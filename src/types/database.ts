@@ -242,6 +242,13 @@ export type Database = {
             foreignKeyName: "enrollments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
@@ -362,6 +369,13 @@ export type Database = {
             columns: ["received_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
             referencedColumns: ["id"]
           },
           {
@@ -633,13 +647,82 @@ export type Database = {
             foreignKeyName: "enrollments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_directory_view: {
+        Row: {
+          course_ids: string[] | null
+          course_names: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          enrollment_count: number | null
+          full_name: string | null
+          id: string | null
+          last_payment_at: string | null
+          mobile: string | null
+          notes: string | null
+          student_code: string | null
+          total_balance: number | null
+          total_net_fee: number | null
+          total_paid: number | null
+          university_ids: string[] | null
+          university_names: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
     }
     Functions: {
+      add_student_enrollment: {
+        Args: {
+          p_admission_staff_id?: string
+          p_course_id: string
+          p_discount?: number
+          p_intake?: string
+          p_specialization_id?: string
+          p_student_id: string
+          p_total_fee?: number
+          p_university_id: string
+        }
+        Returns: Json
+      }
+      create_student_with_enrollment: {
+        Args: {
+          p_admission_staff_id?: string
+          p_course_id?: string
+          p_discount?: number
+          p_email?: string
+          p_full_name: string
+          p_intake?: string
+          p_mobile: string
+          p_notes?: string
+          p_specialization_id?: string
+          p_total_fee?: number
+          p_university_id?: string
+          p_whatsapp?: string
+        }
+        Returns: Json
+      }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
       get_staff_list: {
         Args: never
@@ -708,6 +791,15 @@ export type Database = {
         }
       }
       rotate_share_token: { Args: { p_payment_id: string }; Returns: string }
+      update_enrollment_fee: {
+        Args: {
+          p_discount: number
+          p_enrollment_id: string
+          p_reason?: string
+          p_total_fee: number
+        }
+        Returns: Json
+      }
       void_payment: {
         Args: { p_payment_id: string; p_reason: string }
         Returns: {

@@ -22,6 +22,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/r/') ||
     pathname.startsWith('/api/public') ||
     pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/auth/confirm') ||
     pathname === '/reset-password'
   ) {
     return response

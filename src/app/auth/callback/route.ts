@@ -4,16 +4,17 @@ import type { NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 /**
- * Validates a redirect target path.
- * Allows only same-site relative paths (must start with "/" and must NOT start with "//" or "/\\");
- * anything else -> "/".
+ * Validates a redirect target path with an origin check.
+ * Ensures the target stays on the same origin (no open redirects, schema-relative bypasses, etc.)
  */
-function getSafeRedirectPath(next: string | null): string {
-  if (!next) return '/'
-  if (next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
-    return next
+function getSafeRedirectPath(next: string | null, requestUrl: string): string {
+  try {
+    const origin = new URL(requestUrl).origin
+    const u = new URL(next ?? '/', origin)
+    return u.origin === origin ? u.pathname + u.search : '/'
+  } catch {
+    return '/'
   }
-  return '/'
 }
 
 /**
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type')
   const next = searchParams.get('next')
 
-  const safePath = getSafeRedirectPath(next)
+  const safePath = getSafeRedirectPath(next, request.url)
 
   if (code) {
     const supabase = await createClient()
