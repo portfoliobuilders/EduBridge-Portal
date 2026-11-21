@@ -11,14 +11,46 @@ export default async function NewReceiptPage({
 }: {
   searchParams: Promise<{ enrollment?: string }>
 }) {
-  await requireUser()
+  const { user, profile } = await requireUser()
+  const isOwner = profile.role === 'owner'
   const { enrollment: enrollmentId } = await searchParams
+
+  const supabase = await createClient()
+
+  // Fetch metadata for Quick-Add Candidate sheet
+  const [
+    { data: universitiesData },
+    { data: coursesData },
+    { data: specializationsData },
+    { data: staffData },
+  ] = await Promise.all([
+    supabase
+      .from('universities')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('courses')
+      .select('id, university_id, name, level, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('specializations')
+      .select('id, course_id, name, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    isOwner
+      ? supabase
+          .from('profiles')
+          .select('id, full_name, role')
+          .eq('is_active', true)
+          .order('full_name')
+      : Promise.resolve({ data: [] }),
+  ])
 
   let initialEnrollment: PreselectedEnrollment | null = null
 
   if (enrollmentId) {
-    const supabase = await createClient()
-
     const { data: item } = await supabase
       .from('enrollments')
       .select(`
@@ -83,9 +115,19 @@ export default async function NewReceiptPage({
     <div className="space-y-6">
       <PageHeader
         title="Record Payment"
-        subtitle="Issue an official gapless receipt voucher for student fee payment"
+        subtitle="Issue an official gapless receipt voucher for candidate fee payment"
       />
-      <PaymentForm initialEnrollment={initialEnrollment} />
+      <PaymentForm
+        initialEnrollment={initialEnrollment}
+        quickAddMetadata={{
+          universities: universitiesData || [],
+          courses: coursesData || [],
+          specializations: specializationsData || [],
+          staffList: staffData || [],
+          currentUserId: user.id,
+          isOwner,
+        }}
+      />
     </div>
   )
 }

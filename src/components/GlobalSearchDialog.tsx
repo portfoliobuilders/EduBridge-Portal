@@ -52,7 +52,7 @@ export function GlobalSearchDialog({
 
   const handleSelectStudent = (id: string) => {
     onOpenChange(false)
-    router.push(`/students/${id}`)
+    router.push(`/candidates/${id}`)
   }
 
   const handleSelectReceipt = (id: string) => {
@@ -63,7 +63,7 @@ export function GlobalSearchDialog({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Search students, mobile, code, receipt no..."
+        placeholder="Search candidates, mobile, code, receipt no..."
         value={query}
         onValueChange={setQuery}
       />
@@ -76,11 +76,11 @@ export function GlobalSearchDialog({
         )}
 
         {!isPending && !isShort && activeResults.students.length === 0 && activeResults.receipts.length === 0 && (
-          <CommandEmpty>No matching students or receipts found.</CommandEmpty>
+          <CommandEmpty>No matching candidates or receipts found.</CommandEmpty>
         )}
 
         {activeResults.students.length > 0 && (
-          <CommandGroup heading="Students">
+          <CommandGroup heading="Candidates">
             {activeResults.students.map((stu) => (
               <CommandItem
                 key={stu.id}

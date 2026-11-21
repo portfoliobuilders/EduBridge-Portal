@@ -41,11 +41,25 @@ export async function globalSearchAction(query: string): Promise<SearchResult> {
 
   const supabase = await createClient()
 
+  const cleanDigits = q.replace(/\D/g, '')
+  const noZero = cleanDigits.replace(/^0+/, '')
+  const clauses = [
+    `full_name.ilike.%${q}%`,
+    `student_code.ilike.%${q}%`,
+    `mobile.ilike.%${q}%`,
+  ]
+  if (cleanDigits.length >= 3) {
+    clauses.push(`mobile.ilike.%${cleanDigits}%`)
+  }
+  if (noZero.length >= 3 && noZero !== cleanDigits) {
+    clauses.push(`mobile.ilike.%${noZero}%`)
+  }
+
   // Search students by name, code, or mobile
   const { data: students } = await supabase
     .from('students')
     .select('id, student_code, full_name, mobile')
-    .or(`full_name.ilike.%${q}%,student_code.ilike.%${q}%,mobile.ilike.%${q}%`)
+    .or(clauses.join(','))
     .limit(6)
 
   // Search payments by receipt number
@@ -62,7 +76,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult> {
     receipts: paymentRows.map((p) => ({
       id: p.id,
       receipt_no: p.receipt_no,
-      student_name: p.students?.full_name || 'Unknown Student',
+      student_name: p.students?.full_name || 'Unknown Candidate',
       amount: Number(p.amount),
     })),
   }

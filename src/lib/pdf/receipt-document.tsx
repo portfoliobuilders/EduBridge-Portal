@@ -385,16 +385,16 @@ export function ReceiptDocument({
           </View>
         )}
 
-        {/* Student & Course Info */}
+        {/* Candidate & Course Info */}
         <View style={styles.section}>
           <View style={styles.row}>
-            <Text style={styles.label}>Received From:</Text>
+            <Text style={styles.label}>Received from (Candidate&apos;s Name):</Text>
             <Text style={styles.boldValue}>
               {payment.payee_name || student.full_name}
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Student ID / Tel:</Text>
+            <Text style={styles.label}>Candidate ID / Tel:</Text>
             <Text style={styles.value}>
               {student.student_code} | {student.mobile}
             </Text>
@@ -500,7 +500,7 @@ export function ReceiptDocument({
                 <Text style={styles.colVal}>
                   {formatAED(
                     payment.fee_snapshot -
-                      (enrollment.total_fee - enrollment.discount)
+                    (enrollment.total_fee - enrollment.discount)
                   )}
                 </Text>
               </View>

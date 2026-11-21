@@ -128,7 +128,7 @@ export function ReceiptDetailView({
 
   const handleEmailShare = () => {
     if (!student.email) {
-      toast.error('Student does not have an email address recorded')
+      toast.error('Candidate does not have an email address recorded')
       return
     }
     const subject = encodeURIComponent(
@@ -161,11 +161,11 @@ export function ReceiptDetailView({
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-[#E4E7E7] shadow-xs print:hidden">
         <div className="flex items-center gap-3">
           <Link
-            href={`/students/${student.id}`}
+            href={`/candidates/${student.id}`}
             className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to Student
+            Back to Candidate
           </Link>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-lg text-[#0A0A0A]">
@@ -339,7 +339,7 @@ export function ReceiptDetailView({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-1">
             <span className="text-muted-foreground font-medium text-xs sm:col-span-1">
-              Student ID / Mobile:
+              Candidate ID / Mobile:
             </span>
             <span className="font-mono text-xs sm:col-span-3">
               {student.student_code} · {student.mobile}

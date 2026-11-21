@@ -80,7 +80,7 @@ export function StudentsFilterBar({
     params.set('page', '1')
 
     startTransition(() => {
-      router.push(`/students?${params.toString()}`)
+      router.push(`/candidates?${params.toString()}`)
     })
   }
 
@@ -103,7 +103,7 @@ export function StudentsFilterBar({
     setCourse('')
     setSort('newest')
     startTransition(() => {
-      router.push('/students')
+      router.push('/candidates')
     })
   }
 
@@ -122,7 +122,7 @@ export function StudentsFilterBar({
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, mobile, student code, or email…"
+            placeholder="Search by candidate name, mobile, code, or email…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-10 pr-9 min-h-[44px] text-sm"
@@ -184,7 +184,7 @@ export function StudentsFilterBar({
           <option value="fully_paid">Fully Paid</option>
         </select>
 
-        {/* My Students Pill */}
+        {/* My Candidates Pill */}
         <button
           type="button"
           onClick={() => {
@@ -198,7 +198,7 @@ export function StudentsFilterBar({
               : 'border-[#E4E7E7] bg-white text-[#6B7272] hover:bg-[#F5F6F6]'
           }`}
         >
-          <span>My Students</span>
+          <span>My Candidates</span>
           {mine && <span className="h-1.5 w-1.5 rounded-full bg-[#00A57E]" />}
         </button>
 

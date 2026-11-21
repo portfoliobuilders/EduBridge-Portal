@@ -85,7 +85,7 @@ export function VoidReceiptDialog({
             </Label>
             <Textarea
               id="voidReason"
-              placeholder="e.g. Card transaction reversed, Entered wrong student..."
+              placeholder="e.g. Card transaction reversed, Entered wrong candidate..."
               value={reason}
               onChange={(e) => {
                 setReason(e.target.value)
@@ -97,7 +97,7 @@ export function VoidReceiptDialog({
           </div>
 
           <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
-            <strong>Permanent audit record:</strong> The receipt will remain in the database watermarked &quot;VOID&quot;. The student&apos;s ledger balance will be automatically adjusted back.
+            <strong>Permanent audit record:</strong> The receipt will remain in the database watermarked &quot;VOID&quot;. The candidate&apos;s ledger balance will be automatically adjusted back.
           </div>
         </div>
 

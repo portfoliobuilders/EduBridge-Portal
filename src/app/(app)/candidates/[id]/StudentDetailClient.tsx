@@ -219,7 +219,7 @@ export function StudentDetailClient({
             )}
           </div>
 
-          {/* Edit Student Button */}
+          {/* Edit Candidate Button */}
           <div className="flex items-center gap-2 shrink-0">
             {canEditContact ? (
               <Button
@@ -229,7 +229,7 @@ export function StudentDetailClient({
                 className="gap-1.5 min-h-[44px] text-xs border-[#E4E7E7]"
               >
                 <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>Edit Student</span>
+                <span>Edit Candidate</span>
               </Button>
             ) : (
               <div
@@ -243,7 +243,7 @@ export function StudentDetailClient({
                   className="gap-1.5 min-h-[44px] text-xs border-[#E4E7E7] opacity-60 cursor-not-allowed"
                 >
                   <Edit2 className="h-3.5 w-3.5" />
-                  <span>Edit Student</span>
+                  <span>Edit Candidate</span>
                 </Button>
               </div>
             )}
@@ -572,7 +572,7 @@ export function StudentDetailClient({
             <User className="h-4 w-4 text-[#00A57E] shrink-0 mt-0.5" />
             <div>
               <p className="text-[#0A0A0A] font-medium">
-                Student enrolled by{' '}
+                Candidate enrolled by{' '}
                 <span className="font-semibold text-[#00805F]">
                   {student.creator_profile?.full_name || 'Staff'}
                 </span>

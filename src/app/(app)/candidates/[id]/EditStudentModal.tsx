@@ -68,7 +68,7 @@ export function EditStudentModal({
       })
 
       if (!res.success) {
-        setError(res.error || 'Failed to update student')
+        setError(res.error || 'Failed to update candidate')
         return
       }
 
@@ -82,7 +82,7 @@ export function EditStudentModal({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-[#0A0A0A]">
-              Edit Student Details
+              Edit Candidate Details
             </DialogTitle>
             <DialogDescription className="text-xs text-[#6B7272]">
               Update contact information and admission notes.

@@ -145,7 +145,7 @@ export function AddEnrollmentModal({
               Add New Enrollment
             </DialogTitle>
             <DialogDescription className="text-xs text-[#6B7272]">
-              Enroll this student into another degree or university program.
+              Enroll this candidate into another degree or university program.
             </DialogDescription>
           </DialogHeader>
 

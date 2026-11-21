@@ -52,7 +52,7 @@ export default async function HomePage() {
 
         <div className="bg-white p-5 rounded-2xl border border-border shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider">Students</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Candidates</span>
             <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <Users className="w-4 h-4" />
             </div>
@@ -60,7 +60,7 @@ export default async function HomePage() {
           <p className="text-2xl font-bold font-display tracking-tight text-foreground tabular-nums">
             0
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Enrolled students</p>
+          <p className="text-xs text-muted-foreground mt-1">Enrolled candidates</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-border shadow-xs">
@@ -82,7 +82,7 @@ export default async function HomePage() {
         <div className="bg-white p-6 rounded-2xl border border-border shadow-xs">
           <h2 className="text-base font-semibold text-foreground mb-1">Issue Receipt Voucher</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Record a fee installment for a student, compute real-time balance, and generate an official receipt PDF.
+            Record a fee installment for a candidate, compute real-time balance, and generate an official receipt PDF.
           </p>
           <Link href="/receipts/new">
             <Button className="bg-primary hover:bg-[#00805F] text-white rounded-xl">
@@ -92,13 +92,13 @@ export default async function HomePage() {
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-border shadow-xs">
-          <h2 className="text-base font-semibold text-foreground mb-1">Manage Students & Ledgers</h2>
+          <h2 className="text-base font-semibold text-foreground mb-1">Manage Candidates & Ledgers</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Lookup enrolled students, review running installment ledgers, and download official fee statements.
+            Lookup enrolled candidates, review running installment ledgers, and download official fee statements.
           </p>
-          <Link href="/students">
+          <Link href="/candidates">
             <Button variant="outline" className="border-border rounded-xl">
-              View Students List
+              View Candidates List
             </Button>
           </Link>
         </div>

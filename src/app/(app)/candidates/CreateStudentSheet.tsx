@@ -56,7 +56,24 @@ export interface StaffOption {
   role: string
 }
 
-interface CreateStudentSheetProps {
+export interface CreateCandidateSuccessData {
+  studentId: string
+  studentCode: string
+  enrollmentId: string
+  fullName: string
+  mobile: string
+  universityName: string
+  courseName: string
+  specializationName: string | null
+  intake: string | null
+  vatType: string
+  vatRate: number
+  netFee: number
+  totalPayable: number
+  balance: number
+}
+
+export interface CreateStudentSheetProps {
   universities: UniversityOption[]
   courses: CourseOption[]
   specializations: SpecializationOption[]
@@ -64,6 +81,11 @@ interface CreateStudentSheetProps {
   currentUserId: string
   isOwner: boolean
   triggerButton?: React.ReactNode
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  initialName?: string
+  initialMobile?: string
+  onCandidateCreated?: (created: CreateCandidateSuccessData) => void
 }
 
 export function CreateStudentSheet({
@@ -74,16 +96,35 @@ export function CreateStudentSheet({
   currentUserId,
   isOwner,
   triggerButton,
+  isOpen,
+  onOpenChange,
+  initialName,
+  initialMobile,
+  onCandidateCreated,
 }: CreateStudentSheetProps) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = typeof isOpen === 'boolean'
+  const activeOpen = isControlled ? isOpen : internalOpen
+
+  const handleOpenChange = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v)
+    if (!isControlled) setInternalOpen(v)
+    if (v) {
+      if (initialName) setFullName(initialName)
+      if (initialMobile) setMobile(initialMobile)
+    } else {
+      resetForm()
+    }
+  }
+
   const [step, setStep] = useState<1 | 2>(1)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  // Step 1: Student info
-  const [fullName, setFullName] = useState('')
-  const [mobile, setMobile] = useState('')
+  // Step 1: Candidate info
+  const [fullName, setFullName] = useState(initialName || '')
+  const [mobile, setMobile] = useState(initialMobile || '')
   const [whatsapp, setWhatsapp] = useState('')
   const [sameAsMobile, setSameAsMobile] = useState(true)
   const [email, setEmail] = useState('')
@@ -250,7 +291,31 @@ export function CreateStudentSheet({
       })
 
       if (!res.success || !res.data) {
-        setError(res.error || 'Failed to create student')
+        setError(res.error || 'Failed to create candidate')
+        return
+      }
+
+      if (onCandidateCreated) {
+        const selectedUni = universities.find((u) => u.id === universityId)
+        const selectedC = courses.find((c) => c.id === courseId)
+        const selectedS = specializations.find((s) => s.id === specializationId)
+        onCandidateCreated({
+          studentId: res.data.studentId,
+          studentCode: res.data.studentCode,
+          enrollmentId: res.data.enrollmentId,
+          fullName: fullName.trim(),
+          mobile: mobile.trim(),
+          universityName: selectedUni?.name ?? '',
+          courseName: selectedC?.name ?? '',
+          specializationName: selectedS?.name ?? null,
+          intake: intake.trim() || null,
+          vatType: 'none',
+          vatRate: 5.0,
+          netFee,
+          totalPayable: netFee,
+          balance: netFee,
+        })
+        handleOpenChange(false)
         return
       }
 
@@ -261,23 +326,20 @@ export function CreateStudentSheet({
   return (
     <>
       {triggerButton ? (
-        <span onClick={() => setOpen(true)}>{triggerButton}</span>
+        <span onClick={() => handleOpenChange(true)}>{triggerButton}</span>
       ) : (
         <Button
-          onClick={() => setOpen(true)}
+          onClick={() => handleOpenChange(true)}
           className="bg-[#00A57E] hover:bg-[#00805F] text-white gap-2 font-medium min-h-[44px]"
         >
           <UserPlus className="h-4 w-4" />
-          <span>New Student</span>
+          <span>New Candidate</span>
         </Button>
       )}
 
       <Sheet
-        open={open}
-        onOpenChange={(v) => {
-          setOpen(v)
-          if (!v) resetForm()
-        }}
+        open={activeOpen}
+        onOpenChange={handleOpenChange}
       >
         <SheetContent
           side="right"
@@ -297,16 +359,16 @@ export function CreateStudentSheet({
             </div>
             <SheetTitle className="text-xl font-semibold text-[#0A0A0A]">
               {createdResult
-                ? 'Student Enrolled!'
+                ? 'Candidate Enrolled!'
                 : step === 1
-                ? 'Create New Student'
+                ? 'Create New Candidate'
                 : 'Program & Fee Setup'}
             </SheetTitle>
             <SheetDescription className="text-sm text-[#6B7272]">
               {createdResult
-                ? 'Student record and enrollment package created atomically.'
+                ? 'Candidate record and enrollment package created atomically.'
                 : step === 1
-                ? 'Fast student onboarding for counter staff.'
+                ? 'Fast candidate onboarding for counter staff.'
                 : 'Assign university, course, and agreed tuition fee package.'}
             </SheetDescription>
           </SheetHeader>
@@ -322,7 +384,7 @@ export function CreateStudentSheet({
                   {fullName}
                 </h3>
                 <div className="inline-block px-3 py-1 bg-white rounded-full text-xs font-mono font-semibold text-[#00805F] border border-[#CCEDE5]">
-                  Student Code: {createdResult.studentCode}
+                  Candidate Code: {createdResult.studentCode}
                 </div>
                 <p className="text-xs text-[#6B7272]">
                   Enrollment created with Net Fee: {formatAED(netFee)}
@@ -332,7 +394,7 @@ export function CreateStudentSheet({
               <div className="space-y-3 pt-2">
                 <Button
                   onClick={() => {
-                    setOpen(false)
+                    handleOpenChange(false)
                     router.push(`/receipts/new?enrollment=${createdResult.enrollmentId}`)
                   }}
                   className="w-full bg-[#00A57E] hover:bg-[#00805F] text-white min-h-[44px] gap-2 font-medium"
@@ -344,13 +406,13 @@ export function CreateStudentSheet({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setOpen(false)
-                    router.push(`/students/${createdResult.studentId}`)
+                    handleOpenChange(false)
+                    router.push(`/candidates/${createdResult.studentId}`)
                   }}
                   className="w-full min-h-[44px] gap-2 border-[#E4E7E7]"
                 >
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                  <span>View Student Ledger</span>
+                  <span>View Candidate Ledger</span>
                 </Button>
 
                 <Button
@@ -358,7 +420,7 @@ export function CreateStudentSheet({
                   onClick={resetForm}
                   className="w-full min-h-[44px] text-xs text-muted-foreground"
                 >
-                  + Add Another Student
+                  + Add Another Candidate
                 </Button>
               </div>
             </div>
@@ -370,7 +432,7 @@ export function CreateStudentSheet({
                 </div>
               )}
 
-              {/* STEP 1: Student Contact Details */}
+              {/* STEP 1: Candidate Contact Details */}
               {step === 1 && (
                 <div className="space-y-4">
                   <div>
@@ -415,15 +477,15 @@ export function CreateStudentSheet({
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold">Existing student:</span>{' '}
+                            <span className="font-semibold">Existing candidate:</span>{' '}
                             {duplicateWarning.fullName} ({duplicateWarning.studentCode})
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
-                            setOpen(false)
-                            router.push(`/students/${duplicateWarning.id}`)
+                            handleOpenChange(false)
+                            router.push(`/candidates/${duplicateWarning.id}`)
                           }}
                           className="shrink-0 font-semibold underline text-[#00805F] hover:text-[#005c44]"
                         >
@@ -649,7 +711,7 @@ export function CreateStudentSheet({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setOpen(false)}
+                  onClick={() => handleOpenChange(false)}
                   className="min-h-[44px] px-4"
                 >
                   Cancel
@@ -684,10 +746,10 @@ export function CreateStudentSheet({
                   {isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Saving Student…</span>
+                      <span>Saving Candidate…</span>
                     </>
                   ) : (
-                    <span>Create Student & Enrollment</span>
+                    <span>Create Candidate & Enrollment</span>
                   )}
                 </Button>
               </>
@@ -699,3 +761,5 @@ export function CreateStudentSheet({
     </>
   )
 }
+
+export { CreateStudentSheet as CreateCandidateSheet }

@@ -183,11 +183,25 @@ export async function searchEnrollmentsForPayment(query: string) {
   const trimmed = query.trim()
   if (!trimmed || trimmed.length < 2) return []
 
+  const cleanDigits = trimmed.replace(/\D/g, '')
+  const noZero = cleanDigits.replace(/^0+/, '')
+  const clauses = [
+    `full_name.ilike.%${trimmed}%`,
+    `student_code.ilike.%${trimmed}%`,
+    `mobile.ilike.%${trimmed}%`,
+  ]
+  if (cleanDigits.length >= 3) {
+    clauses.push(`mobile.ilike.%${cleanDigits}%`)
+  }
+  if (noZero.length >= 3 && noZero !== cleanDigits) {
+    clauses.push(`mobile.ilike.%${noZero}%`)
+  }
+
   // 1. Search students first
   const { data: matchedStudents } = await supabase
     .from('students')
     .select('id')
-    .or(`full_name.ilike.%${trimmed}%,student_code.ilike.%${trimmed}%,mobile.ilike.%${trimmed}%`)
+    .or(clauses.join(','))
     .eq('is_active', true)
     .limit(25)
 

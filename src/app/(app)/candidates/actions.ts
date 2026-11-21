@@ -146,7 +146,7 @@ export async function createStudentAction(
 
   const res = rpcResult as { student_id: string; student_code: string; enrollment_id: string }
 
-  revalidatePath('/students')
+  revalidatePath('/candidates')
   return {
     success: true,
     data: {
@@ -183,11 +183,11 @@ export async function updateStudentContactAction(
       .single()
 
     if (fetchErr || !existing) {
-      return { success: false, error: 'Student record not found' }
+      return { success: false, error: 'Candidate record not found' }
     }
 
     if (existing.created_by !== user.id) {
-      return { success: false, error: 'Staff may only edit contact details for students they created' }
+      return { success: false, error: 'Staff may only edit contact details for candidates they created' }
     }
   }
 
@@ -207,8 +207,8 @@ export async function updateStudentContactAction(
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/students')
-  revalidatePath(`/students/${data.studentId}`)
+  revalidatePath('/candidates')
+  revalidatePath(`/candidates/${data.studentId}`)
   return { success: true }
 }
 
@@ -241,7 +241,7 @@ export async function updateEnrollmentFeeAction(
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/students')
+  revalidatePath('/candidates')
   return { success: true }
 }
 
@@ -284,8 +284,8 @@ export async function addStudentEnrollmentAction(
 
   const res = rpcResult as { enrollment_id: string }
 
-  revalidatePath('/students')
-  revalidatePath(`/students/${data.studentId}`)
+  revalidatePath('/candidates')
+  revalidatePath(`/candidates/${data.studentId}`)
   return {
     success: true,
     data: { enrollmentId: res.enrollment_id },

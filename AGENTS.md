@@ -4,6 +4,7 @@
 EduBridge Education (Dubai, UAE) is an admissions consultancy. Staff admit students to partner
 universities/courses, collect fees in instalments, and issue receipt vouchers. This app replaces
 their paper receipt book.
+UI term = Candidate; DB term = student (all UI copy, navigation, buttons, titles, tables, and PDFs show "Candidate(s)"; database tables, columns, and RPCs retain "student" / "students").
 
 ## Business identity (letterhead on every PDF)
 - Name: EduBridge Education

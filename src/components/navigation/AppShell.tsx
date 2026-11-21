@@ -44,7 +44,7 @@ export function AppShell({
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/students', label: 'Students', icon: Users },
+    { href: '/candidates', label: 'Candidates', icon: Users },
     { href: '/receipts/new', label: 'New Receipt', icon: PlusCircle, isAction: true },
     { href: '/reports', label: 'Reports', icon: FileBarChart },
     ...(isOwner ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
@@ -215,14 +215,14 @@ export function AppShell({
           </Link>
 
           <Link
-            href="/students"
+            href="/candidates"
             className={cn(
               'flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium transition-colors',
-              pathname.startsWith('/students') ? 'text-primary font-semibold' : 'text-muted-foreground'
+              pathname.startsWith('/candidates') ? 'text-primary font-semibold' : 'text-muted-foreground'
             )}
           >
             <Users className="w-5 h-5 mb-0.5" />
-            Students
+            Candidates
           </Link>
 
           {/* Prominent Center Action Button */}

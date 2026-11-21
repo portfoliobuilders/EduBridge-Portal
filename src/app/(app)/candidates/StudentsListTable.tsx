@@ -48,7 +48,7 @@ export function StudentsListTable({
     if (newPage < 1 || newPage > totalPages) return
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', newPage.toString())
-    router.push(`/students?${params.toString()}`)
+    router.push(`/candidates?${params.toString()}`)
   }
 
   if (students.length === 0) {
@@ -58,10 +58,10 @@ export function StudentsListTable({
           <Users className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[#0A0A0A]">
-          No students found
+          No candidates found
         </h3>
         <p className="mt-1 text-sm text-[#6B7272]">
-          No matching student records found. Try adjusting your search query or filters.
+          No matching candidate records found. Try adjusting your search query or filters.
         </p>
       </div>
     )
@@ -76,7 +76,7 @@ export function StudentsListTable({
         <Table>
           <TableHeader className="bg-[#F5F6F6]/60">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-semibold text-xs text-[#0A0A0A]">Student</TableHead>
+              <TableHead className="font-semibold text-xs text-[#0A0A0A]">Candidate</TableHead>
               <TableHead className="font-semibold text-xs text-[#0A0A0A]">Mobile</TableHead>
               <TableHead className="font-semibold text-xs text-[#0A0A0A]">University · Course</TableHead>
               <TableHead className="font-semibold text-xs text-[#0A0A0A] text-right">Fee / Paid</TableHead>
@@ -95,7 +95,7 @@ export function StudentsListTable({
                 <TableRow
                   key={student.id}
                   className="group hover:bg-[#F5F6F6]/50 transition cursor-pointer"
-                  onClick={() => router.push(`/students/${student.id}`)}
+                  onClick={() => router.push(`/candidates/${student.id}`)}
                 >
                   <TableCell className="py-3.5">
                     <div className="flex flex-col">
@@ -142,7 +142,7 @@ export function StudentsListTable({
 
                   <TableCell className="py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                     <Link
-                      href={`/students/${student.id}`}
+                      href={`/candidates/${student.id}`}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#E6F6F2] text-[#00805F] hover:bg-[#CCEDE5] transition min-h-[36px]"
                     >
                       <span>Ledger</span>
@@ -168,7 +168,7 @@ export function StudentsListTable({
           return (
             <Link
               key={student.id}
-              href={`/students/${student.id}`}
+              href={`/candidates/${student.id}`}
               className="block rounded-2xl bg-white p-4 border border-[#E4E7E7] shadow-sm hover:border-[#00A57E]/50 transition active:bg-[#F5F6F6]"
             >
               <div className="flex items-start justify-between gap-3">
@@ -216,7 +216,7 @@ export function StudentsListTable({
           <span className="font-semibold text-[#0A0A0A]">
             {Math.min(currentPage * pageSize, totalCount)}
           </span>{' '}
-          of <span className="font-semibold text-[#0A0A0A]">{totalCount}</span> students
+          of <span className="font-semibold text-[#0A0A0A]">{totalCount}</span> candidates
         </div>
 
         <div className="flex items-center gap-2">

@@ -34,6 +34,7 @@ where enrollment_id in (
 -- 4. Remove test enrollments
 delete from public.enrollments
 where id in (
+  '18cb7780-8c5c-495a-be6f-0e4951e01e05',
   'a0bed2c6-2271-46f1-bb55-fecd5cfc6700',
   '0eb17428-7b46-45fc-b671-d0d36407ea7b'
 );
@@ -41,6 +42,7 @@ where id in (
 -- 5. Remove test students
 delete from public.students
 where id in (
+  '4dfecda1-8ab3-459b-9a67-a1a090b0a5f1',
   'bff5d658-061c-4a0c-8bf2-14cc11a60e62',
   'd979862c-cf1e-437b-be4f-13da33f77339'
 );

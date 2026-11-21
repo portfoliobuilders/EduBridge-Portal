@@ -13,6 +13,7 @@ import {
   Search,
   Loader2,
   AlertCircle,
+  UserPlus,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,14 @@ import {
   recordPaymentAction,
   searchEnrollmentsForPayment,
 } from '@/app/(app)/receipts/actions'
+import {
+  CreateStudentSheet,
+  type CreateCandidateSuccessData,
+  type UniversityOption,
+  type CourseOption,
+  type SpecializationOption,
+  type StaffOption,
+} from '@/app/(app)/candidates/CreateStudentSheet'
 
 export interface PreselectedEnrollment {
   enrollmentId: string
@@ -43,20 +52,40 @@ export interface PreselectedEnrollment {
   balance: number
 }
 
+export interface QuickAddMetadata {
+  universities: UniversityOption[]
+  courses: CourseOption[]
+  specializations: SpecializationOption[]
+  staffList: StaffOption[]
+  currentUserId: string
+  isOwner: boolean
+}
+
 interface PaymentFormProps {
   initialEnrollment?: PreselectedEnrollment | null
+  quickAddMetadata?: QuickAddMetadata | null
 }
 
 type PaymentMode = 'card' | 'cash' | 'link' | 'bank_transfer'
 type PaymentPurpose = 'admission' | 'repayment' | 'other'
 
-export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
+export function PaymentForm({
+  initialEnrollment,
+  quickAddMetadata,
+}: PaymentFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   // Selected enrollment state
   const [selectedEnrollment, setSelectedEnrollment] =
     useState<PreselectedEnrollment | null>(initialEnrollment ?? null)
+
+  // Quick Add Candidate Sheet state
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddPrefill, setQuickAddPrefill] = useState<{
+    name: string
+    mobile: string
+  }>({ name: '', mobile: '' })
 
   // Search state when opened globally without preselected enrollment
   const [searchQuery, setSearchQuery] = useState('')
@@ -128,6 +157,68 @@ export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
     }
   }, [searchQuery])
 
+  const handleOpenQuickAdd = () => {
+    setQuickAddPrefill({ name: '', mobile: '' })
+    setQuickAddOpen(true)
+  }
+
+  const handleCreateFromQuery = (query: string) => {
+    const trimmed = query.trim()
+    const hasLetters = /[a-zA-Z]/.test(trimmed)
+    const isDigits = /^[\d+\s()-]+$/.test(trimmed)
+
+    if (hasLetters) {
+      setQuickAddPrefill({ name: trimmed, mobile: '' })
+    } else if (isDigits) {
+      setQuickAddPrefill({ name: '', mobile: trimmed })
+    } else {
+      setQuickAddPrefill({ name: trimmed, mobile: '' })
+    }
+    setQuickAddOpen(true)
+  }
+
+  const handleCandidateCreated = (created: CreateCandidateSuccessData) => {
+    setQuickAddOpen(false)
+    setSearchQuery('')
+    setSearchResults([])
+
+    const preselected: PreselectedEnrollment = {
+      enrollmentId: created.enrollmentId,
+      studentId: created.studentId,
+      studentName: created.fullName,
+      studentCode: created.studentCode,
+      studentMobile: created.mobile,
+      universityName: created.universityName,
+      courseName: created.courseName,
+      specializationName: created.specializationName,
+      intake: created.intake,
+      vatType: created.vatType,
+      vatRate: created.vatRate,
+      totalPayable: created.totalPayable,
+      totalPaid: 0,
+      balance: created.balance,
+    }
+
+    setSelectedEnrollment(preselected)
+    setPayeeName(created.fullName)
+    setPurpose('admission')
+    if (formErrors.enrollment) {
+      setFormErrors((prev) => {
+        const next = { ...prev }
+        delete next.enrollment
+        return next
+      })
+    }
+
+    // Auto-focus amount field
+    setTimeout(() => {
+      const amountInput = document.getElementById('amount') as HTMLInputElement | null
+      if (amountInput) {
+        amountInput.focus()
+      }
+    }, 100)
+  }
+
   const balance = selectedEnrollment?.balance ?? 0
 
   const handleFullBalance = () => {
@@ -160,7 +251,7 @@ export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
     const errors: Record<string, string> = {}
 
     if (!selectedEnrollment) {
-      errors.enrollment = 'Please select a student and course enrollment'
+      errors.enrollment = 'Please select a candidate and course enrollment'
     }
 
     const numericAmount = parseFloat(amount)
@@ -227,121 +318,149 @@ export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
-      {/* 1. Student / Enrollment Picker */}
-      <Card className="border-[#E4E7E7]">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-[#0A0A0A] flex items-center justify-between">
-            <span>Student & Course Enrollment</span>
-            {selectedEnrollment && !initialEnrollment && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedEnrollment(null)
-                  setAmount('')
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Change student
-              </Button>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!selectedEnrollment ? (
-            <div className="space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search student by name, mobile, code, or email..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    if (e.target.value.trim().length < 2) {
-                      setSearchResults([])
-                    }
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
+        {/* 1. Candidate / Enrollment Picker */}
+        <Card className="border-[#E4E7E7]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#0A0A0A] flex items-center justify-between">
+              <span>Candidate & Course Enrollment</span>
+              {selectedEnrollment && !initialEnrollment && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedEnrollment(null)
+                    setAmount('')
                   }}
-                  className="pl-9"
-                  autoFocus
-                />
-                {isSearching && (
-                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
-                )}
-              </div>
-
-              {formErrors.enrollment && (
-                <p className="text-sm text-destructive">{formErrors.enrollment}</p>
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Change candidate
+                </Button>
               )}
-
-              {searchResults.length > 0 && (
-                <div className="border border-[#E4E7E7] rounded-md divide-y divide-[#E4E7E7] max-h-64 overflow-y-auto">
-                  {searchResults.map((item) => (
-                    <button
-                      key={item.enrollmentId}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!selectedEnrollment ? (
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search candidate by name, mobile, code, or email..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value)
+                        if (e.target.value.trim().length < 2) {
+                          setSearchResults([])
+                        }
+                      }}
+                      className="pl-9 min-h-[44px]"
+                      autoFocus
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  {quickAddMetadata && (
+                    <Button
+                      id="btn-quick-add-candidate"
                       type="button"
-                      onClick={() => handleSelectEnrollment(item)}
-                      className="w-full text-left p-3 hover:bg-[#F5F6F6] transition flex items-center justify-between"
+                      onClick={handleOpenQuickAdd}
+                      className="bg-[#00A57E] hover:bg-[#00805F] text-white shrink-0 gap-1.5 font-semibold min-h-[44px]"
                     >
-                      <div>
-                        <div className="font-medium text-sm text-[#0A0A0A]">
-                          {item.studentName}{' '}
-                          <span className="text-xs text-muted-foreground">
-                            ({item.studentCode})
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.universityName} · {item.courseName}
-                          {item.specializationName ? ` (${item.specializationName})` : ''}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{item.studentMobile}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-muted-foreground">Balance Due</div>
-                        <div
-                          className={`text-sm font-semibold ${
-                            item.balance > 0 ? 'text-[#00A57E]' : 'text-muted-foreground'
-                          }`}
-                        >
-                          {formatAED(item.balance)}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                      <UserPlus className="h-4 w-4" />
+                      <span>+ New Candidate</span>
+                    </Button>
+                  )}
                 </div>
-              )}
 
-              {searchQuery.trim().length >= 2 &&
-                !isSearching &&
-                searchResults.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No active student enrollments found matching &quot;{searchQuery}&quot;
-                  </p>
+                {formErrors.enrollment && (
+                  <p className="text-sm text-destructive">{formErrors.enrollment}</p>
                 )}
-            </div>
-          ) : (
-            <div className="bg-[#F5F6F6] p-4 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-base text-[#0A0A0A]">
-                    {selectedEnrollment.studentName}
-                  </span>
-                  <Badge variant="outline" className="text-xs font-mono">
-                    {selectedEnrollment.studentCode}
-                  </Badge>
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {selectedEnrollment.universityName} · {selectedEnrollment.courseName}
-                  {selectedEnrollment.specializationName
-                    ? ` (${selectedEnrollment.specializationName})`
-                    : ''}
-                  {selectedEnrollment.intake ? ` · Intake: ${selectedEnrollment.intake}` : ''}
-                </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  Mobile: {selectedEnrollment.studentMobile}
-                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="border border-[#E4E7E7] rounded-md divide-y divide-[#E4E7E7] max-h-64 overflow-y-auto">
+                    {searchResults.map((item) => (
+                      <button
+                        key={item.enrollmentId}
+                        type="button"
+                        onClick={() => handleSelectEnrollment(item)}
+                        className="w-full text-left p-3 hover:bg-[#F5F6F6] transition flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="font-medium text-sm text-[#0A0A0A]">
+                            {item.studentName}{' '}
+                            <span className="text-xs text-muted-foreground">
+                              ({item.studentCode})
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.universityName} · {item.courseName}
+                            {item.specializationName ? ` (${item.specializationName})` : ''}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{item.studentMobile}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">Balance Due</div>
+                          <div
+                            className={`text-sm font-semibold ${
+                              item.balance > 0 ? 'text-[#00A57E]' : 'text-muted-foreground'
+                            }`}
+                          >
+                            {formatAED(item.balance)}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {searchQuery.trim().length >= 2 &&
+                  !isSearching &&
+                  searchResults.length === 0 && (
+                    <div className="border border-dashed border-[#E4E7E7] rounded-xl p-6 text-center space-y-3 bg-[#F5F6F6]/60">
+                      <p className="text-sm text-muted-foreground">
+                        No candidate found for &quot;<span className="font-semibold text-[#0A0A0A]">{searchQuery}</span>&quot;
+                      </p>
+                      {quickAddMetadata && (
+                        <Button
+                          id="btn-create-from-query"
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleCreateFromQuery(searchQuery)}
+                          className="border-[#00A57E] text-[#00805F] hover:bg-[#E6F6F2] font-semibold gap-1.5"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          <span>+ Create &quot;{searchQuery}&quot; as new candidate</span>
+                        </Button>
+                      )}
+                    </div>
+                  )}
               </div>
+            ) : (
+              <div className="bg-[#F5F6F6] p-4 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-base text-[#0A0A0A]">
+                      {selectedEnrollment.studentName}
+                    </span>
+                    <Badge variant="outline" className="text-xs font-mono">
+                      {selectedEnrollment.studentCode}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {selectedEnrollment.universityName} · {selectedEnrollment.courseName}
+                    {selectedEnrollment.specializationName
+                      ? ` (${selectedEnrollment.specializationName})`
+                      : ''}
+                    {selectedEnrollment.intake ? ` · Intake: ${selectedEnrollment.intake}` : ''}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Mobile: {selectedEnrollment.studentMobile}
+                  </div>
+                </div>
 
               {/* Prominent Balance Display */}
               <div className="bg-white p-3 rounded-md border border-[#E4E7E7] shadow-xs text-right min-w-[180px]">
@@ -586,12 +705,12 @@ export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
               <Label htmlFor="payeeName">Payee / Received From</Label>
               <Input
                 id="payeeName"
-                placeholder="Student or Sponsor Full Name"
+                placeholder="Candidate or Sponsor Full Name"
                 value={payeeName}
                 onChange={(e) => setPayeeName(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Defaults to student name. Enter sponsor or guardian if paid on behalf.
+                Defaults to candidate name. Enter sponsor or guardian if paid on behalf.
               </p>
             </div>
           </div>
@@ -645,5 +764,23 @@ export function PaymentForm({ initialEnrollment }: PaymentFormProps) {
         </Button>
       </div>
     </form>
+
+    {quickAddMetadata && (
+      <CreateStudentSheet
+        key={`${quickAddPrefill.name}-${quickAddPrefill.mobile}-${quickAddOpen}`}
+        universities={quickAddMetadata.universities}
+        courses={quickAddMetadata.courses}
+        specializations={quickAddMetadata.specializations}
+        staffList={quickAddMetadata.staffList}
+        currentUserId={quickAddMetadata.currentUserId}
+        isOwner={quickAddMetadata.isOwner}
+        isOpen={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        initialName={quickAddPrefill.name}
+        initialMobile={quickAddPrefill.mobile}
+        onCandidateCreated={handleCandidateCreated}
+      />
+    )}
+  </>
   )
 }

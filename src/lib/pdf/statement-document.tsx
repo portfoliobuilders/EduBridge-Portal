@@ -346,13 +346,13 @@ export function StatementDocument({
         {/* Info Cards */}
         <View style={styles.metaColumns}>
           <View style={styles.infoCard}>
-            <Text style={styles.cardTitle}>Student Information</Text>
+            <Text style={styles.cardTitle}>Candidate Information</Text>
             <View style={styles.row}>
-              <Text style={styles.label}>Full Name:</Text>
+              <Text style={styles.label}>Candidate&apos;s Name:</Text>
               <Text style={styles.value}>{student.full_name}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Student ID:</Text>
+              <Text style={styles.label}>Candidate ID:</Text>
               <Text style={styles.value}>{student.student_code}</Text>
             </View>
             <View style={styles.row}>

@@ -78,9 +78,21 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
   // Search filter
   if (q) {
-    query = query.or(
-      `full_name.ilike.%${q}%,student_code.ilike.%${q}%,mobile.ilike.%${q}%,email.ilike.%${q}%`
-    )
+    const cleanDigits = q.replace(/\D/g, '')
+    const noZero = cleanDigits.replace(/^0+/, '')
+    const clauses = [
+      `full_name.ilike.%${q}%`,
+      `student_code.ilike.%${q}%`,
+      `mobile.ilike.%${q}%`,
+      `email.ilike.%${q}%`,
+    ]
+    if (cleanDigits.length >= 3) {
+      clauses.push(`mobile.ilike.%${cleanDigits}%`)
+    }
+    if (noZero.length >= 3 && noZero !== cleanDigits) {
+      clauses.push(`mobile.ilike.%${noZero}%`)
+    }
+    query = query.or(clauses.join(','))
   }
 
   // Balance status filter
@@ -130,8 +142,8 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Students Directory"
-        subtitle="Manage admitted students, enrollment packages, and fee balances"
+        title="Candidates Directory"
+        subtitle="Manage admitted candidates, enrollment packages, and fee balances"
       >
         <CreateStudentSheet
           universities={universities}
