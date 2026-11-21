@@ -43,7 +43,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (token_hash && type) {
+  const allowedOtpTypes: readonly EmailOtpType[] = [
+    'invite',
+    'recovery',
+    'email',
+    'magiclink',
+  ]
+
+  if (token_hash && type && (allowedOtpTypes as readonly string[]).includes(type)) {
     const supabase = await createClient()
     const { error } = await supabase.auth.verifyOtp({
       type: type as EmailOtpType,
