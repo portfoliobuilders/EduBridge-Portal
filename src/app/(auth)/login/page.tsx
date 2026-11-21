@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { loginAction, requestPasswordResetAction } from './actions'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -82,13 +81,14 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm">
       {/* Mobile Top Brand Header */}
-      <div className="lg:hidden flex flex-col items-center mb-8 text-center">
+      <div className="md:hidden flex flex-col items-center mb-8 text-center">
         <Image
           src="/brand/edubridge-logo-color.svg"
           alt="EduBridge Education"
           width={190}
           height={48}
           priority
+          style={{ width: 'auto', height: 'auto' }}
           className="mb-4"
         />
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
@@ -171,13 +171,20 @@ function LoginForm() {
                         placeholder="staff@edubridgeeducation.com"
                       />
                     </div>
-                    <Button
+                    <button
                       type="submit"
                       disabled={resetPending}
-                      className="w-full bg-primary hover:bg-[#00805F] text-white"
+                      className="w-full min-h-[44px] h-11 bg-[#00A57E] hover:bg-[#00805F] text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
                     >
-                      {resetPending ? 'Sending...' : 'Send Reset Link'}
-                    </Button>
+                      {resetPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        'Send Reset Link'
+                      )}
+                    </button>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -197,14 +204,23 @@ function LoginForm() {
             </div>
           </div>
 
-          <Button
+          <button
             type="submit"
             disabled={isPending}
-            className="w-full h-11 bg-primary hover:bg-[#00805F] text-white rounded-xl font-medium mt-2 flex items-center justify-center gap-2"
+            className="w-full min-h-[44px] h-11 bg-[#00A57E] hover:bg-[#00805F] text-white rounded-xl font-medium text-sm mt-2 flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed shadow-sm"
           >
-            {isPending ? 'Authenticating...' : 'Sign In'}
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign in</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </form>
       </div>
 
@@ -217,9 +233,9 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#F5F6F6]">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#F5F6F6]">
       {/* Desktop Left Brand Hero Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#00A57E] text-white p-12 xl:p-16 flex-col justify-between relative overflow-hidden">
+      <div className="hidden md:flex md:w-1/2 bg-[#00A57E] text-white p-12 xl:p-16 flex-col justify-between relative overflow-hidden">
         <div>
           <Image
             src="/brand/edubridge-logo-white.svg"
@@ -227,6 +243,7 @@ export default function LoginPage() {
             width={220}
             height={56}
             priority
+            style={{ width: 'auto', height: 'auto' }}
           />
         </div>
 
@@ -249,7 +266,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Login Form Panel */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 sm:px-12 lg:px-16">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 sm:px-12 md:px-16">
         <Suspense
           fallback={
             <div className="flex items-center justify-center p-8 text-sm text-muted-foreground gap-2">
