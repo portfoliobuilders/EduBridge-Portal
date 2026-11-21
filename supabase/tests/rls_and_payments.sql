@@ -183,17 +183,25 @@ begin
     raise exception 'FAIL Test 5a: Anon could not call get_public_receipt';
   end if;
 
-  -- Anon attempts SELECT on students (should see 0 rows)
-  select count(*) into v_rows_affected from students;
-  if v_rows_affected != 0 then
-    raise exception 'FAIL Test 5b: Anon was able to select % rows from students!', v_rows_affected;
-  end if;
+  -- Anon attempts SELECT on students (should see 0 rows or be denied)
+  begin
+    select count(*) into v_rows_affected from students;
+    if v_rows_affected != 0 then
+      raise exception 'FAIL Test 5b: Anon was able to select % rows from students!', v_rows_affected;
+    end if;
+  exception when insufficient_privilege then
+    null; -- Expected: table privileges revoked from anon
+  end;
 
-  -- Anon attempts SELECT on payments (should see 0 rows)
-  select count(*) into v_rows_affected from payments;
-  if v_rows_affected != 0 then
-    raise exception 'FAIL Test 5c: Anon was able to select % rows from payments!', v_rows_affected;
-  end if;
+  -- Anon attempts SELECT on payments (should see 0 rows or be denied)
+  begin
+    select count(*) into v_rows_affected from payments;
+    if v_rows_affected != 0 then
+      raise exception 'FAIL Test 5c: Anon was able to select % rows from payments!', v_rows_affected;
+    end if;
+  exception when insufficient_privilege then
+    null; -- Expected: table privileges revoked from anon
+  end;
 
   insert into test_results values (5, 'Anon access rules (RPC works, SELECT blocked)', 'PASS', 'Public receipt accessible; 0 rows returned from students & payments');
 end $$;
