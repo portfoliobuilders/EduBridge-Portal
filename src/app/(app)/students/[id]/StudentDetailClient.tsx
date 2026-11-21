@@ -21,7 +21,6 @@ import {
   Send,
   ExternalLink,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { EditStudentModal } from './EditStudentModal'
 import { EditFeeModal } from './EditFeeModal'
 import { AddEnrollmentModal } from './AddEnrollmentModal'
@@ -406,18 +405,16 @@ export function StudentDetailClient({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Fee statement placeholder for Part 5 */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      toast.info('Fee statement export & PDF generation will be available in Part 5.')
-                    }
-                    className="min-h-[44px] text-xs gap-1.5 border-[#E4E7E7]"
+                  {/* Fee statement PDF */}
+                  <a
+                    href={`/api/statements/${activeEnrollment.id}/pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground min-h-[44px] gap-1.5"
                   >
                     <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
                     <span>Fee Statement</span>
-                  </Button>
+                  </a>
 
                   {/* Desktop Record Payment button */}
                   <Link

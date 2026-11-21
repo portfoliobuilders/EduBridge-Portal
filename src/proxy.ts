@@ -63,6 +63,9 @@ export async function proxy(request: NextRequest) {
   const isLoginPage = pathname === '/login'
 
   if (!user) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     if (!isLoginPage) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/login'

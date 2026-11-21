@@ -13,6 +13,7 @@
 # testing
 /coverage
 scripts/
+!supabase/scripts/
 
 # next.js
 /.next/

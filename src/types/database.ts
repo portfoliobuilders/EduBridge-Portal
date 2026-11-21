@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -178,6 +178,8 @@ export type Database = {
           total_fee: number
           university_id: string
           updated_at: string
+          vat_rate: number
+          vat_type: string
         }
         Insert: {
           admission_staff_id: string
@@ -193,6 +195,8 @@ export type Database = {
           total_fee: number
           university_id: string
           updated_at?: string
+          vat_rate?: number
+          vat_type?: string
         }
         Update: {
           admission_staff_id?: string
@@ -208,6 +212,8 @@ export type Database = {
           total_fee?: number
           university_id?: string
           updated_at?: string
+          vat_rate?: number
+          vat_type?: string
         }
         Relationships: [
           {
@@ -287,6 +293,8 @@ export type Database = {
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
           vat_amount: number
+          vat_rate: number
+          vat_type: string
           void_reason: string | null
           voided_at: string | null
           voided_by: string | null
@@ -316,6 +324,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           student_id: string
           vat_amount?: number
+          vat_rate?: number
+          vat_type?: string
           void_reason?: string | null
           voided_at?: string | null
           voided_by?: string | null
@@ -345,6 +355,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           student_id?: string
           vat_amount?: number
+          vat_rate?: number
+          vat_type?: string
           void_reason?: string | null
           voided_at?: string | null
           voided_by?: string | null
@@ -641,6 +653,10 @@ export type Database = {
           student_id: string | null
           total_fee: number | null
           total_paid: number | null
+          total_payable: number | null
+          vat_amount: number | null
+          vat_rate: number | null
+          vat_type: string | null
         }
         Relationships: [
           {
@@ -719,6 +735,8 @@ export type Database = {
           p_specialization_id?: string
           p_total_fee?: number
           p_university_id?: string
+          p_vat_rate?: number
+          p_vat_type?: string
           p_whatsapp?: string
         }
         Returns: Json
@@ -779,6 +797,8 @@ export type Database = {
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
           vat_amount: number
+          vat_rate: number
+          vat_type: string
           void_reason: string | null
           voided_at: string | null
           voided_by: string | null
@@ -827,6 +847,8 @@ export type Database = {
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
           vat_amount: number
+          vat_rate: number
+          vat_type: string
           void_reason: string | null
           voided_at: string | null
           voided_by: string | null
