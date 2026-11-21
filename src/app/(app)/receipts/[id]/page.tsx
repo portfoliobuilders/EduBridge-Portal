@@ -28,7 +28,11 @@ export default async function ReceiptDetailPage({
         student_code,
         mobile,
         whatsapp,
-        email
+        email,
+        guardian_name,
+        guardian_email,
+        guardian_phone,
+        guardian_whatsapp
       ),
       enrollment:enrollments!inner(
         id,
@@ -118,6 +122,7 @@ export default async function ReceiptDetailPage({
           vat_type: payment.vat_type,
           vat_rate: Number(payment.vat_rate),
           share_token: payment.share_token,
+          share_enabled: payment.share_enabled,
           void_reason: payment.void_reason,
           voided_at: payment.voided_at,
           voided_by: payment.voided_by,
@@ -129,6 +134,10 @@ export default async function ReceiptDetailPage({
           mobile: student.mobile,
           whatsapp: student.whatsapp,
           email: student.email,
+          guardian_name: student.guardian_name,
+          guardian_email: student.guardian_email,
+          guardian_phone: student.guardian_phone,
+          guardian_whatsapp: student.guardian_whatsapp,
         }}
         enrollment={{
           id: enrollment.id,

@@ -181,11 +181,14 @@ export async function GET(
       },
     })
 
+    const isDownload = request.nextUrl.searchParams.get('download') === '1'
+    const disposition = isDownload ? 'attachment' : 'inline'
+
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${payment.receipt_no}.pdf"`,
+        'Content-Disposition': `${disposition}; filename="${payment.receipt_no}.pdf"`,
         'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       },
     })

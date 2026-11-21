@@ -1,8 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { renderToBuffer } from '@react-pdf/renderer'
+import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser, requireOwner } from '@/lib/auth'
+import { ReceiptDocument } from '@/lib/pdf/receipt-document'
+import { sendReceiptEmail, type EmailSendResult } from '@/lib/email/send-email'
 import { z } from 'zod'
 
 export interface ActionResult<T = unknown> {
@@ -117,8 +121,8 @@ export async function recordPaymentAction(
 
     revalidatePath('/receipts')
     revalidatePath(`/receipts/${payment.id}`)
-    revalidatePath(`/students`)
-    revalidatePath(`/students/${payment.student_id}`)
+    revalidatePath(`/candidates`)
+    revalidatePath(`/candidates/${payment.student_id}`)
 
     return {
       success: true,
@@ -166,7 +170,7 @@ export async function voidPaymentAction(
     revalidatePath(`/receipts/${parsed.data.paymentId}`)
     revalidatePath('/receipts')
     if (data?.student_id) {
-      revalidatePath(`/students/${data.student_id}`)
+      revalidatePath(`/candidates/${data.student_id}`)
     }
 
     return { success: true, data: { paymentId: parsed.data.paymentId } }
@@ -283,4 +287,307 @@ export async function searchEnrollmentsForPayment(query: string) {
       billingContactName: billingContact ?? null,
     }
   })
+}
+
+// -----------------------------------------------------------------------------
+// Share Actions (Link management, share logging, email)
+// -----------------------------------------------------------------------------
+
+const logShareSchema = z.object({
+  paymentId: z.string().uuid().optional().nullable(),
+  enrollmentId: z.string().uuid().optional().nullable(),
+  channel: z.enum([
+    'whatsapp',
+    'email',
+    'web_share',
+    'sms',
+    'download',
+    'print',
+    'link_copy',
+  ]),
+  recipient: z.string().optional().nullable(),
+  meta: z.record(z.string(), z.any()).optional().nullable(),
+})
+
+export async function logShareAction(
+  values: z.infer<typeof logShareSchema>
+): Promise<ActionResult> {
+  try {
+    const { user } = await requireUser()
+    const parsed = logShareSchema.safeParse(values)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message }
+    }
+
+    const supabase = await createClient()
+    const { error } = await supabase.from('share_logs').insert({
+      payment_id: parsed.data.paymentId || null,
+      enrollment_id: parsed.data.enrollmentId || null,
+      channel: parsed.data.channel,
+      recipient: parsed.data.recipient || null,
+      sent_by: user.id,
+      meta: parsed.data.meta || {},
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (parsed.data.paymentId) {
+      revalidatePath(`/receipts/${parsed.data.paymentId}`)
+    }
+    if (parsed.data.enrollmentId) {
+      revalidatePath(`/candidates`)
+    }
+
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to log share'
+    return { success: false, error: message }
+  }
+}
+
+export async function rotateReceiptShareTokenAction(
+  paymentId: string
+): Promise<ActionResult<{ newToken: string }>> {
+  try {
+    await requireUser()
+    const supabase = await createClient()
+
+    const { data: newToken, error } = await supabase.rpc('rotate_share_token', {
+      p_payment_id: paymentId,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath(`/receipts/${paymentId}`)
+    return { success: true, data: { newToken: newToken as string } }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to rotate token'
+    return { success: false, error: message }
+  }
+}
+
+export async function toggleReceiptShareEnabledAction(
+  paymentId: string,
+  enabled: boolean
+): Promise<ActionResult<{ enabled: boolean }>> {
+  try {
+    await requireUser()
+    const supabase = await createClient()
+
+    const { data, error } = await supabase.rpc('set_payment_share_enabled', {
+      p_payment_id: paymentId,
+      p_enabled: enabled,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath(`/receipts/${paymentId}`)
+    return { success: true, data: { enabled: Boolean(data) } }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to update share state'
+    return { success: false, error: message }
+  }
+}
+
+export async function sendReceiptEmailAction(params: {
+  paymentId: string
+  recipientEmail: string
+}): Promise<EmailSendResult> {
+  try {
+    const { user } = await requireUser()
+
+    const emailSchema = z.string().trim().email('Please enter a valid recipient email address')
+    const parsedEmail = emailSchema.safeParse(params.recipientEmail)
+    if (!parsedEmail.success) {
+      return { success: false, error: parsedEmail.error.issues[0]?.message }
+    }
+    const recipient = parsedEmail.data
+
+    const supabase = await createClient()
+
+    // Query payment with relations
+    const { data: payment, error: pError } = await supabase
+      .from('payments')
+      .select(`
+        *,
+        student:students(
+          id,
+          full_name,
+          student_code,
+          mobile,
+          email,
+          guardian_name,
+          guardian_email
+        ),
+        enrollment:enrollments(
+          id,
+          intake,
+          total_fee,
+          discount,
+          opening_paid,
+          university:universities(name),
+          course:courses(name),
+          specialization:specializations(name)
+        ),
+        received_by_profile:profiles!payments_received_by_fkey(full_name),
+        voided_by_profile:profiles!payments_voided_by_fkey(full_name)
+      `)
+      .eq('id', params.paymentId)
+      .single()
+
+    if (pError || !payment) {
+      return { success: false, error: 'Payment receipt not found' }
+    }
+
+    // 1. Atomic rate-limit check via RPC (20/hr per user)
+    const { error: rateLimitError } = await supabase.rpc(
+      'check_and_log_email_rate_limit',
+      {
+        p_recipient: recipient,
+        p_email_type: 'receipt',
+        p_reference_id: payment.receipt_no,
+      }
+    )
+
+    if (rateLimitError) {
+      return { success: false, error: rateLimitError.message }
+    }
+
+    // 2. Fetch company settings
+    const { data: settings } = await supabase
+      .from('company_settings')
+      .select('*')
+      .limit(1)
+      .single()
+
+    const companySettings = {
+      name: settings?.name ?? 'EduBridge Education',
+      address:
+        settings?.address ??
+        'M03, Royal House Building, Hor Al Anz East, Dubai – UAE',
+      phone: settings?.phone ?? '+971 58 107 3898',
+      email: settings?.email ?? 'info@edubridgeeducation.com',
+      website: settings?.website ?? 'https://edubridgeeducation.com',
+      trn: settings?.trn ?? '105215478600003',
+      footer_note:
+        settings?.footer_note ??
+        'Keep your receipt vouchers for future references.',
+    }
+
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || 'https://edubridgeeducation.com'
+    const publicLink = `${appUrl}/r/${payment.share_token}`
+
+    // 3. Render PDF buffer server-side
+    const qrCodeDataUrl = await QRCode.toDataURL(publicLink, {
+      margin: 1,
+      width: 120,
+    })
+
+    const studentData = payment.student!
+    const enrollmentData = payment.enrollment!
+
+    const { data: billingAddress } = await supabase
+      .from('student_addresses')
+      .select('contact_name, contact_phone, line1, line2, city, state, postal_code, country')
+      .eq('student_id', studentData.id)
+      .eq('type', 'billing')
+      .eq('is_default', true)
+      .maybeSingle()
+
+    const docProps = {
+      payment: {
+        id: payment.id,
+        receipt_no: payment.receipt_no,
+        amount: Number(payment.amount),
+        mode: payment.mode,
+        purpose: payment.purpose,
+        purpose_note: payment.purpose_note,
+        reference_no: payment.reference_no,
+        paid_at: payment.paid_at,
+        payee_name: payment.payee_name,
+        comments: payment.comments,
+        status: payment.status,
+        fee_snapshot: Number(payment.fee_snapshot),
+        paid_before_snapshot: Number(payment.paid_before_snapshot),
+        balance_after_snapshot: Number(payment.balance_after_snapshot),
+        vat_amount: Number(payment.vat_amount),
+        vat_type: payment.vat_type,
+        vat_rate: Number(payment.vat_rate),
+        share_token: payment.share_token,
+        void_reason: payment.void_reason,
+        voided_at: payment.voided_at,
+      },
+      student: {
+        full_name: studentData.full_name,
+        student_code: studentData.student_code,
+        mobile: studentData.mobile,
+        email: studentData.email,
+      },
+      enrollment: {
+        university_name: enrollmentData.university?.name ?? 'University',
+        course_name: enrollmentData.course?.name ?? 'Course',
+        specialization_name: enrollmentData.specialization?.name,
+        intake: enrollmentData.intake,
+        total_fee: Number(enrollmentData.total_fee),
+        discount: Number(enrollmentData.discount),
+      },
+      settings: companySettings,
+      billingAddress: billingAddress ?? null,
+      opening_paid: enrollmentData.opening_paid ? Number(enrollmentData.opening_paid) : 0,
+      receivedByName: payment.received_by_profile?.full_name ?? 'EduBridge Staff',
+      voidedByName: payment.voided_by_profile?.full_name,
+      qrCodeDataUrl,
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfBuffer = await renderToBuffer(ReceiptDocument(docProps) as any)
+
+    // 4. Send email via Resend
+    const sendResult = await sendReceiptEmail({
+      to: recipient,
+      replyTo: companySettings.email,
+      receiptNo: payment.receipt_no,
+      studentName: payment.payee_name || studentData.full_name,
+      candidateCode: studentData.student_code,
+      amount: Number(payment.amount),
+      balance: Number(payment.balance_after_snapshot),
+      publicLink,
+      pdfBuffer: Buffer.from(pdfBuffer),
+      subjectTemplate: settings?.email_subject_template,
+      bodyTemplate: settings?.email_body_template,
+      companyName: companySettings.name,
+      companyAddress: companySettings.address,
+      companyTrn: companySettings.trn,
+    })
+
+    // 5. If sent via Resend, log to share_logs
+    if (sendResult.success) {
+      await supabase.from('share_logs').insert({
+        payment_id: payment.id,
+        enrollment_id: payment.enrollment_id,
+        channel: 'email',
+        recipient,
+        sent_by: user.id,
+        meta: {
+          receipt_no: payment.receipt_no,
+          format: 'pdf_attachment',
+        },
+      })
+      revalidatePath(`/receipts/${payment.id}`)
+      revalidatePath(`/candidates/${studentData.id}`)
+    }
+
+    return sendResult
+  } catch (err: unknown) {
+    console.error('sendReceiptEmailAction error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to send receipt email'
+    return { success: false, error: message }
+  }
 }

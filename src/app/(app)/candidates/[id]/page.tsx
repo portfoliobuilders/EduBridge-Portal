@@ -70,6 +70,8 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       status,
       opening_paid,
       opening_paid_note,
+      share_token,
+      share_enabled,
       created_at,
       universities ( name ),
       courses ( name, level ),
@@ -102,6 +104,8 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       total_fee: Number(enr.total_fee),
       discount: Number(enr.discount),
       status: enr.status,
+      share_token: enr.share_token,
+      share_enabled: enr.share_enabled,
       created_at: enr.created_at,
       university: enr.universities as { name: string } | null,
       course: enr.courses as { name: string; level: string } | null,
@@ -214,6 +218,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     { data: coursesData },
     { data: specializationsData },
     { data: staffData },
+    { data: settingsData },
   ] = await Promise.all([
     supabase
       .from('universities')
@@ -237,7 +242,14 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
           .eq('is_active', true)
           .order('full_name')
       : Promise.resolve({ data: [] }),
+    supabase
+      .from('company_settings')
+      .select('*')
+      .limit(1)
+      .maybeSingle(),
   ])
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   const studentData = {
     id: student.id,
@@ -271,6 +283,8 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       staffList={staffData || []}
       currentUserId={user.id}
       isOwner={isOwner}
+      settings={settingsData}
+      appUrl={appUrl}
     />
   )
 }

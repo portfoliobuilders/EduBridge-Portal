@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -163,6 +163,41 @@ export type Database = {
           },
         ]
       }
+      email_rate_limits: {
+        Row: {
+          email_type: string
+          id: string
+          recipient: string
+          reference_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          email_type: string
+          id?: string
+          recipient: string
+          reference_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          email_type?: string
+          id?: string
+          recipient?: string
+          reference_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollments: {
         Row: {
           admission_staff_id: string
@@ -174,6 +209,8 @@ export type Database = {
           intake: string | null
           opening_paid: number
           opening_paid_note: string | null
+          share_enabled: boolean
+          share_token: string
           specialization_id: string | null
           status: Database["public"]["Enums"]["enrollment_status"]
           student_id: string
@@ -193,6 +230,8 @@ export type Database = {
           intake?: string | null
           opening_paid?: number
           opening_paid_note?: string | null
+          share_enabled?: boolean
+          share_token?: string
           specialization_id?: string | null
           status?: Database["public"]["Enums"]["enrollment_status"]
           student_id: string
@@ -212,6 +251,8 @@ export type Database = {
           intake?: string | null
           opening_paid?: number
           opening_paid_note?: string | null
+          share_enabled?: boolean
+          share_token?: string
           specialization_id?: string | null
           status?: Database["public"]["Enums"]["enrollment_status"]
           student_id?: string
@@ -814,6 +855,14 @@ export type Database = {
         }
         Returns: Json
       }
+      check_and_log_email_rate_limit: {
+        Args: {
+          p_email_type: string
+          p_recipient: string
+          p_reference_id: string
+        }
+        Returns: Json
+      }
       create_student_with_enrollment: {
         Args: {
           p_admission_staff_id?: string
@@ -843,6 +892,7 @@ export type Database = {
         Returns: Json
       }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
+      get_public_statement: { Args: { p_token: string }; Returns: Json }
       get_staff_list: {
         Args: never
         Returns: {
@@ -911,7 +961,19 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      rotate_enrollment_share_token: {
+        Args: { p_enrollment_id: string }
+        Returns: string
+      }
       rotate_share_token: { Args: { p_payment_id: string }; Returns: string }
+      set_enrollment_share_enabled: {
+        Args: { p_enabled: boolean; p_enrollment_id: string }
+        Returns: boolean
+      }
+      set_payment_share_enabled: {
+        Args: { p_enabled: boolean; p_payment_id: string }
+        Returns: boolean
+      }
       update_enrollment_fee: {
         Args: {
           p_discount: number

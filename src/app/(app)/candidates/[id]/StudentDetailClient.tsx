@@ -13,7 +13,6 @@ import {
   Edit2,
   PlusCircle,
   Receipt,
-  FileSpreadsheet,
   GraduationCap,
   User,
   Shield,
@@ -24,6 +23,7 @@ import {
 import { EditStudentModal } from './EditStudentModal'
 import { EditFeeModal } from './EditFeeModal'
 import { AddEnrollmentModal } from './AddEnrollmentModal'
+import { StatementShareActions } from '@/components/candidates/StatementShareActions'
 import {
   ContactsAndAddressesCard,
   type StudentAddress,
@@ -45,6 +45,8 @@ export interface EnrollmentDetail {
   total_fee: number
   discount: number
   status: string
+  share_token?: string | null
+  share_enabled?: boolean | null
   created_at: string
   university: { name: string } | null
   course: { name: string; level: string } | null
@@ -134,6 +136,11 @@ interface StudentDetailClientProps {
   staffList: StaffOption[]
   currentUserId: string
   isOwner: boolean
+  settings?: {
+    name?: string
+    whatsapp_statement_template?: string | null
+  } | null
+  appUrl?: string
 }
 
 export function StudentDetailClient({
@@ -149,6 +156,8 @@ export function StudentDetailClient({
   staffList,
   currentUserId,
   isOwner,
+  settings,
+  appUrl = 'http://localhost:3000',
 }: StudentDetailClientProps) {
   const [activeEnrollmentId, setActiveEnrollmentId] = useState<string>(
     enrollments[0]?.id || ''
@@ -459,17 +468,16 @@ export function StudentDetailClient({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Fee statement PDF */}
-                  <a
-                    href={`/api/statements/${activeEnrollment.id}/pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground min-h-[44px] gap-1.5"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
-                    <span>Fee Statement</span>
-                  </a>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Fee Statement Share Actions (Share PDF, WhatsApp, Email, Download, Print, SMS, Link management) */}
+                  <StatementShareActions
+                    enrollment={activeEnrollment}
+                    student={student}
+                    ledger={activeEnrollment.ledger}
+                    settings={settings}
+                    appUrl={appUrl}
+                    isOwner={isOwner}
+                  />
 
                   {/* Desktop Record Payment button */}
                   <Link

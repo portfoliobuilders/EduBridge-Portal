@@ -1,8 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser, requireOwner } from '@/lib/auth'
+import { StatementDocument } from '@/lib/pdf/statement-document'
+import { sendStatementEmail, type EmailSendResult } from '@/lib/email/send-email'
 import { z } from 'zod'
 
 export interface ActionResult<T = unknown> {
@@ -565,5 +568,247 @@ export async function addStudentEnrollmentAction(
   return {
     success: true,
     data: { enrollmentId: res.enrollment_id },
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Statement Share Actions
+// -----------------------------------------------------------------------------
+
+export async function rotateStatementShareTokenAction(
+  enrollmentId: string
+): Promise<ActionResult<{ newToken: string }>> {
+  try {
+    await requireUser()
+    const supabase = await createClient()
+
+    const { data: newToken, error } = await supabase.rpc('rotate_enrollment_share_token', {
+      p_enrollment_id: enrollmentId,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/candidates')
+    return { success: true, data: { newToken: newToken as string } }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to rotate statement token'
+    return { success: false, error: message }
+  }
+}
+
+export async function toggleStatementShareEnabledAction(
+  enrollmentId: string,
+  enabled: boolean
+): Promise<ActionResult<{ enabled: boolean }>> {
+  try {
+    await requireUser()
+    const supabase = await createClient()
+
+    const { data, error } = await supabase.rpc('set_enrollment_share_enabled', {
+      p_enrollment_id: enrollmentId,
+      p_enabled: enabled,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/candidates')
+    return { success: true, data: { enabled: Boolean(data) } }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to toggle statement link state'
+    return { success: false, error: message }
+  }
+}
+
+export async function sendStatementEmailAction(params: {
+  enrollmentId: string
+  recipientEmail: string
+}): Promise<EmailSendResult> {
+  try {
+    const { user } = await requireUser()
+
+    const emailSchema = z.string().trim().email('Please enter a valid recipient email address')
+    const parsedEmail = emailSchema.safeParse(params.recipientEmail)
+    if (!parsedEmail.success) {
+      return { success: false, error: parsedEmail.error.issues[0]?.message }
+    }
+    const recipient = parsedEmail.data
+
+    const supabase = await createClient()
+
+    // 1. Query enrollment with student and relations
+    const { data: enrollment, error: eError } = await supabase
+      .from('enrollments')
+      .select(`
+        id,
+        intake,
+        total_fee,
+        discount,
+        vat_type,
+        vat_rate,
+        status,
+        opening_paid,
+        share_token,
+        student:students!inner(
+          id,
+          full_name,
+          student_code,
+          mobile,
+          email,
+          guardian_name,
+          guardian_email
+        ),
+        university:universities!inner(name),
+        course:courses!inner(name),
+        specialization:specializations(name)
+      `)
+      .eq('id', params.enrollmentId)
+      .single()
+
+    if (eError || !enrollment) {
+      return { success: false, error: 'Enrollment not found' }
+    }
+
+    // 2. Fetch ledger and payments
+    const [{ data: ledger }, { data: payments }, { data: settings }] = await Promise.all([
+      supabase.from('enrollment_ledger').select('*').eq('enrollment_id', params.enrollmentId).single(),
+      supabase.from('payments').select('*').eq('enrollment_id', params.enrollmentId).order('paid_at', { ascending: true }),
+      supabase.from('company_settings').select('*').limit(1).single(),
+    ])
+
+    const year = new Date().getFullYear()
+    const statementNo = `EB-FS-${year}-${enrollment.id.slice(0, 6).toUpperCase()}`
+
+    // 3. Check rate limit via RPC
+    const { error: rateLimitError } = await supabase.rpc(
+      'check_and_log_email_rate_limit',
+      {
+        p_recipient: recipient,
+        p_email_type: 'statement',
+        p_reference_id: statementNo,
+      }
+    )
+
+    if (rateLimitError) {
+      return { success: false, error: rateLimitError.message }
+    }
+
+    const companySettings = {
+      name: settings?.name ?? 'EduBridge Education',
+      address:
+        settings?.address ??
+        'M03, Royal House Building, Hor Al Anz East, Dubai – UAE',
+      phone: settings?.phone ?? '+971 58 107 3898',
+      email: settings?.email ?? 'info@edubridgeeducation.com',
+      website: settings?.website ?? 'https://edubridgeeducation.com',
+      trn: settings?.trn ?? '105215478600003',
+      footer_note:
+        settings?.footer_note ??
+        'Keep your receipt vouchers for future references.',
+      statement_prefix: settings?.statement_prefix ?? 'EB-FS',
+    }
+
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || 'https://edubridgeeducation.com'
+    const publicLink = `${appUrl}/r/statement/${enrollment.share_token}`
+
+    const { data: billingAddress } = await supabase
+      .from('student_addresses')
+      .select('contact_name, contact_phone, line1, line2, city, state, postal_code, country')
+      .eq('student_id', enrollment.student.id)
+      .eq('type', 'billing')
+      .eq('is_default', true)
+      .maybeSingle()
+
+    const docProps = {
+      enrollment: {
+        id: enrollment.id,
+        intake: enrollment.intake,
+        total_fee: Number(enrollment.total_fee),
+        discount: Number(enrollment.discount),
+        vat_type: enrollment.vat_type,
+        vat_rate: Number(enrollment.vat_rate),
+        university_name: enrollment.university.name,
+        course_name: enrollment.course.name,
+        specialization_name: enrollment.specialization?.name,
+      },
+      student: {
+        full_name: enrollment.student.full_name,
+        student_code: enrollment.student.student_code,
+        mobile: enrollment.student.mobile,
+        email: enrollment.student.email,
+      },
+      ledger: {
+        net_fee: Number(
+          ledger?.net_fee ?? enrollment.total_fee - enrollment.discount
+        ),
+        vat_amount: Number(ledger?.vat_amount ?? 0),
+        total_payable: Number(
+          ledger?.total_payable ?? enrollment.total_fee - enrollment.discount
+        ),
+        total_paid: Number(ledger?.total_paid ?? 0),
+        balance: Number(
+          ledger?.balance ?? enrollment.total_fee - enrollment.discount
+        ),
+        opening_paid: Number(ledger?.opening_paid ?? enrollment.opening_paid ?? 0),
+      },
+      payments: (payments ?? []).map((p) => ({
+        id: p.id,
+        receipt_no: p.receipt_no,
+        amount: Number(p.amount),
+        mode: p.mode,
+        purpose: p.purpose,
+        purpose_note: p.purpose_note,
+        reference_no: p.reference_no,
+        paid_at: p.paid_at,
+        status: p.status,
+      })),
+      settings: companySettings,
+      billingAddress: billingAddress ?? null,
+      statementNo,
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfBuffer = await renderToBuffer(StatementDocument(docProps) as any)
+
+    const sendResult = await sendStatementEmail({
+      to: recipient,
+      replyTo: companySettings.email,
+      statementNo,
+      studentName: enrollment.student.full_name,
+      candidateCode: enrollment.student.student_code,
+      totalPayable: Number(docProps.ledger.total_payable),
+      totalPaid: Number(docProps.ledger.total_paid),
+      balance: Number(docProps.ledger.balance),
+      publicLink,
+      pdfBuffer: Buffer.from(pdfBuffer),
+      subjectTemplate: 'Candidate Fee Statement {statement_no} - EduBridge Education',
+      companyName: companySettings.name,
+      companyAddress: companySettings.address,
+      companyTrn: companySettings.trn,
+    })
+
+    if (sendResult.success) {
+      await supabase.from('share_logs').insert({
+        enrollment_id: enrollment.id,
+        channel: 'email',
+        recipient,
+        sent_by: user.id,
+        meta: {
+          statement_no: statementNo,
+          format: 'pdf_attachment',
+        },
+      })
+      revalidatePath(`/candidates/${enrollment.student.id}`)
+    }
+
+    return sendResult
+  } catch (err: unknown) {
+    console.error('sendStatementEmailAction error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to send statement email'
+    return { success: false, error: message }
   }
 }

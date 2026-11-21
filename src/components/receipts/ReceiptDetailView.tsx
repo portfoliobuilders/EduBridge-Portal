@@ -3,29 +3,18 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { toast } from 'sonner'
 import {
-  Download,
-  Printer,
-  Share2,
-  Copy,
   ArrowLeft,
   FileText,
   Ban,
-  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
 import { amountInWords } from '@/lib/amount-in-words'
 import { VoidReceiptDialog } from '@/components/receipts/VoidReceiptDialog'
+import { ReceiptShareActions } from '@/components/receipts/ReceiptShareActions'
 
 export interface ReceiptDetailViewProps {
   payment: {
@@ -50,6 +39,7 @@ export interface ReceiptDetailViewProps {
     vat_type: string
     vat_rate: number
     share_token: string
+    share_enabled?: boolean
     void_reason?: string | null
     voided_at?: string | null
     voided_by?: string | null
@@ -61,6 +51,10 @@ export interface ReceiptDetailViewProps {
     mobile: string
     whatsapp?: string | null
     email?: string | null
+    guardian_name?: string | null
+    guardian_email?: string | null
+    guardian_phone?: string | null
+    guardian_whatsapp?: string | null
   }
   enrollment: {
     id: string
@@ -101,44 +95,6 @@ export function ReceiptDetailView({
 }: ReceiptDetailViewProps) {
   const [voidDialogOpen, setVoidDialogOpen] = useState(false)
   const isVoid = payment.status === 'void'
-
-  const publicLink = `${appUrl}/r/${payment.share_token}`
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(publicLink)
-    toast.success('Public receipt link copied to clipboard!')
-  }
-
-  const handleWhatsAppShare = () => {
-    const rawTemplate =
-      settings.whatsapp_receipt_template ||
-      'Dear {student_name}, thank you for your payment of AED {amount} to EduBridge Education. Receipt No: {receipt_no}. Balance: AED {balance}. View/download: {public_link}'
-
-    const message = rawTemplate
-      .replace('{student_name}', payment.payee_name || student.full_name)
-      .replace('{amount}', payment.amount.toFixed(2))
-      .replace('{receipt_no}', payment.receipt_no)
-      .replace('{balance}', payment.balance_after_snapshot.toFixed(2))
-      .replace('{public_link}', publicLink)
-
-    const cleanPhone = (student.whatsapp || student.mobile).replace(/[^0-9]/g, '')
-    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
-    window.open(waUrl, '_blank')
-  }
-
-  const handleEmailShare = () => {
-    if (!student.email) {
-      toast.error('Candidate does not have an email address recorded')
-      return
-    }
-    const subject = encodeURIComponent(
-      `Payment Receipt ${payment.receipt_no} - EduBridge Education`
-    )
-    const body = encodeURIComponent(
-      `Dear ${payment.payee_name || student.full_name},\n\nThank you for your payment of ${formatAED(payment.amount)} to EduBridge Education.\n\nReceipt No: ${payment.receipt_no}\nBalance Remaining: ${formatAED(payment.balance_after_snapshot)}\n\nYou can view and download your official receipt voucher here:\n${publicLink}\n\nEduBridge Education\nDubai, UAE`
-    )
-    window.location.href = `mailto:${student.email}?subject=${subject}&body=${body}`
-  }
 
   const modeLabels: Record<string, string> = {
     card: 'Credit / Debit Card',
@@ -189,56 +145,20 @@ export function ReceiptDetailView({
             href={`/api/statements/${enrollment.id}/pdf`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground min-h-[44px]"
           >
             <FileText className="h-4 w-4 mr-1.5 text-muted-foreground" />
-            Fee Statement
+            <span>Fee Statement</span>
           </a>
 
-          {/* Download Receipt PDF */}
-          <a
-            href={`/api/receipts/${payment.id}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground"
-          >
-            <Download className="h-4 w-4 mr-1.5 text-[#00A57E]" />
-            Download PDF
-          </a>
-
-          {/* Print */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-          >
-            <Printer className="h-4 w-4 mr-1.5 text-muted-foreground" />
-            Print
-          </Button>
-
-          {/* Share Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md border border-[#E4E7E7] bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground">
-              <Share2 className="h-4 w-4 mr-1.5 text-muted-foreground" />
-              Share
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleCopyLink}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Public Link
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleWhatsAppShare}>
-                <ExternalLink className="h-4 w-4 mr-2 text-green-600" />
-                WhatsApp Message
-              </DropdownMenuItem>
-              {student.email && (
-                <DropdownMenuItem onClick={handleEmailShare}>
-                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" />
-                  Email Receipt Link
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Share, WhatsApp, Email, Download, Print, SMS, Link management */}
+          <ReceiptShareActions
+            payment={payment}
+            student={student}
+            settings={settings}
+            appUrl={appUrl}
+            isOwner={isOwner}
+          />
 
           {/* Owner Void Action */}
           {isOwner && !isVoid && (
@@ -246,9 +166,10 @@ export function ReceiptDetailView({
               variant="destructive"
               size="sm"
               onClick={() => setVoidDialogOpen(true)}
+              className="min-h-[44px] text-xs font-semibold px-3"
             >
               <Ban className="h-4 w-4 mr-1.5" />
-              Void Receipt
+              <span>Void Receipt</span>
             </Button>
           )}
         </div>

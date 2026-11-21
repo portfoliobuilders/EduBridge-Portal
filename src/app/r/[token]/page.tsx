@@ -1,14 +1,23 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { CheckCircle2, Ban, Printer } from 'lucide-react'
+import { CheckCircle2, Ban } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Button } from '@/components/ui/button'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
 import { amountInWords } from '@/lib/amount-in-words'
+import { PublicReceiptActions } from './PublicReceiptClient'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Receipt Voucher | EduBridge Education',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function PublicReceiptPage({
   params,
@@ -27,7 +36,7 @@ export default async function PublicReceiptPage({
 
   const admin = createAdminClient()
 
-  // Call get_public_receipt RPC
+  // Call get_public_receipt RPC (Anon access, verifies share_enabled = true)
   const { data: voucher, error } = await admin.rpc('get_public_receipt', {
     p_token: token,
   })
@@ -38,14 +47,6 @@ export default async function PublicReceiptPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const v = voucher as any
-
-  // Query company settings for letterhead
-  const { data: settings } = await admin
-    .from('company_settings')
-    .select('*')
-    .limit(1)
-    .single()
-
   const isVoid = v.status === 'void'
 
   return (
@@ -66,19 +67,33 @@ export default async function PublicReceiptPage({
             <div>
               <div className="font-semibold text-sm text-[#0A0A0A]">
                 {isVoid
-                  ? 'Voided Receipt Voucher'
+                  ? 'This receipt has been VOIDED'
                   : 'Official Verified Receipt Voucher'}
               </div>
               <div className="text-xs text-muted-foreground">
-                Issued by {settings?.name ?? 'EduBridge Education'} (TRN:{' '}
-                {settings?.trn ?? '105215478600003'})
+                Issued by {v.company?.name ?? 'EduBridge Education'} (TRN:{' '}
+                {v.company?.trn ?? '105215478600003'})
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <PrintButton />
-          </div>
+          <PublicReceiptActions token={token} />
         </div>
+
+        {/* Void Alert Callout */}
+        {isVoid && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-900 flex items-start gap-3 print:border-red-500">
+            <Ban className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-semibold text-sm">
+                This receipt has been VOIDED
+              </div>
+              <div className="text-xs text-red-700 mt-1">
+                This voucher was officially cancelled on {formatDubaiDateTime(v.voided_at)}.
+                {v.void_reason ? ` Reason: "${v.void_reason}"` : ''}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Voucher Paper Card */}
         <div className="relative bg-white border border-[#E4E7E7] rounded-xl p-8 shadow-md overflow-hidden print:shadow-none print:border-none print:p-0">
@@ -103,19 +118,19 @@ export default async function PublicReceiptPage({
             </div>
             <div className="text-right text-xs text-muted-foreground space-y-0.5">
               <div className="font-semibold text-sm text-[#00A57E]">
-                {settings?.name ?? 'EduBridge Education'}
+                {v.company?.name ?? 'EduBridge Education'}
               </div>
               <div>
-                {settings?.address ??
+                {v.company?.address ??
                   'M03, Royal House Building, Hor Al Anz East, Dubai – UAE'}
               </div>
               <div>
-                Tel: {settings?.phone ?? '+971 58 107 3898'} | Email:{' '}
-                {settings?.email ?? 'info@edubridgeeducation.com'}
+                Tel: {v.company?.phone ?? '+971 58 107 3898'} | Email:{' '}
+                {v.company?.email ?? 'info@edubridgeeducation.com'}
               </div>
-              <div>Web: {settings?.website ?? 'https://edubridgeeducation.com'}</div>
+              <div>Web: {v.company?.website ?? 'https://edubridgeeducation.com'}</div>
               <div className="font-semibold text-[#0A0A0A]">
-                TRN: {settings?.trn ?? '105215478600003'}
+                TRN: {v.company?.trn ?? '105215478600003'}
               </div>
             </div>
           </div>
@@ -253,7 +268,7 @@ export default async function PublicReceiptPage({
           {/* Footer */}
           <div className="mt-8 pt-4 border-t border-[#E4E7E7] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
             <div>
-              {settings?.footer_note ??
+              {v.company?.footer_note ??
                 'Keep your receipt vouchers for future references.'}
             </div>
             <div className="text-right">
@@ -270,19 +285,5 @@ export default async function PublicReceiptPage({
         </div>
       </div>
     </div>
-  )
-}
-
-function PrintButton() {
-  'use client'
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => window.print()}
-    >
-      <Printer className="h-4 w-4 mr-1.5" />
-      Print Voucher
-    </Button>
   )
 }
