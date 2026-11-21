@@ -1,16 +1,30 @@
 'use server'
 
+import 'server-only'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address.'),
+  password: z.string().min(1, 'Password is required.'),
+})
 
 export async function loginAction(prevState: { error?: string } | null, formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const raw = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
   const redirectedFrom = (formData.get('redirectedFrom') as string) || '/'
 
-  if (!email || !password) {
-    return { error: 'Please enter both email and password.' }
+  const result = loginSchema.safeParse(raw)
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors
+    const firstError = Object.values(errors).flat()[0]
+    return { error: firstError ?? 'Invalid input.' }
   }
+
+  const { email, password } = result.data
 
   const supabase = await createClient()
 
@@ -50,7 +64,7 @@ export async function requestPasswordResetAction(email: string) {
 
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
   })
 
   if (error) {

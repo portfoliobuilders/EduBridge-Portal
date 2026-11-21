@@ -2,6 +2,11 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  query: z.string().min(2, 'Query too short').max(100, 'Query too long'),
+})
 
 export interface SearchResult {
   students: Array<{
@@ -28,7 +33,8 @@ interface PaymentSearchItem {
 export async function globalSearchAction(query: string): Promise<SearchResult> {
   await requireUser()
 
-  const q = query.trim()
+  const parsed = searchSchema.safeParse({ query })
+  const q = parsed.success ? parsed.data.query.trim() : ''
   if (!q || q.length < 2) {
     return { students: [], receipts: [] }
   }

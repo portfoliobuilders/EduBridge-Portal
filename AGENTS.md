@@ -75,12 +75,13 @@ Enforce roles in Postgres RLS AND in server actions. UI hiding alone is not secu
 4. No hard deletes anywhere. Masters and students use `is_active` / archive.
 5. Every write records `created_by` (auth.uid()). Server sets timestamps, not the client.
 6. All money displayed as "AED 12,500.00".
+7. Never edit a migration after it has been pushed — always add a new one with the next sequence number.
 
 ## Code conventions
 - `src/app/(auth)`, `src/app/(app)` for the signed-in shell, `src/app/r/[token]` for public receipts.
 - `src/lib/supabase/{server,client,admin}.ts`; `admin.ts` (secret key) only imported by server files.
 - Database types generated with `supabase gen types typescript --linked > src/types/database.ts`.
-- All schema changes as migrations in `supabase/migrations/`. Never edit the DB by hand in the dashboard.
+- All schema changes as migrations in `supabase/migrations/`. Never edit the DB by hand in the dashboard. Never edit a migration after it has been pushed — always add a new one.
 - Mobile-first: staff mostly use phones. Every screen must work at 375px width, tap targets ≥44px.
 - Reference repos (InvoiceShelf, Invoice Ninja, InvoicePlane, Accountill, invoiso, Kill Bill,
   Meteroid) are for UX/domain patterns ONLY. Do not copy their code (licensing differs).
@@ -89,3 +90,13 @@ Enforce roles in Postgres RLS AND in server actions. UI hiding alone is not secu
 - Before coding, state the plan in ≤10 bullets. After coding, list files changed and how to test.
 - Run `npm run build` and `npm run lint` before declaring done. Fix all type errors.
 - If a requirement is ambiguous, ask ONE question rather than guessing on money/permissions logic.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

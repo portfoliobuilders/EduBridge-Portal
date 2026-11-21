@@ -2,7 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 
-export async function middleware(request: NextRequest) {
+// Next.js 16 uses proxy.ts with an exported `proxy` function.
+// (middleware.ts / export function middleware is deprecated in Next 16.)
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -11,14 +13,16 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Allow public assets and public verification routes
+  // Allow public assets and routes that must be accessible without a session
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/brand') ||
     pathname.startsWith('/fonts') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/r/') ||
-    pathname.startsWith('/api/public')
+    pathname.startsWith('/api/public') ||
+    pathname.startsWith('/auth/callback') ||
+    pathname === '/reset-password'
   ) {
     return response
   }
