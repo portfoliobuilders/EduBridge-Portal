@@ -60,6 +60,11 @@ EMAIL_FROM="EduBridge Education <receipts@edubridgeeducation.com>"
 NEXT_PUBLIC_APP_URL=https://<vercel-domain>
 Never commit .env*. Keep .env.example updated with names only.
 
+## Credentials
+- Never set, reset, invent, print or log any user's password.
+- Never search transcripts, logs or files for passwords/tokens.
+- Never INSERT/UPDATE rows in the auth schema directly — users are created only via supabase.auth.admin APIs or the Dashboard.
+
 ## Roles
 - owner: everything — masters, staff management, settings, all reports, void receipts.
 - staff: create/search students, create enrollments, record payments, send receipts,

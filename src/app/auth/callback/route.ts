@@ -1,6 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import type { EmailOtpType } from '@supabase/supabase-js'
+
+/**
+ * Validates a redirect target path.
+ * Allows only same-site relative paths (must start with "/" and must NOT start with "//" or "/\\");
+ * anything else -> "/".
+ */
+function getSafeRedirectPath(next: string | null): string {
+  if (!next) return '/'
+  if (next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
+    return next
+  }
+  return '/'
+}
 
 /**
  * Auth callback route handler.
@@ -15,14 +29,27 @@ import type { NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const token_hash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
+  const next = searchParams.get('next')
+
+  const safePath = getSafeRedirectPath(next)
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Ensure next is a safe relative path
-      const safePath = next.startsWith('/') ? next : '/'
+      return NextResponse.redirect(new URL(safePath, request.url))
+    }
+  }
+
+  if (token_hash && type) {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      type: type as EmailOtpType,
+      token_hash,
+    })
+    if (!error) {
       return NextResponse.redirect(new URL(safePath, request.url))
     }
   }

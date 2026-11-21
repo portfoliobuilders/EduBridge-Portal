@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -52,6 +52,8 @@ export type Database = {
           address: string
           created_at: string
           email: string
+          email_body_template: string
+          email_subject_template: string
           footer_note: string | null
           id: string
           logo_path: string | null
@@ -67,11 +69,15 @@ export type Database = {
           vat_enabled: boolean
           vat_rate: number
           website: string
+          whatsapp_receipt_template: string
+          whatsapp_statement_template: string
         }
         Insert: {
           address: string
           created_at?: string
           email: string
+          email_body_template?: string
+          email_subject_template?: string
           footer_note?: string | null
           id?: string
           logo_path?: string | null
@@ -87,11 +93,15 @@ export type Database = {
           vat_enabled?: boolean
           vat_rate?: number
           website: string
+          whatsapp_receipt_template?: string
+          whatsapp_statement_template?: string
         }
         Update: {
           address?: string
           created_at?: string
           email?: string
+          email_body_template?: string
+          email_subject_template?: string
           footer_note?: string | null
           id?: string
           logo_path?: string | null
@@ -107,6 +117,8 @@ export type Database = {
           vat_enabled?: boolean
           vat_rate?: number
           website?: string
+          whatsapp_receipt_template?: string
+          whatsapp_statement_template?: string
         }
         Relationships: []
       }
@@ -629,6 +641,21 @@ export type Database = {
     }
     Functions: {
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
+      get_staff_list: {
+        Args: never
+        Returns: {
+          collections_this_month: number
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_sign_in_at: string
+          phone: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      import_programs: { Args: { p_rows: Json }; Returns: Json }
       is_active_user: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       record_payment: {
