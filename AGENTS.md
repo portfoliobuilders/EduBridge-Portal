@@ -68,6 +68,7 @@ Never commit .env*. Keep .env.example updated with names only.
 - Never write "Output:" for a command you did not run. Browser checks you can't run → "PENDING — user to verify".
 - Never set/print passwords or tokens. Never use auth.admin.generateLink / magic links / service-role sessions to log in as a real user. For screenshots, create disposable test users via auth.admin.createUser with emails ending @test.edubridge.local, sign in as them with a password held only in a process env var (never written to files or output), and delete them afterwards.
 - Never edit a pushed migration.
+- Never run git clean / git checkout -- / git reset --hard without asking me first.
 
 ## Roles
 - owner: everything — masters, staff management, settings, all reports, void receipts.
