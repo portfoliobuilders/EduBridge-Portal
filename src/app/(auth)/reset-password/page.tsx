@@ -1,8 +1,9 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { resetPasswordAction } from './actions'
+import { createClient } from '@/lib/supabase/client'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -19,6 +20,28 @@ function SubmitButton() {
 
 export default function ResetPasswordPage() {
   const [state, formAction] = useActionState(resetPasswordAction, null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+
+      if (accessToken) {
+        const supabase = createClient()
+        supabase.auth
+          .setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+          .then(() => {
+            // Clean up hash from URL without reload
+            window.history.replaceState(null, '', window.location.pathname)
+          })
+      }
+    }
+  }, [])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F5F6F6] px-4">

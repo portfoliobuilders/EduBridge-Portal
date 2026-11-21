@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useActionState, useState, Suspense } from 'react'
+import React, { useActionState, useState, useEffect, Suspense } from 'react'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { loginAction, requestPasswordResetAction } from './actions'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +21,7 @@ import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
 
 function LoginForm() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const reason = searchParams.get('reason')
   const redirectedFrom = searchParams.get('redirectedFrom') || '/'
 
@@ -28,6 +30,35 @@ function LoginForm() {
   const [resetEmail, setResetEmail] = useState('')
   const [resetPending, setResetPending] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
+
+  // Detect Supabase implicit hash tokens from invite/recovery emails
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      const type = params.get('type')
+
+      if (accessToken) {
+        const supabase = createClient()
+        supabase.auth
+          .setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+          .then(({ error }) => {
+            if (!error) {
+              if (type === 'invite' || type === 'recovery') {
+                router.replace('/reset-password')
+              } else {
+                router.replace('/')
+              }
+            }
+          })
+      }
+    }
+  }, [router])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
