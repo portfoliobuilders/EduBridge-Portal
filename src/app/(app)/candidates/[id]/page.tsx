@@ -9,6 +9,7 @@ import {
   type ShareLogItem,
   type AuditLogItem,
 } from './StudentDetailClient'
+import type { StudentAddress } from './ContactsAndAddressesCard'
 
 interface StudentPageProps {
   params: Promise<{ id: string }>
@@ -20,7 +21,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
   const isOwner = profile.role === 'owner'
   const supabase = await createClient()
 
-  // 1. Fetch student record
+  // 1. Fetch student record with guardian details
   const { data: student, error: studentError } = await supabase
     .from('students')
     .select(`
@@ -31,6 +32,11 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       whatsapp,
       email,
       notes,
+      guardian_name,
+      guardian_relation,
+      guardian_phone,
+      guardian_whatsapp,
+      guardian_email,
       created_at,
       created_by,
       creator_profile:profiles!students_created_by_fkey ( full_name, role )
@@ -42,7 +48,14 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     notFound()
   }
 
-  // 2. Fetch student's enrollments
+  // 2. Fetch student's addresses
+  const { data: rawAddresses } = await supabase
+    .from('student_addresses')
+    .select('*')
+    .eq('student_id', id)
+    .order('created_at', { ascending: true })
+
+  // 3. Fetch student's enrollments
   const { data: rawEnrollments } = await supabase
     .from('enrollments')
     .select(`
@@ -55,6 +68,8 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       total_fee,
       discount,
       status,
+      opening_paid,
+      opening_paid_note,
       created_at,
       universities ( name ),
       courses ( name, level ),
@@ -67,7 +82,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
   const enrollmentsList = rawEnrollments || []
   const enrollmentIds = enrollmentsList.map((e) => e.id)
 
-  // 3. Fetch enrollment ledger views for accurate financial metrics
+  // 4. Fetch enrollment ledger views for accurate financial metrics
   const { data: rawLedger } = await supabase
     .from('enrollment_ledger')
     .select('*')
@@ -96,15 +111,17 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
         total_fee: l ? Number(l.total_fee) : Number(enr.total_fee),
         discount: l ? Number(l.discount) : Number(enr.discount),
         net_fee: l ? Number(l.net_fee) : Number(enr.total_fee) - Number(enr.discount),
-        total_paid: l ? Number(l.total_paid) : 0,
-        balance: l ? Number(l.balance) : Number(enr.total_fee) - Number(enr.discount),
+        total_paid: l ? Number(l.total_paid) : Number(enr.opening_paid || 0),
+        balance: l ? Number(l.balance) : Number(enr.total_fee) - Number(enr.discount) - Number(enr.opening_paid || 0),
+        opening_paid: l ? Number(l.opening_paid) : Number(enr.opening_paid || 0),
+        opening_paid_note: l?.opening_paid_note ?? enr.opening_paid_note ?? null,
         payment_count: l ? Number(l.payment_count) : 0,
         last_payment_at: l?.last_payment_at || null,
       },
     }
   })
 
-  // 4. Fetch all payments for this student
+  // 5. Fetch all payments for this student
   const { data: rawPayments } = await supabase
     .from('payments')
     .select(`
@@ -145,7 +162,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     voided_by_profile: p.voided_by_profile as { full_name: string } | null,
   }))
 
-  // 5. Fetch share logs & audit logs for activity timeline
+  // 6. Fetch share logs & audit logs for activity timeline
   const fallbackId = '00000000-0000-0000-0000-000000000000'
   const targetIds = enrollmentIds.length > 0 ? enrollmentIds : [fallbackId]
 
@@ -191,7 +208,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     diff: (a.diff as AuditLogItem['diff']) || null,
   }))
 
-  // 6. Metadata for add-enrollment modal
+  // 7. Metadata for add-enrollment modal
   const [
     { data: universitiesData },
     { data: coursesData },
@@ -230,6 +247,11 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     whatsapp: student.whatsapp,
     email: student.email,
     notes: student.notes,
+    guardian_name: student.guardian_name,
+    guardian_relation: student.guardian_relation,
+    guardian_phone: student.guardian_phone,
+    guardian_whatsapp: student.guardian_whatsapp,
+    guardian_email: student.guardian_email,
     created_at: student.created_at,
     created_by: student.created_by,
     creator_profile: student.creator_profile as { full_name: string; role: string } | null,
@@ -238,6 +260,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
   return (
     <StudentDetailClient
       student={studentData}
+      addresses={(rawAddresses as StudentAddress[]) || []}
       enrollments={enrollments}
       payments={payments}
       shareLogs={shareLogs}

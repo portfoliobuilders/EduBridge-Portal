@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -172,6 +172,8 @@ export type Database = {
           discount: number
           id: string
           intake: string | null
+          opening_paid: number
+          opening_paid_note: string | null
           specialization_id: string | null
           status: Database["public"]["Enums"]["enrollment_status"]
           student_id: string
@@ -189,6 +191,8 @@ export type Database = {
           discount?: number
           id?: string
           intake?: string | null
+          opening_paid?: number
+          opening_paid_note?: string | null
           specialization_id?: string | null
           status?: Database["public"]["Enums"]["enrollment_status"]
           student_id: string
@@ -206,6 +210,8 @@ export type Database = {
           discount?: number
           id?: string
           intake?: string | null
+          opening_paid?: number
+          opening_paid_note?: string | null
           specialization_id?: string | null
           status?: Database["public"]["Enums"]["enrollment_status"]
           student_id?: string
@@ -551,6 +557,75 @@ export type Database = {
           },
         ]
       }
+      student_addresses: {
+        Row: {
+          city: string
+          contact_name: string | null
+          contact_phone: string | null
+          country: string
+          created_at: string
+          created_by: string
+          id: string
+          is_default: boolean
+          line1: string
+          line2: string | null
+          postal_code: string | null
+          state: string | null
+          student_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_default?: boolean
+          line1: string
+          line2?: string | null
+          postal_code?: string | null
+          state?: string | null
+          student_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_default?: boolean
+          line1?: string
+          line2?: string | null
+          postal_code?: string | null
+          state?: string | null
+          student_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_addresses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_addresses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_counters: {
         Row: {
           id: number
@@ -572,6 +647,11 @@ export type Database = {
           created_by: string
           email: string | null
           full_name: string
+          guardian_email: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          guardian_relation: string | null
+          guardian_whatsapp: string | null
           id: string
           is_active: boolean
           mobile: string
@@ -585,6 +665,11 @@ export type Database = {
           created_by: string
           email?: string | null
           full_name: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relation?: string | null
+          guardian_whatsapp?: string | null
           id?: string
           is_active?: boolean
           mobile: string
@@ -598,6 +683,11 @@ export type Database = {
           created_by?: string
           email?: string | null
           full_name?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relation?: string | null
+          guardian_whatsapp?: string | null
           id?: string
           is_active?: boolean
           mobile?: string
@@ -649,6 +739,8 @@ export type Database = {
           enrollment_id: string | null
           last_payment_at: string | null
           net_fee: number | null
+          opening_paid: number | null
+          opening_paid_note: string | null
           payment_count: number | null
           student_id: string | null
           total_fee: number | null
@@ -725,13 +817,22 @@ export type Database = {
       create_student_with_enrollment: {
         Args: {
           p_admission_staff_id?: string
+          p_billing_address?: Json
           p_course_id?: string
           p_discount?: number
           p_email?: string
           p_full_name: string
+          p_guardian_email?: string
+          p_guardian_name?: string
+          p_guardian_phone?: string
+          p_guardian_relation?: string
+          p_guardian_whatsapp?: string
           p_intake?: string
           p_mobile: string
           p_notes?: string
+          p_opening_paid?: number
+          p_opening_paid_note?: string
+          p_shipping_address?: Json
           p_specialization_id?: string
           p_total_fee?: number
           p_university_id?: string
@@ -817,6 +918,15 @@ export type Database = {
           p_enrollment_id: string
           p_reason?: string
           p_total_fee: number
+        }
+        Returns: Json
+      }
+      update_enrollment_opening_paid: {
+        Args: {
+          p_enrollment_id: string
+          p_opening_paid: number
+          p_opening_paid_note?: string
+          p_reason?: string
         }
         Returns: Json
       }

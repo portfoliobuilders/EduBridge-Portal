@@ -224,7 +224,8 @@ export async function searchEnrollmentsForPayment(query: string) {
         id,
         full_name,
         student_code,
-        mobile
+        mobile,
+        guardian_name
       ),
       university:universities!inner(
         name
@@ -242,17 +243,27 @@ export async function searchEnrollmentsForPayment(query: string) {
 
   if (error || !data || data.length === 0) return []
 
-  // 3. Query ledger for these enrollments
+  // 3. Query ledger & billing addresses for these enrollments
   const enrollmentIds = data.map((e) => e.id)
-  const { data: ledgers } = await supabase
-    .from('enrollment_ledger')
-    .select('enrollment_id, total_payable, total_paid, balance')
-    .in('enrollment_id', enrollmentIds)
+  const [ledgerRes, addrRes] = await Promise.all([
+    supabase
+      .from('enrollment_ledger')
+      .select('enrollment_id, total_payable, total_paid, balance')
+      .in('enrollment_id', enrollmentIds),
+    supabase
+      .from('student_addresses')
+      .select('student_id, contact_name')
+      .in('student_id', studentIds)
+      .eq('type', 'billing')
+      .eq('is_default', true),
+  ])
 
-  const ledgerMap = new Map((ledgers ?? []).map((l) => [l.enrollment_id, l]))
+  const ledgerMap = new Map((ledgerRes.data ?? []).map((l) => [l.enrollment_id, l]))
+  const billingMap = new Map((addrRes.data ?? []).map((a) => [a.student_id, a.contact_name]))
 
   return data.map((item) => {
     const ledger = ledgerMap.get(item.id)
+    const billingContact = billingMap.get(item.student.id)
     return {
       enrollmentId: item.id,
       studentId: item.student_id,
@@ -268,6 +279,8 @@ export async function searchEnrollmentsForPayment(query: string) {
       totalPayable: Number(ledger?.total_payable ?? item.total_fee - item.discount),
       totalPaid: Number(ledger?.total_paid ?? 0),
       balance: Number(ledger?.balance ?? (item.total_fee - item.discount)),
+      guardianName: item.student.guardian_name ?? null,
+      billingContactName: billingContact ?? null,
     }
   })
 }

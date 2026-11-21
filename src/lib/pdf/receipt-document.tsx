@@ -295,6 +295,16 @@ export interface ReceiptDocumentProps {
     trn: string
     footer_note: string
   }
+  billingAddress?: {
+    contact_name?: string | null
+    contact_phone?: string | null
+    line1?: string | null
+    line2?: string | null
+    city?: string | null
+    state?: string | null
+    country?: string | null
+  } | null
+  opening_paid?: number
   receivedByName: string
   voidedByName?: string | null
   qrCodeDataUrl: string
@@ -306,6 +316,8 @@ export function ReceiptDocument({
   student,
   enrollment,
   settings,
+  billingAddress,
+  opening_paid,
   receivedByName,
   voidedByName,
   qrCodeDataUrl,
@@ -387,12 +399,29 @@ export function ReceiptDocument({
 
         {/* Candidate & Course Info */}
         <View style={styles.section}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Received from (Candidate&apos;s Name):</Text>
-            <Text style={styles.boldValue}>
-              {payment.payee_name || student.full_name}
-            </Text>
-          </View>
+          {billingAddress ? (
+            <View style={styles.row}>
+              <Text style={styles.label}>Bill To:</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.boldValue}>
+                  {billingAddress.contact_name || payment.payee_name || student.full_name}
+                </Text>
+                <Text style={styles.value}>
+                  {[billingAddress.line1, billingAddress.line2, billingAddress.city, billingAddress.state, billingAddress.country].filter(Boolean).join(', ')}
+                </Text>
+                {billingAddress.contact_phone ? (
+                  <Text style={styles.value}>Tel: {billingAddress.contact_phone}</Text>
+                ) : null}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.row}>
+              <Text style={styles.label}>Received from (Candidate&apos;s Name):</Text>
+              <Text style={styles.boldValue}>
+                {payment.payee_name || student.full_name}
+              </Text>
+            </View>
+          )}
           <View style={styles.row}>
             <Text style={styles.label}>Candidate ID / Tel:</Text>
             <Text style={styles.value}>
@@ -522,6 +551,13 @@ export function ReceiptDocument({
               {formatAED(payment.fee_snapshot)}
             </Text>
           </View>
+
+          {opening_paid && opening_paid > 0 ? (
+            <View style={styles.gridRow}>
+              <Text style={styles.colLabel}>Paid before system (Opening Balance)</Text>
+              <Text style={styles.colVal}>{formatAED(opening_paid)}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.gridRow}>
             <Text style={styles.colLabel}>Previously Paid</Text>

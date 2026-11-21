@@ -24,6 +24,10 @@ import {
 import { EditStudentModal } from './EditStudentModal'
 import { EditFeeModal } from './EditFeeModal'
 import { AddEnrollmentModal } from './AddEnrollmentModal'
+import {
+  ContactsAndAddressesCard,
+  type StudentAddress,
+} from './ContactsAndAddressesCard'
 import type {
   UniversityOption,
   CourseOption,
@@ -52,6 +56,8 @@ export interface EnrollmentDetail {
     net_fee: number
     total_paid: number
     balance: number
+    opening_paid?: number
+    opening_paid_note?: string | null
     payment_count: number
     last_payment_at: string | null
   }
@@ -108,10 +114,16 @@ interface StudentDetailClientProps {
     whatsapp: string | null
     email: string | null
     notes: string | null
+    guardian_name: string | null
+    guardian_relation: string | null
+    guardian_phone: string | null
+    guardian_whatsapp: string | null
+    guardian_email: string | null
     created_at: string
     created_by: string
     creator_profile: { full_name: string; role: string } | null
   }
+  addresses: StudentAddress[]
   enrollments: EnrollmentDetail[]
   payments: PaymentItem[]
   shareLogs: ShareLogItem[]
@@ -126,6 +138,7 @@ interface StudentDetailClientProps {
 
 export function StudentDetailClient({
   student,
+  addresses,
   enrollments,
   payments,
   shareLogs,
@@ -262,6 +275,22 @@ export function StudentDetailClient({
       </div>
 
       {/* --------------------------------------------------------------------- */}
+      {/* 1.5. CONTACTS & ADDRESSES CARD                                         */}
+      {/* --------------------------------------------------------------------- */}
+      <ContactsAndAddressesCard
+        studentId={student.id}
+        canEdit={canEditContact}
+        guardian={{
+          guardian_name: student.guardian_name,
+          guardian_relation: student.guardian_relation,
+          guardian_phone: student.guardian_phone,
+          guardian_whatsapp: student.guardian_whatsapp,
+          guardian_email: student.guardian_email,
+        }}
+        addresses={addresses}
+      />
+
+      {/* --------------------------------------------------------------------- */}
       {/* 2. ENROLLMENT TABS                                                    */}
       {/* --------------------------------------------------------------------- */}
       {enrollments.length === 0 ? (
@@ -346,6 +375,24 @@ export function StudentDetailClient({
                 )}
               </div>
 
+              {/* Opening balance notice if present */}
+              {(activeEnrollment.ledger.opening_paid ?? 0) > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs bg-[#E6F6F2] text-[#00805F] px-4 py-3 rounded-xl border border-[#CCEDE5]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Paid prior to system (Opening balance):</span>
+                    <span className="font-mono font-bold text-sm">
+                      {formatAED(activeEnrollment.ledger.opening_paid ?? 0)}
+                    </span>
+                    {activeEnrollment.ledger.opening_paid_note && (
+                      <span className="text-[#6B7272] italic font-normal">
+                        — {activeEnrollment.ledger.opening_paid_note}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-[#00805F]/80">Pre-system credit</span>
+                </div>
+              )}
+
               {/* --------------------------------------------------------------- */}
               {/* 3. SUMMARY KPI CARDS (from enrollment_ledger)                   */}
               {/* --------------------------------------------------------------- */}
@@ -374,7 +421,15 @@ export function StudentDetailClient({
                     {formatAED(activeEnrollment.ledger.total_paid)}
                   </div>
                   <span className="text-[11px] text-[#6B7272]">
-                    {activeEnrollment.ledger.payment_count} valid voucher{activeEnrollment.ledger.payment_count === 1 ? '' : 's'}
+                    {(activeEnrollment.ledger.opening_paid ?? 0) > 0 ? (
+                      <>
+                        Opening AED {formatAED(activeEnrollment.ledger.opening_paid ?? 0)} · {activeEnrollment.ledger.payment_count} voucher{activeEnrollment.ledger.payment_count === 1 ? '' : 's'}
+                      </>
+                    ) : (
+                      <>
+                        {activeEnrollment.ledger.payment_count} valid voucher{activeEnrollment.ledger.payment_count === 1 ? '' : 's'}
+                      </>
+                    )}
                   </span>
                 </div>
 

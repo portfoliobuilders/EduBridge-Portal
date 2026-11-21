@@ -255,6 +255,7 @@ export interface StatementDocumentProps {
     total_payable: number
     total_paid: number
     balance: number
+    opening_paid?: number
   }
   payments: Array<{
     id: string
@@ -277,6 +278,15 @@ export interface StatementDocumentProps {
     footer_note: string
     statement_prefix?: string
   }
+  billingAddress?: {
+    contact_name?: string | null
+    contact_phone?: string | null
+    line1?: string | null
+    line2?: string | null
+    city?: string | null
+    state?: string | null
+    country?: string | null
+  } | null
   statementNo: string
   logoPath?: string
 }
@@ -287,6 +297,7 @@ export function StatementDocument({
   ledger,
   payments,
   settings,
+  billingAddress,
   statementNo,
   logoPath,
 }: StatementDocumentProps) {
@@ -346,25 +357,54 @@ export function StatementDocument({
         {/* Info Cards */}
         <View style={styles.metaColumns}>
           <View style={styles.infoCard}>
-            <Text style={styles.cardTitle}>Candidate Information</Text>
-            <View style={styles.row}>
-              <Text style={styles.label}>Candidate&apos;s Name:</Text>
-              <Text style={styles.value}>{student.full_name}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Candidate ID:</Text>
-              <Text style={styles.value}>{student.student_code}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Mobile:</Text>
-              <Text style={styles.value}>{student.mobile}</Text>
-            </View>
-            {student.email ? (
-              <View style={styles.row}>
-                <Text style={styles.label}>Email:</Text>
-                <Text style={styles.value}>{student.email}</Text>
-              </View>
-            ) : null}
+            <Text style={styles.cardTitle}>Bill To</Text>
+            {billingAddress ? (
+              <>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Contact Name:</Text>
+                  <Text style={styles.value}>
+                    {billingAddress.contact_name || student.full_name}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Address:</Text>
+                  <Text style={styles.value}>
+                    {[billingAddress.line1, billingAddress.line2, billingAddress.city, billingAddress.state, billingAddress.country].filter(Boolean).join(', ')}
+                  </Text>
+                </View>
+                {billingAddress.contact_phone ? (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Phone:</Text>
+                    <Text style={styles.value}>{billingAddress.contact_phone}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.row}>
+                  <Text style={styles.label}>Candidate ID:</Text>
+                  <Text style={styles.value}>{student.student_code}</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Candidate&apos;s Name:</Text>
+                  <Text style={styles.value}>{student.full_name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Candidate ID:</Text>
+                  <Text style={styles.value}>{student.student_code}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Mobile:</Text>
+                  <Text style={styles.value}>{student.mobile}</Text>
+                </View>
+                {student.email ? (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Email:</Text>
+                    <Text style={styles.value}>{student.email}</Text>
+                  </View>
+                ) : null}
+              </>
+            )}
           </View>
 
           <View style={styles.infoCard}>
@@ -544,6 +584,15 @@ export function StatementDocument({
                 {formatAED(ledger.total_paid)}
               </Text>
             </View>
+
+            {ledger.opening_paid && ledger.opening_paid > 0 ? (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Paid before system:</Text>
+                <Text style={styles.summaryVal}>
+                  {formatAED(ledger.opening_paid)}
+                </Text>
+              </View>
+            ) : null}
 
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>Balance Due:</Text>

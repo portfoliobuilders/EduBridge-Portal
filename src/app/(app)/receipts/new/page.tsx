@@ -66,7 +66,8 @@ export default async function NewReceiptPage({
           id,
           full_name,
           student_code,
-          mobile
+          mobile,
+          guardian_name
         ),
         university:universities!inner(
           name
@@ -82,11 +83,20 @@ export default async function NewReceiptPage({
       .single()
 
     if (item) {
-      const { data: ledger } = await supabase
-        .from('enrollment_ledger')
-        .select('total_payable, total_paid, balance')
-        .eq('enrollment_id', enrollmentId)
-        .single()
+      const [{ data: ledger }, { data: billingAddr }] = await Promise.all([
+        supabase
+          .from('enrollment_ledger')
+          .select('total_payable, total_paid, balance')
+          .eq('enrollment_id', enrollmentId)
+          .single(),
+        supabase
+          .from('student_addresses')
+          .select('contact_name')
+          .eq('student_id', item.student_id)
+          .eq('type', 'billing')
+          .eq('is_default', true)
+          .maybeSingle(),
+      ])
 
       initialEnrollment = {
         enrollmentId: item.id,
@@ -107,6 +117,8 @@ export default async function NewReceiptPage({
         balance: Number(
           ledger?.balance ?? item.total_fee - item.discount
         ),
+        guardianName: item.student.guardian_name ?? null,
+        billingContactName: billingAddr?.contact_name ?? null,
       }
     }
   }

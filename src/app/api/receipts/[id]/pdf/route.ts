@@ -35,6 +35,7 @@ export async function GET(
           intake,
           total_fee,
           discount,
+          opening_paid,
           university:universities(name),
           course:courses(name),
           specialization:specializations(name)
@@ -87,6 +88,15 @@ export async function GET(
     const studentData = payment.student!
     const enrollmentData = payment.enrollment!
 
+    // Query billing address if present
+    const { data: billingAddress } = await supabase
+      .from('student_addresses')
+      .select('contact_name, contact_phone, line1, line2, city, state, postal_code, country')
+      .eq('student_id', studentData.id)
+      .eq('type', 'billing')
+      .eq('is_default', true)
+      .maybeSingle()
+
     const docProps = {
       payment: {
         id: payment.id,
@@ -125,6 +135,8 @@ export async function GET(
         discount: Number(enrollmentData.discount),
       },
       settings: companySettings,
+      billingAddress: billingAddress ?? null,
+      opening_paid: enrollmentData.opening_paid ? Number(enrollmentData.opening_paid) : 0,
       receivedByName:
         payment.received_by_profile?.full_name ?? 'EduBridge Staff',
       voidedByName: payment.voided_by_profile?.full_name,

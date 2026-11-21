@@ -153,7 +153,7 @@ export default async function PublicReceiptPage({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-1">
               <span className="text-muted-foreground font-medium text-xs sm:col-span-1">
-                Student ID:
+                Candidate ID:
               </span>
               <span className="font-mono text-xs sm:col-span-3">
                 {v.student_code}

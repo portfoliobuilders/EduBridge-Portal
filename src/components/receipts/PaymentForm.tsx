@@ -50,6 +50,8 @@ export interface PreselectedEnrollment {
   totalPayable: number
   totalPaid: number
   balance: number
+  guardianName?: string | null
+  billingContactName?: string | null
 }
 
 export interface QuickAddMetadata {
@@ -197,6 +199,8 @@ export function PaymentForm({
       totalPayable: created.totalPayable,
       totalPaid: 0,
       balance: created.balance,
+      guardianName: created.guardianName ?? null,
+      billingContactName: created.billingContactName ?? null,
     }
 
     setSelectedEnrollment(preselected)
@@ -702,7 +706,56 @@ export function PaymentForm({
 
             {/* Payee Name */}
             <div className="space-y-1.5">
-              <Label htmlFor="payeeName">Payee / Received From</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="payeeName">Payee / Received From</Label>
+              </div>
+
+              {/* Quick choices when candidate / guardian / billing contact available */}
+              {selectedEnrollment && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5 pb-1">
+                  <span className="text-[11px] text-muted-foreground mr-1">Quick pick:</span>
+                  <button
+                    type="button"
+                    onClick={() => setPayeeName(selectedEnrollment.studentName)}
+                    className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition border ${
+                      payeeName === selectedEnrollment.studentName
+                        ? 'bg-[#E6F6F2] text-[#00805F] border-[#CCEDE5]'
+                        : 'bg-white text-muted-foreground border-[#E4E7E7] hover:bg-[#F5F6F6]'
+                    }`}
+                  >
+                    Candidate: {selectedEnrollment.studentName}
+                  </button>
+                  {selectedEnrollment.guardianName && (
+                    <button
+                      type="button"
+                      onClick={() => setPayeeName(selectedEnrollment.guardianName!)}
+                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition border ${
+                        payeeName === selectedEnrollment.guardianName
+                          ? 'bg-[#E6F6F2] text-[#00805F] border-[#CCEDE5]'
+                          : 'bg-white text-muted-foreground border-[#E4E7E7] hover:bg-[#F5F6F6]'
+                      }`}
+                    >
+                      Guardian: {selectedEnrollment.guardianName}
+                    </button>
+                  )}
+                  {selectedEnrollment.billingContactName &&
+                    selectedEnrollment.billingContactName !== selectedEnrollment.studentName &&
+                    selectedEnrollment.billingContactName !== selectedEnrollment.guardianName && (
+                      <button
+                        type="button"
+                        onClick={() => setPayeeName(selectedEnrollment.billingContactName!)}
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition border ${
+                          payeeName === selectedEnrollment.billingContactName
+                            ? 'bg-[#E6F6F2] text-[#00805F] border-[#CCEDE5]'
+                            : 'bg-white text-muted-foreground border-[#E4E7E7] hover:bg-[#F5F6F6]'
+                        }`}
+                      >
+                        Billing: {selectedEnrollment.billingContactName}
+                      </button>
+                    )}
+                </div>
+              )}
+
               <Input
                 id="payeeName"
                 placeholder="Candidate or Sponsor Full Name"

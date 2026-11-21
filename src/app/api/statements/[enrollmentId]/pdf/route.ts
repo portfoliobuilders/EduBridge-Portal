@@ -28,6 +28,7 @@ export async function GET(
         vat_type,
         vat_rate,
         status,
+        opening_paid,
         student:students!inner(
           id,
           full_name,
@@ -91,6 +92,15 @@ export async function GET(
     const year = new Date().getFullYear()
     const statementNo = `${companySettings.statement_prefix}-${year}-${enrollment.id.slice(0, 6).toUpperCase()}`
 
+    // Query billing address if present
+    const { data: billingAddress } = await supabase
+      .from('student_addresses')
+      .select('contact_name, contact_phone, line1, line2, city, state, postal_code, country')
+      .eq('student_id', enrollment.student.id)
+      .eq('type', 'billing')
+      .eq('is_default', true)
+      .maybeSingle()
+
     const docProps = {
       enrollment: {
         id: enrollment.id,
@@ -121,6 +131,7 @@ export async function GET(
         balance: Number(
           ledger?.balance ?? enrollment.total_fee - enrollment.discount
         ),
+        opening_paid: Number(ledger?.opening_paid ?? enrollment.opening_paid ?? 0),
       },
       payments: (payments ?? []).map((p) => ({
         id: p.id,
@@ -134,6 +145,7 @@ export async function GET(
         status: p.status,
       })),
       settings: companySettings,
+      billingAddress: billingAddress ?? null,
       statementNo,
     }
 
