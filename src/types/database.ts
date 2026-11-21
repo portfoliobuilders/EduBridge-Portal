@@ -6,187 +6,512 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type AppRole = 'owner' | 'staff'
-export type PaymentMode = 'card' | 'cash' | 'link' | 'bank_transfer'
-export type PaymentPurpose = 'admission' | 'repayment' | 'other'
-export type PaymentStatus = 'valid' | 'void'
-export type EnrollmentStatus = 'active' | 'completed' | 'cancelled'
-export type ShareChannel = 'whatsapp' | 'email' | 'web_share' | 'sms' | 'download' | 'print' | 'link_copy'
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.18"
+  }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          created_at: string
+          diff: Json | null
+          id: string
+          row_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          created_at?: string
+          diff?: Json | null
+          id?: string
+          row_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          created_at?: string
+          diff?: Json | null
+          id?: string
+          row_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
-          singleton: boolean
-          id: string
-          name: string
           address: string
-          phone: string
-          email: string
-          website: string
-          trn: string
-          logo_path: string | null
-          receipt_prefix: string
-          statement_prefix: string
-          vat_enabled: boolean
-          vat_rate: number
-          footer_note: string | null
-          terms: string | null
           created_at: string
+          email: string
+          footer_note: string | null
+          id: string
+          logo_path: string | null
+          name: string
+          phone: string
+          receipt_prefix: string
+          singleton: boolean
+          statement_prefix: string
+          terms: string | null
+          trn: string
           updated_at: string
           updated_by: string | null
-        }
-        Insert: {
-          singleton?: boolean
-          id?: string
-          name: string
-          address: string
-          phone: string
-          email: string
+          vat_enabled: boolean
+          vat_rate: number
           website: string
-          trn: string
-          logo_path?: string | null
-          receipt_prefix?: string
-          statement_prefix?: string
-          vat_enabled?: boolean
-          vat_rate?: number
-          footer_note?: string | null
-          terms?: string | null
-          created_at?: string
-          updated_at?: string
-          updated_by?: string | null
         }
-        Update: {
+        Insert: {
+          address: string
+          created_at?: string
+          email: string
+          footer_note?: string | null
+          id?: string
+          logo_path?: string | null
+          name: string
+          phone: string
+          receipt_prefix?: string
           singleton?: boolean
-          id?: string
-          name?: string
-          address?: string
-          phone?: string
-          email?: string
-          website?: string
-          trn?: string
-          logo_path?: string | null
-          receipt_prefix?: string
           statement_prefix?: string
-          vat_enabled?: boolean
-          vat_rate?: number
-          footer_note?: string | null
           terms?: string | null
-          created_at?: string
+          trn: string
           updated_at?: string
           updated_by?: string | null
-        }
-      }
-      profiles: {
-        Row: {
-          id: string
-          full_name: string
-          phone: string | null
-          role: AppRole
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name: string
-          phone?: string | null
-          role?: AppRole
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
+          vat_enabled?: boolean
+          vat_rate?: number
+          website: string
         }
         Update: {
-          id?: string
-          full_name?: string
-          phone?: string | null
-          role?: AppRole
-          is_active?: boolean
+          address?: string
           created_at?: string
-          updated_at?: string
-        }
-      }
-      universities: {
-        Row: {
-          id: string
-          name: string
-          country: string
-          is_active: boolean
-          created_at: string
-        }
-        Insert: {
+          email?: string
+          footer_note?: string | null
           id?: string
-          name: string
-          country?: string
-          is_active?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
+          logo_path?: string | null
           name?: string
-          country?: string
-          is_active?: boolean
-          created_at?: string
+          phone?: string
+          receipt_prefix?: string
+          singleton?: boolean
+          statement_prefix?: string
+          terms?: string | null
+          trn?: string
+          updated_at?: string
+          updated_by?: string | null
+          vat_enabled?: boolean
+          vat_rate?: number
+          website?: string
         }
+        Relationships: []
       }
       courses: {
         Row: {
-          id: string
-          university_id: string
-          name: string
-          level: string
-          duration: string | null
-          default_fee: number | null
-          is_active: boolean
           created_at: string
+          default_fee: number | null
+          duration: string | null
+          id: string
+          is_active: boolean
+          level: string
+          name: string
+          university_id: string
         }
         Insert: {
-          id?: string
-          university_id: string
-          name: string
-          level: string
-          duration?: string | null
-          default_fee?: number | null
-          is_active?: boolean
           created_at?: string
+          default_fee?: number | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean
+          level: string
+          name: string
+          university_id: string
         }
         Update: {
-          id?: string
-          university_id?: string
-          name?: string
-          level?: string
-          duration?: string | null
-          default_fee?: number | null
-          is_active?: boolean
           created_at?: string
+          default_fee?: number | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean
+          level?: string
+          name?: string
+          university_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "courses_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          admission_staff_id: string
+          course_id: string
+          created_at: string
+          created_by: string
+          discount: number
+          id: string
+          intake: string | null
+          specialization_id: string | null
+          status: Database["public"]["Enums"]["enrollment_status"]
+          student_id: string
+          total_fee: number
+          university_id: string
+          updated_at: string
+        }
+        Insert: {
+          admission_staff_id: string
+          course_id: string
+          created_at?: string
+          created_by: string
+          discount?: number
+          id?: string
+          intake?: string | null
+          specialization_id?: string | null
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          student_id: string
+          total_fee: number
+          university_id: string
+          updated_at?: string
+        }
+        Update: {
+          admission_staff_id?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          discount?: number
+          id?: string
+          intake?: string | null
+          specialization_id?: string | null
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          student_id?: string
+          total_fee?: number
+          university_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_admission_staff_id_fkey"
+            columns: ["admission_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_specialization_id_fkey"
+            columns: ["specialization_id"]
+            isOneToOne: false
+            referencedRelation: "specializations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          balance_after_snapshot: number
+          comments: string | null
+          created_at: string
+          enrollment_id: string
+          fee_snapshot: number
+          id: string
+          idempotency_key: string | null
+          mode: Database["public"]["Enums"]["payment_mode"]
+          paid_at: string
+          paid_before_snapshot: number
+          payee_name: string | null
+          pdf_path: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          purpose_note: string | null
+          receipt_no: string
+          received_by: string
+          recorded_at: string
+          reference_no: string | null
+          share_enabled: boolean
+          share_token: string
+          status: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+          vat_amount: number
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after_snapshot: number
+          comments?: string | null
+          created_at?: string
+          enrollment_id: string
+          fee_snapshot: number
+          id?: string
+          idempotency_key?: string | null
+          mode: Database["public"]["Enums"]["payment_mode"]
+          paid_at: string
+          paid_before_snapshot: number
+          payee_name?: string | null
+          pdf_path?: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          purpose_note?: string | null
+          receipt_no: string
+          received_by: string
+          recorded_at?: string
+          reference_no?: string | null
+          share_enabled?: boolean
+          share_token?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+          vat_amount?: number
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after_snapshot?: number
+          comments?: string | null
+          created_at?: string
+          enrollment_id?: string
+          fee_snapshot?: number
+          id?: string
+          idempotency_key?: string | null
+          mode?: Database["public"]["Enums"]["payment_mode"]
+          paid_at?: string
+          paid_before_snapshot?: number
+          payee_name?: string | null
+          pdf_path?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          purpose_note?: string | null
+          receipt_no?: string
+          received_by?: string
+          recorded_at?: string
+          reference_no?: string | null
+          share_enabled?: boolean
+          share_token?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          student_id?: string
+          vat_amount?: number
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_ledger"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_received_by_fkey"
+            columns: ["received_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_voided_by_fkey"
+            columns: ["voided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          is_active?: boolean
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receipt_counters: {
+        Row: {
+          last_no: number
+          year: number
+        }
+        Insert: {
+          last_no?: number
+          year: number
+        }
+        Update: {
+          last_no?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      share_logs: {
+        Row: {
+          channel: Database["public"]["Enums"]["share_channel"]
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          meta: Json
+          payment_id: string | null
+          recipient: string | null
+          sent_at: string
+          sent_by: string | null
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["share_channel"]
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          meta?: Json
+          payment_id?: string | null
+          recipient?: string | null
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["share_channel"]
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          meta?: Json
+          payment_id?: string | null
+          recipient?: string | null
+          sent_at?: string
+          sent_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_logs_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_ledger"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "share_logs_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_logs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_logs_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       specializations: {
         Row: {
-          id: string
           course_id: string
-          name: string
-          default_fee: number | null
-          is_active: boolean
           created_at: string
+          default_fee: number | null
+          id: string
+          is_active: boolean
+          name: string
         }
         Insert: {
-          id?: string
           course_id: string
-          name: string
-          default_fee?: number | null
-          is_active?: boolean
           created_at?: string
+          default_fee?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
         }
         Update: {
-          id?: string
           course_id?: string
-          name?: string
-          default_fee?: number | null
-          is_active?: boolean
           created_at?: string
+          default_fee?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "specializations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_counters: {
         Row: {
@@ -201,332 +526,355 @@ export interface Database {
           id?: number
           last_no?: number
         }
+        Relationships: []
       }
       students: {
         Row: {
-          id: string
-          student_code: string
-          full_name: string
-          mobile: string
-          whatsapp: string | null
+          created_at: string
+          created_by: string
           email: string | null
-          notes: string | null
-          created_by: string
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          student_code?: string
           full_name: string
+          id: string
+          is_active: boolean
           mobile: string
-          whatsapp?: string | null
-          email?: string | null
-          notes?: string | null
-          created_by: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          student_code?: string
-          full_name?: string
-          mobile?: string
-          whatsapp?: string | null
-          email?: string | null
-          notes?: string | null
-          created_by?: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      enrollments: {
-        Row: {
-          id: string
-          student_id: string
-          university_id: string
-          course_id: string
-          specialization_id: string | null
-          admission_staff_id: string
-          intake: string | null
-          total_fee: number
-          discount: number
-          status: EnrollmentStatus
-          created_by: string
-          created_at: string
+          notes: string | null
+          student_code: string
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
-          id?: string
-          student_id: string
-          university_id: string
-          course_id: string
-          specialization_id?: string | null
-          admission_staff_id: string
-          intake?: string | null
-          total_fee: number
-          discount?: number
-          status?: EnrollmentStatus
+          created_at?: string
           created_by: string
-          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          mobile: string
+          notes?: string | null
+          student_code: string
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
-          id?: string
-          student_id?: string
-          university_id?: string
-          course_id?: string
-          specialization_id?: string | null
-          admission_staff_id?: string
-          intake?: string | null
-          total_fee?: number
-          discount?: number
-          status?: EnrollmentStatus
+          created_at?: string
           created_by?: string
-          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          mobile?: string
+          notes?: string | null
+          student_code?: string
           updated_at?: string
+          whatsapp?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      receipt_counters: {
+      universities: {
         Row: {
-          year: number
-          last_no: number
-        }
-        Insert: {
-          year: number
-          last_no?: number
-        }
-        Update: {
-          year?: number
-          last_no?: number
-        }
-      }
-      payments: {
-        Row: {
-          id: string
-          receipt_no: string
-          enrollment_id: string
-          student_id: string
-          amount: number
-          mode: PaymentMode
-          purpose: PaymentPurpose
-          purpose_note: string | null
-          reference_no: string | null
-          paid_at: string
-          recorded_at: string
-          received_by: string
-          payee_name: string | null
-          comments: string | null
-          status: PaymentStatus
-          void_reason: string | null
-          voided_by: string | null
-          voided_at: string | null
-          fee_snapshot: number
-          paid_before_snapshot: number
-          balance_after_snapshot: number
-          vat_amount: number
-          pdf_path: string | null
-          share_token: string
-          share_enabled: boolean
-          idempotency_key: string | null
+          country: string
           created_at: string
-        }
-        Insert: {
-          id?: string
-          receipt_no: string
-          enrollment_id: string
-          student_id: string
-          amount: number
-          mode: PaymentMode
-          purpose: PaymentPurpose
-          purpose_note?: string | null
-          reference_no?: string | null
-          paid_at: string
-          recorded_at?: string
-          received_by: string
-          payee_name?: string | null
-          comments?: string | null
-          status?: PaymentStatus
-          void_reason?: string | null
-          voided_by?: string | null
-          voided_at?: string | null
-          fee_snapshot: number
-          paid_before_snapshot: number
-          balance_after_snapshot: number
-          vat_amount?: number
-          pdf_path?: string | null
-          share_token?: string
-          share_enabled?: boolean
-          idempotency_key?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          receipt_no?: string
-          enrollment_id?: string
-          student_id?: string
-          amount?: number
-          mode?: PaymentMode
-          purpose?: PaymentPurpose
-          purpose_note?: string | null
-          reference_no?: string | null
-          paid_at?: string
-          recorded_at?: string
-          received_by?: string
-          payee_name?: string | null
-          comments?: string | null
-          status?: PaymentStatus
-          void_reason?: string | null
-          voided_by?: string | null
-          voided_at?: string | null
-          fee_snapshot?: number
-          paid_before_snapshot?: number
-          balance_after_snapshot?: number
-          vat_amount?: number
-          pdf_path?: string | null
-          share_token?: string
-          share_enabled?: boolean
-          idempotency_key?: string | null
-          created_at?: string
-        }
-      }
-      share_logs: {
-        Row: {
           id: string
-          payment_id: string | null
-          enrollment_id: string | null
-          channel: ShareChannel
-          recipient: string | null
-          sent_by: string | null
-          sent_at: string
-          meta: Json
-          created_at: string
+          is_active: boolean
+          name: string
         }
         Insert: {
-          id?: string
-          payment_id?: string | null
-          enrollment_id?: string | null
-          channel: ShareChannel
-          recipient?: string | null
-          sent_by?: string | null
-          sent_at?: string
-          meta?: Json
+          country?: string
           created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
         }
         Update: {
-          id?: string
-          payment_id?: string | null
-          enrollment_id?: string | null
-          channel?: ShareChannel
-          recipient?: string | null
-          sent_by?: string | null
-          sent_at?: string
-          meta?: Json
+          country?: string
           created_at?: string
-        }
-      }
-      audit_log: {
-        Row: {
-          id: string
-          table_name: string
-          row_id: string
-          action: string
-          actor: string | null
-          at: string
-          diff: Json | null
-          created_at: string
-        }
-        Insert: {
           id?: string
-          table_name: string
-          row_id: string
-          action: string
-          actor?: string | null
-          at?: string
-          diff?: Json | null
-          created_at?: string
+          is_active?: boolean
+          name?: string
         }
-        Update: {
-          id?: string
-          table_name?: string
-          row_id?: string
-          action?: string
-          actor?: string | null
-          at?: string
-          diff?: Json | null
-          created_at?: string
-        }
+        Relationships: []
       }
     }
     Views: {
       enrollment_ledger: {
         Row: {
-          enrollment_id: string
-          student_id: string
-          total_fee: number
-          discount: number
-          net_fee: number
-          total_paid: number
-          balance: number
+          balance: number | null
+          discount: number | null
+          enrollment_id: string | null
           last_payment_at: string | null
-          payment_count: number
+          net_fee: number | null
+          payment_count: number | null
+          student_id: string | null
+          total_fee: number | null
+          total_paid: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
-      is_active_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_owner: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      get_public_receipt: { Args: { p_token: string }; Returns: Json }
+      is_active_user: { Args: never; Returns: boolean }
+      is_owner: { Args: never; Returns: boolean }
       record_payment: {
         Args: {
-          p_enrollment_id: string
           p_amount: number
-          p_mode: PaymentMode
-          p_purpose: PaymentPurpose
-          p_purpose_note: string | null
-          p_reference_no: string | null
+          p_comments: string
+          p_enrollment_id: string
+          p_idempotency_key?: string
+          p_mode: Database["public"]["Enums"]["payment_mode"]
           p_paid_at: string
-          p_payee_name: string | null
-          p_comments: string | null
-          p_idempotency_key?: string | null
+          p_payee_name: string
+          p_purpose: Database["public"]["Enums"]["payment_purpose"]
+          p_purpose_note: string
+          p_reference_no: string
         }
-        Returns: Database['public']['Tables']['payments']['Row']
+        Returns: {
+          amount: number
+          balance_after_snapshot: number
+          comments: string | null
+          created_at: string
+          enrollment_id: string
+          fee_snapshot: number
+          id: string
+          idempotency_key: string | null
+          mode: Database["public"]["Enums"]["payment_mode"]
+          paid_at: string
+          paid_before_snapshot: number
+          payee_name: string | null
+          pdf_path: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          purpose_note: string | null
+          receipt_no: string
+          received_by: string
+          recorded_at: string
+          reference_no: string | null
+          share_enabled: boolean
+          share_token: string
+          status: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+          vat_amount: number
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
+      rotate_share_token: { Args: { p_payment_id: string }; Returns: string }
       void_payment: {
-        Args: {
-          p_payment_id: string
-          p_reason: string
+        Args: { p_payment_id: string; p_reason: string }
+        Returns: {
+          amount: number
+          balance_after_snapshot: number
+          comments: string | null
+          created_at: string
+          enrollment_id: string
+          fee_snapshot: number
+          id: string
+          idempotency_key: string | null
+          mode: Database["public"]["Enums"]["payment_mode"]
+          paid_at: string
+          paid_before_snapshot: number
+          payee_name: string | null
+          pdf_path: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          purpose_note: string | null
+          receipt_no: string
+          received_by: string
+          recorded_at: string
+          reference_no: string | null
+          share_enabled: boolean
+          share_token: string
+          status: Database["public"]["Enums"]["payment_status"]
+          student_id: string
+          vat_amount: number
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
-        Returns: Database['public']['Tables']['payments']['Row']
-      }
-      rotate_share_token: {
-        Args: {
-          p_payment_id: string
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
         }
-        Returns: string
-      }
-      get_public_receipt: {
-        Args: {
-          p_token: string
-        }
-        Returns: Json
       }
     }
     Enums: {
-      app_role: AppRole
-      payment_mode: PaymentMode
-      payment_purpose: PaymentPurpose
-      payment_status: PaymentStatus
-      enrollment_status: EnrollmentStatus
-      share_channel: ShareChannel
+      app_role: "owner" | "staff"
+      enrollment_status: "active" | "completed" | "cancelled"
+      payment_mode: "card" | "cash" | "link" | "bank_transfer"
+      payment_purpose: "admission" | "repayment" | "other"
+      payment_status: "valid" | "void"
+      share_channel:
+        | "whatsapp"
+        | "email"
+        | "web_share"
+        | "sms"
+        | "download"
+        | "print"
+        | "link_copy"
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["owner", "staff"],
+      enrollment_status: ["active", "completed", "cancelled"],
+      payment_mode: ["card", "cash", "link", "bank_transfer"],
+      payment_purpose: ["admission", "repayment", "other"],
+      payment_status: ["valid", "void"],
+      share_channel: [
+        "whatsapp",
+        "email",
+        "web_share",
+        "sms",
+        "download",
+        "print",
+        "link_copy",
+      ],
+    },
+  },
+} as const

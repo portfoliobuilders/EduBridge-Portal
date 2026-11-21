@@ -4,8 +4,8 @@
 -- =============================================================================
 
 -- Extensions
-create extension if not exists "pg_trgm";
-create extension if not exists "uuid-ossp";
+create extension if not exists "pg_trgm" with schema extensions;
+create extension if not exists "uuid-ossp" with schema extensions;
 
 -- -----------------------------------------------------------------------------
 -- 1. Enums
@@ -35,7 +35,7 @@ create or replace function public.is_active_user()
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 stable
 as $$
   select exists (
@@ -49,7 +49,7 @@ create or replace function public.is_owner()
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 stable
 as $$
   select exists (
@@ -60,10 +60,10 @@ as $$
   );
 $$;
 
-revoke all on function public.is_active_user() from public;
+revoke execute on function public.is_active_user() from public, anon, authenticated;
 grant execute on function public.is_active_user() to authenticated;
 
-revoke all on function public.is_owner() from public;
+revoke execute on function public.is_owner() from public, anon, authenticated;
 grant execute on function public.is_owner() to authenticated;
 
 -- Trigger to create profile when auth.users is created
@@ -71,7 +71,7 @@ create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   insert into public.profiles (id, full_name, phone, role, is_active)
@@ -92,18 +92,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- Profile update guard: non-owners cannot change role or is_active
 create or replace function public.guard_profile_updates()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_active_owners_count int;
 begin
   if (new.role is distinct from old.role or new.is_active is distinct from old.is_active) then
-    if not public.is_owner() then
+    if auth.uid() is not null and not public.is_owner() then
       raise exception 'Only owners can modify profile roles or active status';
     end if;
 
@@ -127,6 +129,8 @@ $$;
 create trigger trg_guard_profile_updates
   before update on profiles
   for each row execute function public.guard_profile_updates();
+
+revoke execute on function public.guard_profile_updates() from public, anon, authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 3. Company Settings (singleton)
@@ -238,7 +242,7 @@ create table students (
   updated_at timestamptz not null default now()
 );
 
-create index idx_students_full_name_trgm on students using gin (full_name gin_trgm_ops);
+create index idx_students_full_name_trgm on students using gin (full_name extensions.gin_trgm_ops);
 create index idx_students_mobile on students (mobile);
 create index idx_students_email on students (email);
 
@@ -247,7 +251,7 @@ create or replace function public.generate_student_code()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_next int;
@@ -272,6 +276,8 @@ $$;
 create trigger trg_students_code_gen
   before insert on students
   for each row execute function public.generate_student_code();
+
+revoke execute on function public.generate_student_code() from public, anon, authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 6. Enrollments
@@ -299,6 +305,8 @@ create index idx_enrollments_admission_staff on enrollments(admission_staff_id);
 create or replace function public.validate_enrollment()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, extensions
 as $$
 declare
   v_course_uni uuid;
@@ -339,6 +347,8 @@ $$;
 create trigger trg_validate_enrollment
   before insert or update on enrollments
   for each row execute function public.validate_enrollment();
+
+revoke execute on function public.validate_enrollment() from public, anon, authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 7. Receipt Counters and Payments
@@ -449,7 +459,7 @@ create or replace function public.record_payment(
 returns payments
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_caller_id uuid;
@@ -631,7 +641,7 @@ begin
 end;
 $$;
 
-revoke all on function public.record_payment from public;
+revoke execute on function public.record_payment from public, anon, authenticated;
 grant execute on function public.record_payment to authenticated;
 
 -- 10.2 void_payment (owner only)
@@ -642,7 +652,7 @@ create or replace function public.void_payment(
 returns payments
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_caller_id uuid;
@@ -694,7 +704,7 @@ begin
 end;
 $$;
 
-revoke all on function public.void_payment from public;
+revoke execute on function public.void_payment from public, anon, authenticated;
 grant execute on function public.void_payment to authenticated;
 
 -- 10.3 rotate_share_token (owner or receiving staff)
@@ -702,7 +712,7 @@ create or replace function public.rotate_share_token(p_payment_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_caller_id uuid;
@@ -731,15 +741,15 @@ begin
 end;
 $$;
 
-revoke all on function public.rotate_share_token from public;
-grant execute on function public.rotate_share_token to authenticated;
+revoke execute on function public.rotate_share_token(uuid) from public, anon, authenticated;
+grant execute on function public.rotate_share_token(uuid) to authenticated;
 
 -- 10.4 get_public_receipt (accessible by anon)
 create or replace function public.get_public_receipt(p_token uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_res jsonb;
@@ -797,6 +807,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.get_public_receipt(uuid) from public, anon, authenticated;
 grant execute on function public.get_public_receipt(uuid) to anon, authenticated;
 
 -- -----------------------------------------------------------------------------

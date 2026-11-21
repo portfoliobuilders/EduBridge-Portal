@@ -37,8 +37,9 @@ yarn-error.log*
 EDUBRIDGE/
 
 
-# vercel
-.vercel
+# supabase temp files
+supabase/.temp/
+
 
 # typescript
 *.tsbuildinfo
