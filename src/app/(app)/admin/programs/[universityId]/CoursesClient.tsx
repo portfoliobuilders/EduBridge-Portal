@@ -432,7 +432,7 @@ export function CoursesClient({
 
               <div className="space-y-1.5">
                 <Label htmlFor="course-fee" className="text-xs font-semibold">
-                  Default Tuition Fee (AED)
+                  Default Tuition Fee (AED) — before VAT treatment
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -450,7 +450,7 @@ export function CoursesClient({
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Default fee applied when students enroll in this course.
+                  Base tuition fee before VAT treatment is applied during candidate enrollment.
                 </p>
               </div>
             </div>

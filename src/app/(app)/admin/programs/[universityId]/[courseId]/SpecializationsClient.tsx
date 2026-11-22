@@ -351,7 +351,7 @@ export function SpecializationsClient({
 
               <div className="space-y-1.5">
                 <Label htmlFor="spec-fee" className="text-xs font-semibold">
-                  Default Fee Override (AED, optional)
+                  Default Fee Override (AED) — before VAT treatment
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -369,7 +369,7 @@ export function SpecializationsClient({
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Leave blank to inherit the course default fee ({courseFee !== null ? formatMoney(courseFee) : 'None'}).
+                  Leave blank to inherit course default fee ({courseFee !== null ? formatMoney(courseFee) : 'None'}). Base tuition before VAT treatment.
                 </p>
               </div>
             </div>
