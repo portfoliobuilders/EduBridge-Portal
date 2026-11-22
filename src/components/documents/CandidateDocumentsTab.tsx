@@ -83,13 +83,12 @@ export function CandidateDocumentsTab({
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const cameraInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  // Compute summary (excluding 'other' from denominator)
-  const standardTypes = documentTypes.filter((t) => t.slug !== 'other')
+  // Compute summary using total active document types
+  const totalActiveDocTypes = documentTypes.length
   const uploadedTypeIds = new Set(
     documents.filter((d) => !d.archived_at).map((d) => d.document_type_id)
   )
-  const uploadedStandardCount = standardTypes.filter((t) => uploadedTypeIds.has(t.id)).length
-  const totalStandardCount = standardTypes.length
+  const uploadedActiveCount = documentTypes.filter((t) => uploadedTypeIds.has(t.id)).length
 
   const handleUploadFile = async (docType: DocumentTypeFull, file: File) => {
     const typeId = docType.id
@@ -183,7 +182,7 @@ export function CandidateDocumentsTab({
               variant="outline"
               className="bg-[#E6F6F2] text-[#00805F] border-[#CCEDE5] font-semibold text-xs py-0.5"
             >
-              {uploadedStandardCount} of {totalStandardCount} types uploaded
+              {uploadedActiveCount} of {totalActiveDocTypes} types uploaded
             </Badge>
           </div>
           <p className="text-xs text-[#6B7272]">

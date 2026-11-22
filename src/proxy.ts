@@ -68,7 +68,14 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/vendor') ||
     pathname.startsWith('/icons') ||
     pathname.startsWith('/fonts') ||
+    pathname === '/favicon.ico' ||
     pathname.startsWith('/favicon.ico') ||
+    pathname === '/icon.png' ||
+    pathname === '/icon-preview.html' ||
+    pathname === '/apple-touch-icon.png' ||
+    pathname.startsWith('/apple-touch-icon') ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/manifest.json' ||
     pathname.startsWith('/manifest') ||
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/confirm') ||
@@ -157,8 +164,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - icon.png, apple-touch-icon.png
      * - public assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|icon\\.png|apple-touch-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2|ico)$).*)',
   ],
 }

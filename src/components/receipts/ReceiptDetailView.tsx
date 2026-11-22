@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
 import { amountInWords } from '@/lib/amount-in-words'
+import { formatPhoneNumber } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { VoidReceiptDialog } from '@/components/receipts/VoidReceiptDialog'
 import { ReceiptShareActions } from '@/components/receipts/ReceiptShareActions'
@@ -255,7 +256,7 @@ export function ReceiptDetailView({
             </div>
             <div>{settings.address}</div>
             <div>
-              Tel: {settings.phone} | Email: {settings.email}
+              Tel: {formatPhoneNumber(settings.phone)} | Email: {settings.email}
             </div>
             <div>Web: {settings.website}</div>
             <div className="font-semibold text-[#0A0A0A]">TRN: {settings.trn}</div>
@@ -298,7 +299,7 @@ export function ReceiptDetailView({
               Candidate ID / Mobile:
             </span>
             <span className="font-mono text-xs sm:col-span-3">
-              {student.student_code} · {student.mobile}
+              {student.student_code} · {formatPhoneNumber(student.mobile)}
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-1">

@@ -13,6 +13,7 @@ import {
 import { globalSearchAction, SearchResult } from '@/app/(app)/actions/search'
 import { User, Receipt, Loader2 } from 'lucide-react'
 import { Money } from '@/components/Money'
+import { formatPhoneNumber } from '@/lib/phone'
 
 export function GlobalSearchDialog({
   open,
@@ -93,7 +94,7 @@ export function GlobalSearchDialog({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{stu.full_name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{stu.student_code} · {stu.mobile}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{stu.student_code} · {formatPhoneNumber(stu.mobile)}</p>
                   </div>
                 </div>
               </CommandItem>

@@ -13,6 +13,7 @@ import path from 'path'
 import { formatAED } from '@/lib/money'
 import { amountInWords } from '@/lib/amount-in-words'
 import { formatDubaiDate, formatDubaiDateTime } from '@/lib/date'
+import { formatPhoneNumber } from '@/lib/phone'
 
 const fontsDir = path.join(process.cwd(), 'public', 'fonts')
 
@@ -340,7 +341,7 @@ export function StatementDocument({
             <Text style={styles.companyName}>{settings.name}</Text>
             <Text>{settings.address}</Text>
             <Text>
-              Tel: {settings.phone} | Email: {settings.email}
+              Tel: {formatPhoneNumber(settings.phone)} | Email: {settings.email}
             </Text>
             <Text>Web: {settings.website}</Text>
             <Text style={{ fontWeight: 600, color: '#0A0A0A', marginTop: 1 }}>
@@ -396,7 +397,7 @@ export function StatementDocument({
                 {billingAddress.contact_phone ? (
                   <View style={styles.row}>
                     <Text style={styles.label}>Phone:</Text>
-                    <Text style={styles.value}>{billingAddress.contact_phone}</Text>
+                    <Text style={styles.value}>{formatPhoneNumber(billingAddress.contact_phone)}</Text>
                   </View>
                 ) : null}
                 <View style={styles.row}>
@@ -416,7 +417,7 @@ export function StatementDocument({
                 </View>
                 <View style={styles.row}>
                   <Text style={styles.label}>Mobile:</Text>
-                  <Text style={styles.value}>{student.mobile}</Text>
+                  <Text style={styles.value}>{formatPhoneNumber(student.mobile)}</Text>
                 </View>
                 {student.email ? (
                   <View style={styles.row}>

@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
 import { amountInWords } from '@/lib/amount-in-words'
+import { formatPhoneNumber } from '@/lib/phone'
 import { PublicReceiptActions } from './PublicReceiptClient'
 
 export const dynamic = 'force-dynamic'
@@ -125,7 +126,7 @@ export default async function PublicReceiptPage({
                   'M03, Royal House Building, Hor Al Anz East, Dubai – UAE'}
               </div>
               <div>
-                Tel: {v.company?.phone ?? '+971 58 107 3898'} | Email:{' '}
+                Tel: {formatPhoneNumber(v.company?.phone ?? '+971 58 107 3898')} | Email:{' '}
                 {v.company?.email ?? 'info@edubridgeeducation.com'}
               </div>
               <div>Web: {v.company?.website ?? 'https://edubridgeeducation.com'}</div>

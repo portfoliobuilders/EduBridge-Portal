@@ -245,20 +245,30 @@ export function StudentsListTable({
       {/* DESKTOP TABLE VIEW (>=1024px)                                         */}
       {/* --------------------------------------------------------------------- */}
       <div className="hidden lg:block rounded-[14px] bg-white border border-[#E4E7E7] overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="overflow-x-auto xl:overflow-x-visible">
+          <Table className="table-fixed w-full min-w-[940px] xl:min-w-full">
+            <colgroup>
+              <col style={{ width: '44px' }} />
+              <col style={{ width: '23%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '17%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '84px' }} />
+            </colgroup>
             <TableHeader className="bg-[#F5F6F6] sticky top-0 z-10 border-b border-[#E4E7E7]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-10 px-4 py-3.5">
+                <TableHead className="w-[44px] px-3.5 py-3.5 text-center">
                   <input
                     type="checkbox"
                     checked={isAllSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="w-4 h-4 rounded border-[#E4E7E7] text-[#00A57E] focus:ring-[#00A57E] cursor-pointer"
+                    className="w-4 h-4 rounded border-[#E4E7E7] text-[#00A57E] focus:ring-[#00A57E] cursor-pointer align-middle"
                     aria-label="Select all candidates on this page"
                   />
                 </TableHead>
-                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5">
+                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5 pl-2">
                   Candidate
                 </TableHead>
                 <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5">
@@ -267,7 +277,7 @@ export function StudentsListTable({
                 <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5">
                   Program
                 </TableHead>
-                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5 min-w-[140px]">
+                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5">
                   Payment
                 </TableHead>
                 <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5">
@@ -276,7 +286,7 @@ export function StudentsListTable({
                 <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5 whitespace-nowrap">
                   Last payment
                 </TableHead>
-                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5 text-right pr-4">
+                <TableHead className="font-semibold text-xs text-[#0A0A0A] py-3.5 text-right pr-4 sticky right-0 z-20 bg-[#F5F6F6] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] xl:shadow-none">
                   Actions
                 </TableHead>
               </TableRow>
@@ -290,7 +300,8 @@ export function StudentsListTable({
                 const netFee = Number(c.total_net_fee || 0)
                 const paid = Number(c.total_paid || 0)
                 const pct = netFee > 0 ? Math.min(100, Math.round((paid / netFee) * 100)) : 0
-                const docsRatio = `${c.verified_docs_count || 0}/${c.total_doc_types_count || 6}`
+                const activeTotal = c.total_doc_types_count ?? 7
+                const docsRatio = `${c.verified_docs_count || 0}/${activeTotal}`
                 const cleanPhone = cleanPhoneForWhatsApp(c.whatsapp || c.mobile)
 
                 return (
@@ -313,35 +324,41 @@ export function StudentsListTable({
                   >
                     {/* 1. Checkbox */}
                     <TableCell
-                      className="px-4 py-3"
+                      className="w-[44px] px-3.5 py-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={(e) => handleToggleSelect(studentId, e as unknown as React.MouseEvent)}
-                        className="w-4 h-4 rounded border-[#E4E7E7] text-[#00A57E] focus:ring-[#00A57E] cursor-pointer"
+                        className="w-4 h-4 rounded border-[#E4E7E7] text-[#00A57E] focus:ring-[#00A57E] cursor-pointer align-middle"
                         aria-label={`Select ${candidateName}`}
                       />
                     </TableCell>
 
-                    {/* 2. Candidate */}
-                    <TableCell className="py-3">
-                      <div className="flex items-center gap-3">
-                        <CandidateAvatar name={candidateName} code={c.student_code} size="md" />
-                        <div className="min-w-0">
-                          <div className="font-semibold text-sm text-[#0A0A0A] group-hover:text-[#00A57E] transition-colors truncate">
+                    {/* 2. Candidate (truncated with tooltip) */}
+                    <TableCell className="py-3 pl-2 overflow-hidden">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <CandidateAvatar name={candidateName} code={c.student_code} size="md" className="shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className="font-semibold text-sm text-[#0A0A0A] group-hover:text-[#00A57E] transition-colors truncate"
+                            title={candidateName}
+                          >
                             {candidateName}
                           </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="font-mono text-xs text-[#6B7272]">
+                          <div className="flex items-center gap-1.5 mt-0.5 truncate">
+                            <span className="font-mono text-xs text-[#6B7272] shrink-0">
                               {c.student_code}
                             </span>
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F5F6F6] text-[#6B7272] border border-[#E4E7E7]">
+                            <span
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F5F6F6] text-[#6B7272] border border-[#E4E7E7] shrink-0"
+                              title={`Verified documents: ${c.verified_docs_count || 0} of ${activeTotal} active types`}
+                            >
                               Docs {docsRatio}
                             </span>
                             {c.enrollment_count && c.enrollment_count > 1 ? (
-                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#E6F6F2] text-[#00805F] border border-[#CCEDE5]">
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#E6F6F2] text-[#00805F] border border-[#CCEDE5] shrink-0 truncate">
                                 {c.enrollment_count} programs
                               </span>
                             ) : null}
@@ -351,14 +368,14 @@ export function StudentsListTable({
                     </TableCell>
 
                     {/* 3. Contact */}
-                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="py-3 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 text-xs text-[#0A0A0A] font-medium">
-                          <span>{formatPhoneNumber(c.mobile)}</span>
+                        <div className="flex items-center gap-1 text-xs text-[#0A0A0A] font-medium truncate">
+                          <span className="truncate">{formatPhoneNumber(c.mobile)}</span>
                           <a
                             href={`tel:${c.mobile}`}
                             title="Call candidate"
-                            className="p-1 rounded-md text-[#6B7272] hover:text-[#00A57E] hover:bg-[#E6F6F2] transition-colors"
+                            className="p-1 rounded-md text-[#6B7272] hover:text-[#00A57E] hover:bg-[#E6F6F2] transition-colors shrink-0"
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </a>
@@ -368,23 +385,23 @@ export function StudentsListTable({
                               target="_blank"
                               rel="noopener noreferrer"
                               title="Chat on WhatsApp"
-                              className="p-1 rounded-md text-[#6B7272] hover:text-[#00A57E] hover:bg-[#E6F6F2] transition-colors"
+                              className="p-1 rounded-md text-[#6B7272] hover:text-[#00A57E] hover:bg-[#E6F6F2] transition-colors shrink-0"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
                             </a>
                           )}
                         </div>
                         {c.email && (
-                          <div className="text-[11px] text-[#6B7272] truncate max-w-[170px] mt-0.5" title={c.email}>
+                          <div className="text-[11px] text-[#6B7272] truncate max-w-full mt-0.5" title={c.email}>
                             {c.email}
                           </div>
                         )}
                       </div>
                     </TableCell>
 
-                    {/* 4. Program */}
-                    <TableCell className="py-3">
-                      <div className="min-w-0 max-w-[200px]">
+                    {/* 4. Program (truncated with tooltip) */}
+                    <TableCell className="py-3 overflow-hidden">
+                      <div className="min-w-0">
                         <div
                           className="font-medium text-xs text-[#0A0A0A] truncate"
                           title={c.university_names || 'No university'}
@@ -401,37 +418,43 @@ export function StudentsListTable({
                     </TableCell>
 
                     {/* 5. Payment */}
-                    <TableCell className="py-3">
-                      <div className="min-w-[130px] space-y-1.5">
+                    <TableCell className="py-3 overflow-hidden">
+                      <div className="space-y-1.5 min-w-0">
                         <div className="w-full h-1.5 rounded-full bg-[#E4E7E7] overflow-hidden">
                           <div
                             className="h-full bg-[#00A57E] transition-all rounded-full"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <div className="text-[11px] font-medium text-[#0A0A0A] tabular-nums">
+                        <div className="text-[11px] font-medium text-[#0A0A0A] tabular-nums truncate">
                           {formatAED(paid)} of {formatAED(netFee)}
                         </div>
                       </div>
                     </TableCell>
 
                     {/* 6. Balance */}
-                    <TableCell className="py-3">
+                    <TableCell className="py-3 overflow-hidden">
                       <BalancePill status={c.candidate_status} balance={c.total_balance} />
                     </TableCell>
 
                     {/* 7. Last payment */}
-                    <TableCell className="py-3">
+                    <TableCell className="py-3 overflow-hidden">
                       <div
-                        className="text-xs text-[#6B7272] tabular-nums whitespace-nowrap"
+                        className="text-xs text-[#6B7272] tabular-nums whitespace-nowrap truncate"
                         title={formatDubaiDateTime(c.last_payment_at)}
                       >
                         {formatRelativeTime(c.last_payment_at)}
                       </div>
                     </TableCell>
 
-                    {/* 8. Actions */}
-                    <TableCell className="py-3 text-right pr-4" onClick={(e) => e.stopPropagation()}>
+                    {/* 8. Actions (sticky right on smaller widths) */}
+                    <TableCell
+                      className={cn(
+                        'py-3 text-right pr-4 sticky right-0 z-10 transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] xl:shadow-none',
+                        isSelected ? 'bg-[#E6F6F2]' : 'bg-white group-hover:bg-[#F5F6F6]'
+                      )}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex items-center justify-end gap-1">
                         {/* Quick Record Payment */}
                         <Button

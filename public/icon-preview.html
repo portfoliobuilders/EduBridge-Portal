@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EduBridge App Icon Preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+    h1 { font-size: 24px; font-weight: 600; text-align: center; }
+    .subtitle { color: #94a3b8; font-size: 14px; margin-top: -24px; }
+    .section {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .tiles-row {
+      display: flex;
+      gap: 48px;
+      align-items: center;
+      justify-content: center;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e293b"/><stop offset="100%" stop-color="%230f172a"/></linearGradient></defs><rect width="400" height="200" fill="url(%23g)"/></svg>');
+      padding: 32px 48px;
+      border-radius: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .tile-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .ios-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 13.5px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: block;
+    }
+    .android-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: block;
+    }
+    .app-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      letter-spacing: -0.2px;
+    }
+    .platform-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+    #icon-512-preview {
+      width: 512px;
+      height: 512px;
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <h1>EduBridge Brand App Icon</h1>
+  <p class="subtitle">Solid #00A57E with centered graduation-cap mark</p>
+
+  <div class="section" id="section-tiles">
+    <div class="tiles-row">
+      <!-- iOS tile -->
+      <div class="tile-wrapper">
+        <span class="platform-tag">iOS Home Screen</span>
+        <img class="ios-icon" src="/apple-touch-icon.png" alt="iOS Tile" />
+        <span class="app-label">EduBridge</span>
+      </div>
+
+      <!-- Android tile -->
+      <div class="tile-wrapper">
+        <span class="platform-tag">Android Adaptive</span>
+        <img class="android-icon" src="/icons/icon-maskable-192.png" alt="Android Tile" />
+        <span class="app-label">EduBridge</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="section-512">
+    <span class="platform-tag">512×512 Master PWA Icon</span>
+    <img id="icon-512-preview" src="/icons/icon-512.png" alt="EduBridge 512 Icon" />
+  </div>
+</body>
+</html>

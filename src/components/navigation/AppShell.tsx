@@ -123,15 +123,15 @@ export function AppShell({
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-[#E4E7E7] shrink-0 fixed inset-y-0 z-30">
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-[#E4E7E7] shrink-0">
-          <Link href="/" className="inline-block">
+          <Link href="/" className="inline-flex items-center">
             <Image
               src="/brand/edubridge-logo-color.svg"
               alt="EduBridge Education"
               width={160}
-              height={30}
+              height={32}
               priority
-              style={{ width: 'auto', height: 'auto' }}
-              className="h-[30px] w-auto"
+              style={{ width: 'auto', height: '32px' }}
+              className="h-8 w-auto max-h-8 object-contain"
             />
           </Link>
         </div>
@@ -235,16 +235,16 @@ export function AppShell({
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
         {/* Mobile Top Header (< 1024px): Logo + Search only */}
-        <header className="lg:hidden h-14 bg-white border-b border-[#E4E7E7] px-4 flex items-center justify-between sticky top-0 z-20">
-          <Link href="/" className="inline-block">
+        <header className="lg:hidden h-16 bg-white border-b border-[#E4E7E7] px-4 flex items-center justify-between sticky top-0 z-20">
+          <Link href="/" className="inline-flex items-center">
             <Image
               src="/brand/edubridge-logo-color.svg"
               alt="EduBridge Education"
-              width={130}
-              height={28}
+              width={160}
+              height={32}
               priority
-              style={{ width: 'auto', height: 'auto' }}
-              className="h-7 w-auto"
+              style={{ width: 'auto', height: '32px' }}
+              className="h-8 w-auto max-h-8 object-contain"
             />
           </Link>
 

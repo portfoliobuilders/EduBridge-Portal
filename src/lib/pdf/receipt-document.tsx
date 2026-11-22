@@ -13,6 +13,7 @@ import path from 'path'
 import { amountInWords } from '@/lib/amount-in-words'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
+import { formatPhoneNumber } from '@/lib/phone'
 
 // Register Poppins fonts from local filesystem
 const fontsDir = path.join(process.cwd(), 'public', 'fonts')
@@ -373,7 +374,7 @@ export function ReceiptDocument({
             <Text style={styles.companyName}>{settings.name}</Text>
             <Text>{settings.address}</Text>
             <Text>
-              Tel: {settings.phone} | Email: {settings.email}
+              Tel: {formatPhoneNumber(settings.phone)} | Email: {settings.email}
             </Text>
             <Text>Web: {settings.website}</Text>
             <Text style={{ fontWeight: 600, color: '#0A0A0A', marginTop: 1 }}>
@@ -424,7 +425,7 @@ export function ReceiptDocument({
                   {[billingAddress.line1, billingAddress.line2, billingAddress.city, billingAddress.state, billingAddress.country].filter(Boolean).join(', ')}
                 </Text>
                 {billingAddress.contact_phone ? (
-                  <Text style={styles.value}>Tel: {billingAddress.contact_phone}</Text>
+                  <Text style={styles.value}>Tel: {formatPhoneNumber(billingAddress.contact_phone)}</Text>
                 ) : null}
               </View>
             </View>
@@ -439,7 +440,7 @@ export function ReceiptDocument({
           <View style={styles.row}>
             <Text style={styles.label}>Candidate ID / Tel:</Text>
             <Text style={styles.value}>
-              {student.student_code} | {student.mobile}
+              {student.student_code} | {formatPhoneNumber(student.mobile)}
             </Text>
           </View>
           <View style={styles.row}>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { BalancePill } from '@/components/BalancePill'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
+import { formatPhoneNumber } from '@/lib/phone'
 import {
   Phone,
   MessageSquare,
@@ -201,13 +202,12 @@ export function StudentDetailClient({
   const [editFeeOpen, setEditFeeOpen] = useState(false)
   const [addEnrollmentOpen, setAddEnrollmentOpen] = useState(false)
 
-  // Document summary computation (exclude 'other' slug from denominator)
-  const standardTypes = documentTypes.filter((t) => t.slug !== 'other')
+  // Document summary computation (use total active document types)
+  const totalActiveDocTypes = documentTypes.length
   const uploadedTypeIds = new Set(
     documents.filter((d) => !d.archived_at).map((d) => d.document_type_id)
   )
-  const uploadedStandardCount = standardTypes.filter((t) => uploadedTypeIds.has(t.id)).length
-  const totalStandardCount = standardTypes.length
+  const uploadedActiveCount = documentTypes.filter((t) => uploadedTypeIds.has(t.id)).length
   const unverifiedDocsCount = documents.filter(
     (d) => !d.archived_at && d.status === 'received'
   ).length
@@ -249,7 +249,7 @@ export function StudentDetailClient({
                 title="Click to view candidate documents"
               >
                 <FileText className="h-3.5 w-3.5 text-[#00A57E]" />
-                <span>Documents: {uploadedStandardCount} of {totalStandardCount} types uploaded</span>
+                <span>Documents: {uploadedActiveCount} of {totalActiveDocTypes} types uploaded</span>
                 {unverifiedDocsCount > 0 && (
                   <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                     {unverifiedDocsCount} unverified
@@ -266,7 +266,7 @@ export function StudentDetailClient({
                   className="flex items-center gap-1.5 font-mono text-[#0A0A0A] hover:text-[#00A57E] transition py-1"
                 >
                   <Phone className="h-3.5 w-3.5 text-[#00A57E]" />
-                  <span>{student.mobile}</span>
+                  <span>{formatPhoneNumber(student.mobile)}</span>
                 </a>
               )}
 
@@ -369,7 +369,7 @@ export function StudentDetailClient({
           <FileText className="h-4 w-4" />
           <span>Documents</span>
           <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#E6F6F2] text-[#00805F]">
-            {uploadedStandardCount}/{totalStandardCount}
+            {uploadedActiveCount}/{totalActiveDocTypes}
           </span>
           {unverifiedDocsCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">

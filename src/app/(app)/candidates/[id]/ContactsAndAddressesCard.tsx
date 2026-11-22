@@ -24,6 +24,7 @@ import {
   Truck,
 } from 'lucide-react'
 import { COUNTRIES, GUARDIAN_RELATIONS } from '@/lib/constants'
+import { formatPhoneNumber } from '@/lib/phone'
 import {
   updateStudentGuardianAction,
   saveStudentAddressAction,
@@ -264,7 +265,7 @@ export function ContactsAndAddressesCard({
                       href={`tel:${guardian.guardian_phone}`}
                       className="font-mono hover:text-[#0A0A0A]"
                     >
-                      {guardian.guardian_phone}
+                      {formatPhoneNumber(guardian.guardian_phone)}
                     </a>
                   </div>
                 )}

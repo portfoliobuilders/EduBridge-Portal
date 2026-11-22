@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { formatAED } from '@/lib/money'
+import { formatPhoneNumber } from '@/lib/phone'
 import { calculatePaymentVat, type VatTreatment } from '@/lib/vat'
 import { cn } from '@/lib/utils'
 import {
@@ -413,7 +414,7 @@ export function PaymentForm({
                               {item.intake ? ` · ${item.intake}` : ''}
                             </div>
                             <div className="text-xs text-[#6B7272] font-mono mt-0.5">
-                              {item.studentMobile}
+                              {formatPhoneNumber(item.studentMobile)}
                             </div>
                           </div>
                           <div className="text-right shrink-0 pl-3">
@@ -466,7 +467,7 @@ export function PaymentForm({
                       {selectedEnrollment.intake ? ` · Intake: ${selectedEnrollment.intake}` : ''}
                     </div>
                     <div className="text-xs text-[#6B7272] mt-0.5 font-mono">
-                      Mobile: {selectedEnrollment.studentMobile}
+                      Mobile: {formatPhoneNumber(selectedEnrollment.studentMobile)}
                     </div>
                   </div>
 

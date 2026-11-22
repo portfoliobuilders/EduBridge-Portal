@@ -6,6 +6,7 @@ import { CheckCircle2, FileSpreadsheet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
+import { formatPhoneNumber } from '@/lib/phone'
 import { PublicStatementActions } from './PublicStatementClient'
 
 export const dynamic = 'force-dynamic'
@@ -95,7 +96,7 @@ export default async function PublicStatementPage({
                   'M03, Royal House Building, Hor Al Anz East, Dubai – UAE'}
               </div>
               <div>
-                Tel: {s.company?.phone ?? '+971 58 107 3898'} | Email:{' '}
+                Tel: {formatPhoneNumber(s.company?.phone ?? '+971 58 107 3898')} | Email:{' '}
                 {s.company?.email ?? 'info@edubridgeeducation.com'}
               </div>
               <div>Web: {s.company?.website ?? 'https://edubridgeeducation.com'}</div>
