@@ -17,6 +17,7 @@ playwright-report/
 scripts/*
 !scripts/check-test-users.mjs
 !scripts/cleanup-test-users.mjs
+!scripts/generate_owner_guide_pdf.js
 !supabase/scripts/
 
 # next.js
