@@ -240,14 +240,23 @@ export function PaymentForm({
 
   const getRefLabel = () => {
     switch (mode) {
-      case 'card':
-        return 'Card Approval Code / Auth No *'
       case 'link':
-        return 'Payment Link ID / Reference *'
+        return 'Payment link ID *'
       case 'bank_transfer':
-        return 'Bank Transfer Reference / IBAN *'
-      case 'cash':
-        return 'Receipt Note / Cash Reference (optional)'
+        return 'Bank transfer ref *'
+      default:
+        return ''
+    }
+  }
+
+  const getRefPlaceholder = () => {
+    switch (mode) {
+      case 'link':
+        return 'Enter payment link ID'
+      case 'bank_transfer':
+        return 'Enter bank transfer reference'
+      default:
+        return ''
     }
   }
 
@@ -265,8 +274,13 @@ export function PaymentForm({
       errors.amount = `Amount cannot exceed balance of ${formatAED(balance)}`
     }
 
-    if (mode !== 'cash' && (!referenceNo || referenceNo.trim().length < 2)) {
-      errors.referenceNo = 'Reference number is required for non-cash payments'
+    if (mode === 'link' || mode === 'bank_transfer') {
+      if (!referenceNo || referenceNo.trim().length < 2) {
+        errors.referenceNo =
+          mode === 'link'
+            ? 'Payment link ID is required'
+            : 'Bank transfer ref is required'
+      }
     }
 
     if (purpose === 'other' && (!purposeNote || purposeNote.trim().length < 2)) {
@@ -305,7 +319,10 @@ export function PaymentForm({
         mode,
         purpose,
         purposeNote: purpose === 'other' ? purposeNote : null,
-        referenceNo: referenceNo.trim() || null,
+        referenceNo:
+          (mode === 'link' || mode === 'bank_transfer') && referenceNo.trim()
+            ? referenceNo.trim()
+            : null,
         paidAt: new Date(paidAt).toISOString(),
         payeeName: payeeName.trim() || null,
         comments: comments.trim() || null,
@@ -557,7 +574,20 @@ export function PaymentForm({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setMode(item.id as PaymentMode)}
+                  onClick={() => {
+                    const newMode = item.id as PaymentMode
+                    setMode(newMode)
+                    if (newMode === 'card' || newMode === 'cash') {
+                      setReferenceNo('')
+                      if (formErrors.referenceNo) {
+                        setFormErrors((prev) => {
+                          const next = { ...prev }
+                          delete next.referenceNo
+                          return next
+                        })
+                      }
+                    }
+                  }}
                   className={`p-4 rounded-lg border-2 text-left transition flex flex-col justify-between ${
                     isSelected
                       ? 'border-[#00A57E] bg-[#E6F6F2]/40 text-[#0A0A0A]'
@@ -585,32 +615,30 @@ export function PaymentForm({
             })}
           </div>
 
-          {/* Reference Input */}
-          <div className="space-y-1.5 pt-2">
-            <Label htmlFor="referenceNo">{getRefLabel()}</Label>
-            <Input
-              id="referenceNo"
-              placeholder={
-                mode === 'cash'
-                  ? 'Optional reference note'
-                  : 'Enter receipt / approval / transaction reference'
-              }
-              value={referenceNo}
-              onChange={(e) => {
-                setReferenceNo(e.target.value)
-                if (formErrors.referenceNo) {
-                  setFormErrors((prev) => {
-                    const next = { ...prev }
-                    delete next.referenceNo
-                    return next
-                  })
-                }
-              }}
-            />
-            {formErrors.referenceNo && (
-              <p className="text-sm text-destructive">{formErrors.referenceNo}</p>
-            )}
-          </div>
+          {/* Reference Input - only shown for Link and Bank Transfer */}
+          {(mode === 'link' || mode === 'bank_transfer') && (
+            <div className="space-y-1.5 pt-2">
+              <Label htmlFor="referenceNo">{getRefLabel()}</Label>
+              <Input
+                id="referenceNo"
+                placeholder={getRefPlaceholder()}
+                value={referenceNo}
+                onChange={(e) => {
+                  setReferenceNo(e.target.value)
+                  if (formErrors.referenceNo) {
+                    setFormErrors((prev) => {
+                      const next = { ...prev }
+                      delete next.referenceNo
+                      return next
+                    })
+                  }
+                }}
+              />
+              {formErrors.referenceNo && (
+                <p className="text-sm text-destructive">{formErrors.referenceNo}</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

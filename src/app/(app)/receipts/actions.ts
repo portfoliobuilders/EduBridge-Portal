@@ -30,13 +30,13 @@ const recordPaymentSchema = z
   })
   .refine(
     (data) => {
-      if (data.mode !== 'cash') {
+      if (data.mode === 'link' || data.mode === 'bank_transfer') {
         return !!data.referenceNo && data.referenceNo.trim().length >= 2
       }
       return true
     },
     {
-      message: 'Reference number is required for Card, Link, and Bank Transfer payments',
+      message: 'Reference number is required for Payment Link and Bank Transfer payments',
       path: ['referenceNo'],
     }
   )
@@ -104,7 +104,10 @@ export async function recordPaymentAction(
       p_mode: mode,
       p_purpose: purpose,
       p_purpose_note: purposeNote ? purposeNote.trim() : '',
-      p_reference_no: referenceNo ? referenceNo.trim() : '',
+      p_reference_no:
+        (mode === 'link' || mode === 'bank_transfer') && referenceNo
+          ? referenceNo.trim()
+          : '',
       p_paid_at: new Date(paidAt).toISOString(),
       p_payee_name: payeeName ? payeeName.trim() : '',
       p_comments: comments ? comments.trim() : '',
