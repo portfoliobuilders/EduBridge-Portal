@@ -4,7 +4,7 @@ import React from 'react'
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import type { StudentDirectoryRow } from '@/types/database'
+import type { StudentDirectoryRow } from '@/types/student-directory'
 
 interface CandidatesHeaderProps {
   students: StudentDirectoryRow[]

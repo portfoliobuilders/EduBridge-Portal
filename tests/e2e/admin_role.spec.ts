@@ -19,6 +19,7 @@ const adminClient = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECR
 });
 
 test.describe('Admin Role Permissions & Scope E2E Scenario', () => {
+  test.describe.configure({ mode: 'serial' });
   const runId = Date.now();
   const adminEmail = `admin_role_${runId}@test.edubridge.local`;
   const password = `AdminP@ss_${runId}!Aa1`;

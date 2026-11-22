@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { formatAED } from '@/lib/money'
 import { formatPhoneNumber, cleanPhoneForWhatsApp } from '@/lib/phone'
 import { MessageCircle, ExternalLink, CheckCircle2, ArrowRight } from 'lucide-react'
-import type { StudentDirectoryRow } from '@/types/database'
+import type { StudentDirectoryRow } from '@/types/student-directory'
 
 interface WhatsAppReminderDialogProps {
   open: boolean

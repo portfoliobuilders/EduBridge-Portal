@@ -50,6 +50,8 @@ test.describe('Capture Candidate Document Screenshots', () => {
       fullName: 'Fatima Al Mansoori',
       mobile: `+97158${runId.toString().slice(-7)}`,
       staffUserId: testUserId,
+      email: testEmail,
+      password: password,
     });
     testStudentId = candidate.studentId;
 
@@ -99,16 +101,7 @@ test.describe('Capture Candidate Document Screenshots', () => {
     });
   });
 
-  test.afterAll(async () => {
-    if (testStudentId) {
-      await supabase.from('document_upload_links').delete().eq('student_id', testStudentId);
-      await supabase.from('candidate_documents').delete().eq('student_id', testStudentId);
-      await supabase.from('students').delete().eq('id', testStudentId);
-    }
-    if (testUserId) {
-      await supabase.auth.admin.deleteUser(testUserId);
-    }
-  });
+
 
   test('Capture Document Screenshots across 1280px Desktop and 375px Mobile', async ({ page }) => {
     // A. Login

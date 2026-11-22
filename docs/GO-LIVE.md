@@ -24,7 +24,7 @@ This checklist must be executed in sequence before turning over the live applica
   ```bash
   npx supabase migration list --remote
   ```
-  Ensure all migrations (0001 through 0016) are applied and in sync.
+  Ensure all migrations (0001 through 0047) are applied and in sync.
 - [ ] **Advisors Security & Performance Audit**:
   ```bash
   npx supabase db advisors --remote

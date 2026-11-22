@@ -21,7 +21,7 @@ const adminClient = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECR
 });
 
 test.describe('VAT Treatment End-to-End Suite & Screenshot Capture', () => {
-  test.describe.configure({ timeout: 120000 });
+  test.describe.configure({ mode: 'serial', timeout: 120000 });
 
   const runId = Date.now();
   const testEmail = `vat_owner_${runId}@test.edubridge.local`;

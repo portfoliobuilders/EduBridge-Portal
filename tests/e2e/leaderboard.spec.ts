@@ -19,6 +19,7 @@ const adminClient = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECR
 });
 
 test.describe('Staff Leaderboard E2E & API Verification', () => {
+  test.describe.configure({ mode: 'serial' });
   const runId = Date.now();
   const staffEmail = `lb_staff_${runId}@test.edubridge.local`;
   const adminEmail = `lb_admin_${runId}@test.edubridge.local`;

@@ -37,7 +37,7 @@ async function handleCron(req: NextRequest) {
       .select('celebration_emails_enabled')
       .maybeSingle()
 
-    const emailsEnabled = settings?.celebration_emails_enabled ?? true
+    const emailsEnabled = settings?.celebration_emails_enabled ?? false
 
     // Process daily celebrations in database (creates in-app notifications & reminders)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

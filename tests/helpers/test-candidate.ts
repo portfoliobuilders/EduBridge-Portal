@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export interface TestCandidateResult {
   studentId: string
@@ -17,8 +17,26 @@ export async function createTestCandidateWithEnrollment(
     fullName?: string
     mobile?: string
     staffUserId?: string
+    email?: string
+    password?: string
   }
 ): Promise<TestCandidateResult> {
+  let callerClient = client
+  if (options?.email && options?.password) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
+    if (url && key) {
+      const authedClient = createClient(url, key)
+      const { error: signErr } = await authedClient.auth.signInWithPassword({
+        email: options.email,
+        password: options.password,
+      })
+      if (!signErr) {
+        callerClient = authedClient
+      }
+    }
+  }
+
   const runId = Date.now()
   const fullName = options?.fullName || `Test Candidate ${runId}`
   // Generate random 7 digits for phone number
@@ -26,7 +44,7 @@ export async function createTestCandidateWithEnrollment(
   const mobile = options?.mobile || `+97150${randomDigits}`
 
   // 1. Get an active university and course
-  const { data: uni, error: uErr } = await client
+  const { data: uni, error: uErr } = await callerClient
     .from('universities')
     .select('id')
     .eq('is_active', true)
@@ -37,7 +55,7 @@ export async function createTestCandidateWithEnrollment(
     throw new Error(`Failed to find active university: ${uErr?.message}`)
   }
 
-  const { data: course, error: cErr } = await client
+  const { data: course, error: cErr } = await callerClient
     .from('courses')
     .select('id, default_fee')
     .eq('university_id', uni.id)
@@ -50,7 +68,7 @@ export async function createTestCandidateWithEnrollment(
   }
 
   // 2. Call create_student_with_enrollment RPC
-  const { data: rpcRes, error: rpcErr } = await client.rpc('create_student_with_enrollment', {
+  const { data: rpcRes, error: rpcErr } = await callerClient.rpc('create_student_with_enrollment', {
     p_full_name: fullName,
     p_mobile: mobile,
     p_whatsapp: mobile,

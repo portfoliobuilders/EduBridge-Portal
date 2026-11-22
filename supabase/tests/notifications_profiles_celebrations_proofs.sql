@@ -74,31 +74,64 @@ begin
 
   update public.profiles set
     full_name = 'Staff Member A', role = 'staff', is_active = true, reports_to = v_admin,
-    dob = make_date(1995, extract(month from v_today)::int, extract(day from v_today)::int),
     joining_date = make_date(v_cur_year - 2, extract(month from v_today)::int, extract(day from v_today)::int),
-    address = '123 Dubai Marina', emergency_contact_name = 'Jane Doe', emergency_contact_phone = '+971501112233',
     celebrate_birthday = true, celebrate_anniversary = true
   where id = v_staff_a;
 
+  insert into public.staff_sensitive_details (
+    user_id, dob, address, emergency_contact_name, emergency_contact_phone
+  ) values (
+    v_staff_a,
+    make_date(1995, extract(month from v_today)::int, extract(day from v_today)::int),
+    '123 Dubai Marina', 'Jane Doe', '+971501112233'
+  ) on conflict (user_id) do update set
+    dob = excluded.dob, address = excluded.address,
+    emergency_contact_name = excluded.emergency_contact_name, emergency_contact_phone = excluded.emergency_contact_phone;
+
   update public.profiles set
     full_name = 'Staff Member B', role = 'staff', is_active = true, reports_to = v_admin,
-    dob = make_date(1998, 11, 15), joining_date = make_date(v_cur_year - 1, 10, 1),
-    address = '456 JLT Cluster D', emergency_contact_name = 'Bob Smith', emergency_contact_phone = '+971504445566',
+    joining_date = make_date(v_cur_year - 1, 10, 1),
     celebrate_birthday = true, celebrate_anniversary = true
   where id = v_staff_b;
 
+  insert into public.staff_sensitive_details (
+    user_id, dob, address, emergency_contact_name, emergency_contact_phone
+  ) values (
+    v_staff_b,
+    make_date(1998, 11, 15),
+    '456 JLT Cluster D', 'Bob Smith', '+971504445566'
+  ) on conflict (user_id) do update set
+    dob = excluded.dob, address = excluded.address,
+    emergency_contact_name = excluded.emergency_contact_name, emergency_contact_phone = excluded.emergency_contact_phone;
+
   update public.profiles set
     full_name = 'Opt Out Staff', role = 'staff', is_active = true, reports_to = v_admin,
-    dob = make_date(1992, extract(month from v_today)::int, extract(day from v_today)::int),
     joining_date = make_date(v_cur_year - 3, extract(month from v_today)::int, extract(day from v_today)::int),
     celebrate_birthday = false, celebrate_anniversary = false
   where id = v_staff_opt_out;
 
+  insert into public.staff_sensitive_details (
+    user_id, dob, address
+  ) values (
+    v_staff_opt_out,
+    make_date(1992, extract(month from v_today)::int, extract(day from v_today)::int),
+    '789 Business Bay'
+  ) on conflict (user_id) do update set
+    dob = excluded.dob, address = excluded.address;
+
   update public.profiles set
     full_name = 'Leap Day Staff', role = 'staff', is_active = true, reports_to = v_admin,
-    dob = '1996-02-29'::date, joining_date = '2020-02-29'::date,
+    joining_date = '2020-02-29'::date,
     celebrate_birthday = true, celebrate_anniversary = true
   where id = v_staff_leap;
+
+  insert into public.staff_sensitive_details (
+    user_id, dob
+  ) values (
+    v_staff_leap,
+    '1996-02-29'::date
+  ) on conflict (user_id) do update set
+    dob = excluded.dob;
 
   -- ---------------------------------------------------------------------------
   -- TEST 1: Notification RLS - user sees own only

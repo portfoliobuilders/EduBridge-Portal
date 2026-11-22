@@ -207,8 +207,10 @@ begin
   -- -------------------------------------------------------------------------
   -- PROOF 7: Missing checkout: session marked missing_checkout, worked minutes not counted
   -- -------------------------------------------------------------------------
-  -- Staff 2 is currently punched in without out. Run daily close routine
+  -- Staff 2 is currently punched in without out. Run daily close routine (as cron/service_role)
+  execute 'reset role';
   v_res := public.process_daily_attendance_close();
+  execute 'set local role authenticated';
   assert (v_res->>'success')::boolean = true, 'Daily close routine should succeed';
 
   v_today := (now() at time zone 'Asia/Dubai')::date;
@@ -276,7 +278,9 @@ begin
   set weekly_off = '{6}'
   where user_id = v_staff1_id;
 
+  execute 'reset role';
   v_res := public.process_daily_attendance_absences((v_today - interval '1 day')::date);
+  execute 'set local role authenticated';
   assert (v_res->>'success')::boolean = true, 'Daily absence process should succeed';
 
   -- -------------------------------------------------------------------------

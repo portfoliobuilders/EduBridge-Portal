@@ -314,4 +314,48 @@ update public.student_counters set last_no = 0 where id = 1;
 delete from public.email_rate_limits;
 delete from public.public_rate_limits;
 
+-- 10. Clean up test notifications and audit records
+delete from public.notifications
+where title like 'New Team Member: test_%'
+   or title like 'New Team Member: UI Tester %'
+   or body like '%test_%';
+
+-- 11. Clean up test staff sensitive details
+delete from public.staff_sensitive_details
+where user_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+
+-- 12. Clean up test celebration wishes
+delete from public.celebration_wishes
+where sender_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+) or recipient_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+
+-- 13. Clean up test attendance records
+delete from public.leave_requests
+where user_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+
+delete from public.staff_attendance_settings
+where user_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+
+delete from public.attendance_days
+where user_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+
+-- Safely purge test punches by temporarily disabling delete trigger
+alter table public.attendance_punches disable trigger prevent_attendance_punch_delete;
+delete from public.attendance_punches
+where user_id in (
+  select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
+);
+alter table public.attendance_punches enable trigger prevent_attendance_punch_delete;
+
 commit;

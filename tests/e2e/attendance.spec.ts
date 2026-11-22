@@ -294,4 +294,22 @@ test.describe('Attendance Geofencing, Punch Flow & Admin Console E2E', () => {
       fullPage: false,
     });
   });
+
+  test.afterAll(async () => {
+    if (staffId) {
+      await adminClient.from('attendance_punches').delete().eq('user_id', staffId);
+      await adminClient.from('attendance_daily_summary').delete().eq('user_id', staffId);
+      await adminClient.from('leave_requests').delete().eq('user_id', staffId);
+      await adminClient.from('staff_attendance_settings').delete().eq('user_id', staffId);
+      await adminClient.from('profiles').delete().eq('id', staffId);
+      await adminClient.auth.admin.deleteUser(staffId);
+    }
+    if (adminId) {
+      await adminClient.from('profiles').delete().eq('id', adminId);
+      await adminClient.auth.admin.deleteUser(adminId);
+    }
+    if (officeId) {
+      await adminClient.from('offices').delete().eq('id', officeId);
+    }
+  });
 });

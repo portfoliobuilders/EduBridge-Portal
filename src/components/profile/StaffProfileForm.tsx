@@ -39,7 +39,7 @@ export function StaffProfileForm({ initialProfile }: StaffProfileFormProps) {
   const [emergencyPhone, setEmergencyPhone] = useState(profile.emergency_contact_phone || '')
   const [celebrateBirthday, setCelebrateBirthday] = useState(profile.celebrate_birthday)
   const [celebrateAnniversary, setCelebrateAnniversary] = useState(profile.celebrate_anniversary)
-  const [emailDigest, setEmailDigest] = useState(profile.email_digest_enabled)
+  const [emailDigest] = useState(profile.email_digest_enabled)
 
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -393,19 +393,7 @@ export function StaffProfileForm({ initialProfile }: StaffProfileFormProps) {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4 py-2 border-t border-[#F5F6F6]">
-            <div>
-              <p className="text-xs font-semibold text-[#0A0A0A]">Daily Email Digest</p>
-              <p className="text-[11px] text-[#6B7272]">
-                Receive a daily email summary of your candidates, payment notifications, and key reminders via Resend.
-              </p>
-            </div>
-            <Switch
-              checked={emailDigest}
-              onCheckedChange={setEmailDigest}
-              className="data-[state=checked]:bg-[#00A57E]"
-            />
-          </div>
+          {/* Daily Email Digest toggle hidden until backend digest sender is implemented */}
         </div>
       </div>
 

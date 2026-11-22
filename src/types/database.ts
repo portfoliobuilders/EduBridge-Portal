@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1333,17 +1333,13 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
           admin_scope: string
           avatar_url: string | null
           celebrate_anniversary: boolean
           celebrate_birthday: boolean
           created_at: string
           display_name: string | null
-          dob: string | null
           email_digest_enabled: boolean
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
           employee_id: string | null
           full_name: string
           id: string
@@ -1351,7 +1347,6 @@ export type Database = {
           is_support: boolean
           job_title: string | null
           joining_date: string | null
-          personal_email: string | null
           phone: string | null
           reports_to: string | null
           role: Database["public"]["Enums"]["app_role"]
@@ -1359,17 +1354,13 @@ export type Database = {
           work_email: string | null
         }
         Insert: {
-          address?: string | null
           admin_scope?: string
           avatar_url?: string | null
           celebrate_anniversary?: boolean
           celebrate_birthday?: boolean
           created_at?: string
           display_name?: string | null
-          dob?: string | null
           email_digest_enabled?: boolean
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           employee_id?: string | null
           full_name: string
           id: string
@@ -1377,7 +1368,6 @@ export type Database = {
           is_support?: boolean
           job_title?: string | null
           joining_date?: string | null
-          personal_email?: string | null
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
@@ -1385,17 +1375,13 @@ export type Database = {
           work_email?: string | null
         }
         Update: {
-          address?: string | null
           admin_scope?: string
           avatar_url?: string | null
           celebrate_anniversary?: boolean
           celebrate_birthday?: boolean
           created_at?: string
           display_name?: string | null
-          dob?: string | null
           email_digest_enabled?: boolean
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           employee_id?: string | null
           full_name?: string
           id?: string
@@ -1403,7 +1389,6 @@ export type Database = {
           is_support?: boolean
           job_title?: string | null
           joining_date?: string | null
-          personal_email?: string | null
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
@@ -2645,31 +2630,57 @@ export type Database = {
         Args: { p_enabled?: boolean; p_payment_id: string }
         Returns: boolean
       }
-      transfer_candidate: {
-        Args: {
-          p_enrollment_id?: string
-          p_reason?: string
-          p_scope: string
-          p_student_id: string
-          p_to_user: string
-        }
-        Returns: {
-          at: string
-          enrollment_id: string | null
-          from_user: string
-          id: string
-          reason: string
-          student_id: string
-          to_user: string
-          transferred_by: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "candidate_transfers"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      transfer_candidate:
+        | {
+            Args: {
+              p_enrollment_id?: string
+              p_reason?: string
+              p_scope?: string
+              p_student_id: string
+              p_to_user: string
+            }
+            Returns: {
+              at: string
+              enrollment_id: string | null
+              from_user: string
+              id: string
+              reason: string
+              student_id: string
+              to_user: string
+              transferred_by: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "candidate_transfers"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_enrollment_id?: string
+              p_reason?: string
+              p_scope: string
+              p_student_id: string
+              p_to_user: string
+            }
+            Returns: {
+              at: string
+              enrollment_id: string | null
+              from_user: string
+              id: string
+              reason: string
+              student_id: string
+              to_user: string
+              transferred_by: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "candidate_transfers"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       update_enrollment_fee: {
         Args: {
           p_discount: number
@@ -2705,17 +2716,13 @@ export type Database = {
           p_phone?: string
         }
         Returns: {
-          address: string | null
           admin_scope: string
           avatar_url: string | null
           celebrate_anniversary: boolean
           celebrate_birthday: boolean
           created_at: string
           display_name: string | null
-          dob: string | null
           email_digest_enabled: boolean
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
           employee_id: string | null
           full_name: string
           id: string
@@ -2723,7 +2730,6 @@ export type Database = {
           is_support: boolean
           job_title: string | null
           joining_date: string | null
-          personal_email: string | null
           phone: string | null
           reports_to: string | null
           role: Database["public"]["Enums"]["app_role"]
@@ -2974,6 +2980,3 @@ export const Constants = {
     },
   },
 } as const
-
-
-export type StudentDirectoryRow = Database['public']['Views']['student_directory_view']['Row'];

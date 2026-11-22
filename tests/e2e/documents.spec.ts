@@ -43,6 +43,8 @@ test.describe('Candidate Documents & Self-Upload Link Flow', () => {
       fullName: 'Fatima Al Mansoori',
       mobile: `+97158${runId.toString().slice(-7)}`,
       staffUserId,
+      email: staffEmail,
+      password: tempPassword,
     });
     testStudentId = candidate.studentId;
 
@@ -75,17 +77,7 @@ test.describe('Candidate Documents & Self-Upload Link Flow', () => {
     });
   });
 
-  test.afterAll(async () => {
-    // Clean up
-    if (testStudentId) {
-      await adminClient.from('document_upload_links').delete().eq('student_id', testStudentId);
-      await adminClient.from('candidate_documents').delete().eq('student_id', testStudentId);
-      await adminClient.from('students').delete().eq('id', testStudentId);
-    }
-    if (staffUserId) {
-      await adminClient.auth.admin.deleteUser(staffUserId);
-    }
-  });
+
 
   test('Public self-upload page (/u/[token]) displays candidate first name and requested types only', async ({
     page,

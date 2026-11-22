@@ -59,13 +59,18 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
         role: 'staff',
         job_title: 'Senior Education Counsellor',
         employee_id: `EB-STF-${runId.toString().slice(-4)}`,
-        dob: dobForToday,
         joining_date: joiningDateForAnniversary,
         celebrate_birthday: true,
         celebrate_anniversary: true,
         is_active: true,
       })
       .eq('id', celebrantId);
+
+    // Save DOB in staff_sensitive_details
+    await adminClient.from('staff_sensitive_details').upsert({
+      user_id: celebrantId,
+      dob: dobForToday,
+    });
 
     // 2. Create Colleague User
     const { data: colData, error: colErr } = await adminClient.auth.admin.createUser({
@@ -240,9 +245,13 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
 
     // 2. Switch Celebrant to Work Anniversary milestone only
     await adminClient
+      .from('staff_sensitive_details')
+      .update({ dob: null })
+      .eq('user_id', celebrantId);
+
+    await adminClient
       .from('profiles')
       .update({
-        dob: null, // clear birthday so anniversary is primary
         joining_date: `${Number(dubaiYear) - 3}-${dubaiMonth}-${dubaiDay}`,
       })
       .eq('id', celebrantId);
