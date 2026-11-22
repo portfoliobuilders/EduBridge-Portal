@@ -277,17 +277,27 @@ export async function GET(request: NextRequest) {
       )
       const headers = [
         'Month',
-        'Taxable Amount (AED)',
-        'VAT Collected (AED)',
+        'Total Taxable (AED)',
+        'Total VAT (AED)',
         'Total Collected (AED)',
         'Receipts Count',
+        'Exclusive Taxable (AED)',
+        'Exclusive VAT (AED)',
+        'Inclusive Taxable (AED)',
+        'Inclusive VAT (AED)',
+        'No VAT Total (AED)',
       ]
-      const rows = rowsData.map((r) => [
+      const rows = rowsData.map((r: any) => [
         r.month_name.trim(),
         Number(r.taxable_amount).toFixed(2),
         Number(r.vat_collected).toFixed(2),
         Number(r.total_collected).toFixed(2),
         r.receipt_count,
+        Number(r.by_treatment?.exclusive?.taxable || 0).toFixed(2),
+        Number(r.by_treatment?.exclusive?.vat || 0).toFixed(2),
+        Number(r.by_treatment?.inclusive?.taxable || 0).toFixed(2),
+        Number(r.by_treatment?.inclusive?.vat || 0).toFixed(2),
+        Number(r.by_treatment?.none?.total || 0).toFixed(2),
       ])
       csvContent = toCsvString(headers, rows)
       filename = `edubridge-vat-summary-${year || new Date().getFullYear()}.csv`
