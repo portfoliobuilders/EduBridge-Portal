@@ -665,7 +665,9 @@ export function ReportsClient({
                     <th className="py-3 px-4">Mode & Ref</th>
                     <th className="py-3 px-4">Purpose</th>
                     <th className="py-3 px-4">Received By</th>
-                    <th className="py-3 px-4 text-right">Amount</th>
+                    <th className="py-3 px-4 text-right">Taxable</th>
+                    <th className="py-3 px-4 text-right">VAT</th>
+                    <th className="py-3 px-4 text-right">Total Amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E4E7E7] font-mono tabular-nums">
@@ -694,6 +696,12 @@ export function ReportsClient({
                         <td className="py-3 px-4 font-sans text-[#6B7272]">
                           {r.received_by_name || 'Staff'}
                         </td>
+                        <td className="py-3 px-4 text-right text-[#0A0A0A]">
+                          {formatAED(Number(r.taxable_amount != null ? r.taxable_amount : Number(r.amount) - Number(r.vat_amount || 0)))}
+                        </td>
+                        <td className="py-3 px-4 text-right text-[#6B7272]">
+                          {formatAED(Number(r.vat_amount || 0))}
+                        </td>
                         <td className="py-3 px-4 text-right font-bold text-[#00A57E]">
                           {formatAED(Number(r.amount))}
                         </td>
@@ -701,7 +709,7 @@ export function ReportsClient({
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-muted-foreground font-sans">
+                      <td colSpan={9} className="py-8 text-center text-muted-foreground font-sans">
                         No collections match the specified filter criteria.
                       </td>
                     </tr>
