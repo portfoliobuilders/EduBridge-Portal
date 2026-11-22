@@ -9,6 +9,9 @@ interface CollectionsExportRow {
   student_name: string
   student_code: string
   amount: number | string
+  taxable_amount?: number | string | null
+  vat_amount?: number | string | null
+  vat_treatment?: string | null
   mode: string
   purpose: string
   purpose_note?: string | null
@@ -16,7 +19,6 @@ interface CollectionsExportRow {
   received_by_name?: string | null
   university_name?: string | null
   course_name?: string | null
-  vat_amount?: number | string | null
   status: string
 }
 
@@ -121,13 +123,15 @@ export async function GET(request: NextRequest) {
         'Candidate Name',
         'Candidate Code',
         'Amount (AED)',
+        'Taxable Amount (AED)',
+        'VAT Amount (AED)',
+        'VAT Treatment',
         'Mode',
         'Purpose',
         'Purpose Note',
         'Received By',
         'University',
         'Course',
-        'VAT Amount (AED)',
         'Status',
       ]
       const rows = rowsData.map((r) => [
@@ -136,13 +140,15 @@ export async function GET(request: NextRequest) {
         r.student_name,
         r.student_code,
         Number(r.amount).toFixed(2),
+        Number(r.taxable_amount != null ? r.taxable_amount : Number(r.amount) - Number(r.vat_amount || 0)).toFixed(2),
+        Number(r.vat_amount || 0).toFixed(2),
+        r.vat_treatment || 'exclusive',
         r.mode,
         r.purpose,
         r.purpose_note || '',
         r.received_by_name || '',
         r.university_name || '',
         r.course_name || '',
-        Number(r.vat_amount || 0).toFixed(2),
         r.status,
       ])
       csvContent = toCsvString(headers, rows)
