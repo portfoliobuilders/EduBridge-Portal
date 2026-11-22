@@ -18,7 +18,7 @@ export interface ActionResult<T = unknown> {
 // Validation Schemas
 // -----------------------------------------------------------------------------
 
-export const addressSchema = z.object({
+const addressSchema = z.object({
   contactName: z.string().trim().optional().nullable(),
   contactPhone: z.string().trim().optional().nullable(),
   line1: z.string().trim().min(1, 'Address line 1 is required'),

@@ -13,7 +13,8 @@ export default async function NewReceiptPage({
 }) {
   const { user, profile } = await requireUser()
   const isOwner = profile.role === 'owner'
-  const { enrollment: enrollmentId } = await searchParams
+  const resolvedParams = searchParams ? await searchParams : {}
+  const enrollmentId = resolvedParams?.enrollment
 
   const supabase = await createClient()
 
@@ -83,6 +84,11 @@ export default async function NewReceiptPage({
       .single()
 
     if (item) {
+      const studentObj = Array.isArray(item.student) ? item.student[0] : item.student
+      const uniObj = Array.isArray(item.university) ? item.university[0] : item.university
+      const courseObj = Array.isArray(item.course) ? item.course[0] : item.course
+      const specObj = Array.isArray(item.specialization) ? item.specialization[0] : item.specialization
+
       const [{ data: ledger }, { data: billingAddr }] = await Promise.all([
         supabase
           .from('enrollment_ledger')
@@ -101,12 +107,12 @@ export default async function NewReceiptPage({
       initialEnrollment = {
         enrollmentId: item.id,
         studentId: item.student_id,
-        studentName: item.student.full_name,
-        studentCode: item.student.student_code,
-        studentMobile: item.student.mobile,
-        universityName: item.university.name,
-        courseName: item.course.name,
-        specializationName: item.specialization?.name ?? null,
+        studentName: studentObj?.full_name ?? '',
+        studentCode: studentObj?.student_code ?? '',
+        studentMobile: studentObj?.mobile ?? '',
+        universityName: uniObj?.name ?? '',
+        courseName: courseObj?.name ?? '',
+        specializationName: specObj?.name ?? null,
         intake: item.intake,
         vatType: item.vat_type,
         vatRate: item.vat_rate,
@@ -117,7 +123,7 @@ export default async function NewReceiptPage({
         balance: Number(
           ledger?.balance ?? item.total_fee - item.discount
         ),
-        guardianName: item.student.guardian_name ?? null,
+        guardianName: studentObj?.guardian_name ?? null,
         billingContactName: billingAddr?.contact_name ?? null,
       }
     }

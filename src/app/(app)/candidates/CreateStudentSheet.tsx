@@ -571,6 +571,7 @@ export function CreateStudentSheet({
                       </Label>
                       <div className="mt-1">
                         <PhoneInput
+                          id="mobile"
                           value={mobile}
                           onChange={(val) => {
                             setMobile(val)

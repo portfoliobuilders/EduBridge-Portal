@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
 
   const { data: settings } = await supabase
     .from('company_settings')
@@ -11,7 +12,7 @@ export async function GET() {
     .single()
 
   if (!settings?.logo_path) {
-    return NextResponse.redirect(new URL('/brand/edubridge-logo-color.svg', 'http://localhost:3000'))
+    return NextResponse.redirect(new URL('/brand/edubridge-logo-color.svg', appUrl))
   }
 
   const { data, error } = await supabase.storage
@@ -19,7 +20,7 @@ export async function GET() {
     .download(settings.logo_path)
 
   if (error || !data) {
-    return NextResponse.redirect(new URL('/brand/edubridge-logo-color.svg', 'http://localhost:3000'))
+    return NextResponse.redirect(new URL('/brand/edubridge-logo-color.svg', appUrl))
   }
 
   const isSvg = settings.logo_path.endsWith('.svg')
