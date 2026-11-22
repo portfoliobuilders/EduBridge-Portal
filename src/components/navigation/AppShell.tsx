@@ -128,6 +128,7 @@ export function AppShell({
               width={160}
               height={32}
               priority
+              style={{ width: 'auto', height: 'auto' }}
               className="h-8 w-auto"
             />
           </Link>
@@ -235,6 +236,7 @@ export function AppShell({
               width={130}
               height={28}
               priority
+              style={{ width: 'auto', height: 'auto' }}
               className="h-7 w-auto"
             />
           </Link>

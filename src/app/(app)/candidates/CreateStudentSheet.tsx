@@ -439,7 +439,7 @@ export function CreateStudentSheet({
     <>
       {triggerButton ? (
         <span onClick={() => handleOpenChange(true)}>{triggerButton}</span>
-      ) : (
+      ) : !isControlled ? (
         <Button
           id="btn-create-candidate-trigger"
           onClick={() => handleOpenChange(true)}
@@ -448,7 +448,7 @@ export function CreateStudentSheet({
           <UserPlus className="h-4 w-4" />
           <span>New Candidate</span>
         </Button>
-      )}
+      ) : null}
 
       <Sheet
         open={activeOpen}
