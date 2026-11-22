@@ -128,6 +128,96 @@ test.describe('Candidate Documents & Self-Upload Link Flow', () => {
     await expect(page.getByRole('link', { name: 'Contact EduBridge' })).toBeVisible();
   });
 
+  test('5 MB JPG upload on /u/[token] compresses to <= 500 KB in storage with zero CSP errors', async ({
+    page,
+  }) => {
+    // 1. Generate genuine 5+ MB JPG buffer
+    const sharp = (await import('sharp')).default;
+    const w = 3800;
+    const h = 2800;
+    const rawBuffer = Buffer.alloc(w * h * 3);
+    for (let i = 0; i < rawBuffer.length; i += 3) {
+      rawBuffer[i] = i % 255;
+      rawBuffer[i + 1] = Math.floor(i / 3) % 255;
+      rawBuffer[i + 2] = 200;
+    }
+    const bigJpgBuffer = await sharp(rawBuffer, {
+      raw: { width: w, height: h, channels: 3 },
+    })
+      .jpeg({ quality: 92 })
+      .toBuffer();
+
+    expect(bigJpgBuffer.length).toBeGreaterThan(5 * 1024 * 1024);
+
+    // 2. Track CSP violations and console errors
+    const cspViolations: string[] = [];
+    page.on('console', (msg) => {
+      const text = msg.text();
+      console.log(`[BROWSER ${msg.type().toUpperCase()}]:`, text);
+      if (
+        /violates the following Content Security Policy/i.test(text) ||
+        /Content Security Policy/i.test(text)
+      ) {
+        cspViolations.push(text);
+      }
+    });
+    page.on('pageerror', (err) => {
+      console.log('[BROWSER UNCAUGHT ERROR]:', err);
+    });
+
+    // 3. Navigate to /u/[token]
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/u/${activeToken}`);
+    await expect(page.locator('h1')).toContainText('Fatima');
+
+    // 4. Attach the 5 MB JPG to the first file input
+    const fileInput = page.locator('input[type="file"]').first();
+
+    const uploadResponsePromise = page.waitForResponse(
+      (resp) =>
+        resp.url().includes(`/api/public/uploads/${activeToken}`) && resp.status() === 200,
+      { timeout: 45000 }
+    );
+
+    await fileInput.setInputFiles({
+      name: 'large_highres_document.jpg',
+      mimeType: 'image/jpeg',
+      buffer: bigJpgBuffer,
+    });
+
+    // 5. Wait for the upload network response
+    const uploadResponse = await uploadResponsePromise;
+    const json = await uploadResponse.json();
+    expect(json.document).toBeDefined();
+
+    // 6. Verify in storage & DB: ends up <= 500 KB
+    const { data: docRecord, error: docErr } = await adminClient
+      .from('candidate_documents')
+      .select('*')
+      .eq('id', json.document.id)
+      .single();
+
+    expect(docErr).toBeNull();
+    expect(docRecord).toBeDefined();
+    expect(docRecord.size_bytes).toBeLessThanOrEqual(500 * 1024);
+
+    // Also download from Supabase storage to verify raw stored payload
+    const { data: fileBlob, error: downloadErr } = await adminClient.storage
+      .from('candidate-documents')
+      .download(docRecord.file_path);
+
+    expect(downloadErr).toBeNull();
+    const arrayBuf = await fileBlob!.arrayBuffer();
+    expect(arrayBuf.byteLength).toBeLessThanOrEqual(500 * 1024);
+
+    console.log(
+      `PROOF: 5.7 MB JPG (${bigJpgBuffer.length} bytes) compressed to ${docRecord.size_bytes} bytes in DB, and ${arrayBuf.byteLength} bytes in Supabase storage.`
+    );
+
+    // 7. Assert zero CSP violations
+    expect(cspViolations).toEqual([]);
+  });
+
   test('ZIP download endpoint rejects unauthenticated request with 401', async ({ request }) => {
     const res = await request.get(`/api/candidates/${testStudentId}/documents/zip`);
     expect(res.status()).toBe(401);

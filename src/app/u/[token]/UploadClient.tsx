@@ -140,7 +140,7 @@ export function UploadClient({
         </div>
         <p className="text-sm text-[#0A0A0A] leading-relaxed">
           Please upload your requested documents securely to EduBridge Education. This link is valid until{' '}
-          <span className="font-semibold text-[#00A57E]">{expiryFormatted}</span>.
+          <span className="font-semibold text-[#00A57E]" suppressHydrationWarning>{expiryFormatted}</span>.
         </p>
 
         {/* Tips Box */}

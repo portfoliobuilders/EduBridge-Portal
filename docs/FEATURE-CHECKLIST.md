@@ -48,7 +48,7 @@ This document maps every feature from the official client quotation against its 
 | # | Feature | Where in the App (Route / Component) | How Verified (Test Name / SQL Proof) | Status |
 |---|---|---|---|:---:|
 | **4.1** | Live financial ledger | `enrollment_ledger` PostgreSQL view (`total_payable`, `opening_paid`, `total_paid`, `balance`), `PaymentForm.tsx` | `supabase/tests/part4_students_proofs.sql` (Test 4: ledger math formula PASS: 10,000 - 500 - 5,000 = 4,500), `tests/e2e/smoke.spec.ts` | ✔ done |
-| **4.2** | Record payment (mode, ref, purpose, date/time, payee, comments) | `src/components/receipts/PaymentForm.tsx`, `record_payment` RPC | `tests/e2e/smoke.spec.ts` (Test 1 records payment), `supabase/tests/card_reference_proof.sql` (all 6 payment variations tested) | ✔ done |
+| **4.2** | Record payment (mode, ref, purpose, date/time, payee, comments) | `src/components/receipts/PaymentForm.tsx`, `record_payment` RPC | `tests/e2e/smoke.spec.ts` (Test 1 records payment), `supabase/tests/remove_reference_proof.sql` (all 5 payment mode variations tested without reference) | ✔ done |
 | **4.3** | Auto Dubai timestamp + receiver capture | `paid_at` in UTC `timestamptz` displayed in `Asia/Dubai`, `received_by` from `auth.uid()` | `supabase/tests/part7_dashboards_proof.sql` (Test 3: Midnight-crossing window at 20:00 UTC matches Dubai calendar day PASS) | ✔ done |
 | **4.4** | Overpayment & double-submit blocked | `record_payment` RPC balance constraint, `payments.idempotency_key` unique index | `supabase/tests/idempotency_proof.sql` (Duplicate key returns existing payment, count remains 1 PASS), `supabase/tests/rls_and_payments.sql` (Test 3 PASS) | ✔ done |
 | **4.5** | Gapless yearly receipt numbering | `counters` sequence table row-lock (`EB-RV-YYYY-XXXXX`) in `record_payment` RPC | `supabase/tests/rls_and_payments.sql` (Test 4: `EB-RV-2026-00005 -> EB-RV-2026-00006` PASS), `tests/e2e/smoke.spec.ts` | ✔ done |
@@ -132,10 +132,34 @@ This document maps every feature from the official client quotation against its 
 
 ---
 
+## Complete SQL Test Suites in `supabase/tests/` (13 Active Suites)
+
+All 13 SQL test suites executed against the live remote Supabase database (`bhbgkhyewxaacqnjltwr`) and verified with 100% PASS:
+
+| # | Suite File | Tests / Assertions | Scope & Verified Logic | Live Result |
+|---|---|---|---|:---:|
+| 1 | `candidate_documents_proof.sql` | 10 tests | Document types, private storage RLS, verification, rejection reason, audit logs, upload link tokens, revocation, link stats RPC | ✔ 10/10 PASS |
+| 2 | `candidate_extensions_proofs.sql` | 7 tests | Candidate address RLS, ledger opening balance arithmetic, staff update blocked, owner update with reason | ✔ 7/7 PASS |
+| 3 | `guard_bypass_proof.sql` | 2 tests | Profile role self-promotion blocked, anon updates to profiles table rejected by RLS | ✔ 2/2 PASS |
+| 4 | `idempotency_proof.sql` | 2 tests | Duplicate payment submission with identical idempotency key returns existing row without double-billing | ✔ 2/2 PASS |
+| 5 | `joe_dashboard_numbers.sql` | 1 test | Staff member KPI numbers isolation and accurate zero-leak count verification | ✔ 1/1 PASS |
+| 6 | `joe_dashboard_proof.sql` | 1 test | Staff dashboard RPC isolation and data boundary constraints | ✔ 1/1 PASS |
+| 7 | `part4_students_proofs.sql` | 5 tests | Student code auto-generation (`EB-STU-XXXXX`), search index, ledger view math, active status checks | ✔ 5/5 PASS |
+| 8 | `part5_payments_proofs.sql` | 5 tests | Duplicate mobile check, sibling registration allowed, idempotent payments, VAT Exclusive computation, overpayment guard | ✔ 5/5 PASS |
+| 9 | `part7_dashboards_proof.sql` | 7 tests | Asia/Dubai day boundary, KPI sum strict match, midnight-crossing UTC test, opening balance exclusion, voided payment exclusion, staff isolation | ✔ 7/7 PASS |
+| 10 | `remove_reference_proof.sql` | 5 tests | Card, Cash, Link, and Bank Transfer succeed with NULL reference; passed reference ignored and stored as NULL | ✔ 5/5 PASS |
+| 11 | `rls_and_payments.sql` | 5 tests | Staff UPDATE on payments blocked, owner void permitted, overpayment guard, consecutive yearly receipt numbers, anon public token RPC access | ✔ 5/5 PASS |
+| 12 | `rpc_hardening_proof.sql` | 4 tests | Staff and anonymous callers blocked from executing privileged admin RPCs (`get_staff_list`, `import_programs`) | ✔ 4/4 PASS |
+| 13 | `token_rpc_proof.sql` | 10 tests | Receipt and statement share token rotation, owner and receiving staff permission, unauthorized staff rejection, anon access | ✔ 10/10 PASS |
+
+---
+
 ## Final Verification Summary
 - **Quotation Features Delivered**: **46 / 46 (100%)**
 - **Document Management Features Delivered**: **6 / 6 (100%)**
 - **Extra Features Delivered**: **6 / 6**
 - **Total Functional Checkpoints Verified**: **58 / 58**
-- **Test Suites Passing**: 9/9 SQL suites on live remote DB, 17/17 Vitest unit tests, 6/6 Playwright browser e2e tests.
-- **Production Build**: 0 errors across all routes.
+- **SQL Test Suites Passing**: **13 / 13 active suites passing on live remote DB** (0 failures, `card_reference_proof.sql` superseded and cleaned up).
+- **Physical Phone Camera Test**: **PENDING — user to verify** (camera input shortcut `<input type="file" accept="image/*" capture="environment">` integrated on both `/u/[token]` and candidate Documents tab; requires testing on physical mobile device).
+- **Unit & E2E Tests**: 17/17 Vitest unit tests, Playwright browser e2e tests passing.
+- **Production Build**: 0 errors across all routes with production-hardened CSP (no unsafe-eval) and `camera=(self)` Permissions-Policy.

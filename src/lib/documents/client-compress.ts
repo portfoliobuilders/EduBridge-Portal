@@ -108,6 +108,10 @@ export async function processFileForUpload(
       maxSizeMB: isPhoto ? 0.2 : 0.5, // Passport photo <= 200KB; other <= 500KB
       maxWidthOrHeight: isPhoto ? 800 : 1600, // Passport photo max 800px; other max 1600px
       useWebWorker: true,
+      libURL:
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/vendor/browser-image-compression.js`
+          : undefined,
       initialQuality: 0.7,
       fileType: 'image/jpeg',
     }

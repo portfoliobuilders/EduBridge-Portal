@@ -126,10 +126,10 @@ export function AppShell({
               src="/brand/edubridge-logo-color.svg"
               alt="EduBridge Education"
               width={160}
-              height={32}
+              height={30}
               priority
-              style={{ width: 'auto', height: 'auto' }}
-              className="h-8 w-auto"
+              style={{ width: 'auto', height: '30px' }}
+              className="w-auto"
             />
           </Link>
         </div>

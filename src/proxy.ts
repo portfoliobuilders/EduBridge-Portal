@@ -65,6 +65,8 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/brand') ||
+    pathname.startsWith('/vendor') ||
+    pathname.startsWith('/icons') ||
     pathname.startsWith('/fonts') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/manifest') ||
