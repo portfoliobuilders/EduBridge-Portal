@@ -61,8 +61,8 @@ declare
   v_doc public.candidate_documents;
   v_stats jsonb;
 begin
-  -- Get active owner profile
-  select id into v_owner_id from public.profiles where role = 'owner' and is_active = true limit 1;
+  -- Get active super_admin / owner profile
+  select id into v_owner_id from public.profiles where role in ('super_admin', 'owner') and is_active = true limit 1;
   if v_owner_id is null then
     raise exception 'No active owner profile found for testing';
   end if;

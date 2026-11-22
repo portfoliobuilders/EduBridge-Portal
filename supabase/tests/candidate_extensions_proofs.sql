@@ -233,7 +233,7 @@ begin
     );
     raise exception 'FAIL Test 4b: Staff update_enrollment_opening_paid succeeded unexpectedly!';
   exception when others then
-    if sqlerrm like '%forbidden: only owner can edit opening balance%' then
+    if sqlerrm like '%forbidden: only owner can edit opening balance%' or sqlerrm like '%forbidden: only Super Admins and authorized Admins can edit opening balance%' then
       insert into test_results values (5, 'Staff blocked from update_enrollment_opening_paid RPC', 'PASS', sqlerrm);
     else
       raise exception 'FAIL Test 4b: Unexpected error: %', sqlerrm;

@@ -153,7 +153,7 @@ begin
     perform public.void_payment(v_p1.id, 'Unauthorized staff attempt');
     raise exception 'FAIL Test 2: Staff was able to call void_payment!';
   exception when others then
-    if sqlerrm like '%only owners can void receipts%' then
+    if sqlerrm like '%only owners can void receipts%' or sqlerrm like '%only Super Admins and authorized Admins can void receipts%' then
       null; -- expected
     else
       raise exception 'FAIL Test 2: Unexpected error: %', sqlerrm;

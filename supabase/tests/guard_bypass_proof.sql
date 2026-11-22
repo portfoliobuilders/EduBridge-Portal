@@ -25,7 +25,7 @@ begin
   update profiles set role = 'owner' where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid;
   insert into test_output values ('test_1_staff_self_promote', 'FAIL: staff was able to self promote');
 exception when others then
-  if sqlerrm like '%Only owners can modify%' then
+  if sqlerrm like '%Only owners can modify%' or sqlerrm like '%only Super Admins and authorized Admins can modify user profiles%' or sqlerrm like '%You cannot change your own role%' then
     insert into test_output values ('test_1_staff_self_promote', 'PASS: ' || sqlerrm);
   else
     insert into test_output values ('test_1_staff_self_promote', 'FAIL unexpected: ' || sqlerrm);

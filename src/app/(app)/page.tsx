@@ -40,7 +40,7 @@ export default async function HomePage() {
   const { profile } = await requireUser()
   const supabase = await createClient()
 
-  if (profile.role === 'owner') {
+  if (profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner') {
     const todayRange = getDubaiDateRange('today')
     const [{ data: kpis }, { data: docStats }] = await Promise.all([
       supabase.rpc('dashboard_kpis', {

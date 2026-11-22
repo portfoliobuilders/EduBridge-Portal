@@ -32,7 +32,7 @@ begin
   -- ---------------------------------------------------------------------------
   -- SETUP: Use existing active owner/user and existing active uni & course
   -- ---------------------------------------------------------------------------
-  select id into v_user_id from public.profiles where is_active = true and role = 'owner' limit 1;
+  select id into v_user_id from public.profiles where is_active = true and role in ('super_admin', 'owner') limit 1;
   if v_user_id is null then
     select id into v_user_id from public.profiles where is_active = true limit 1;
   end if;

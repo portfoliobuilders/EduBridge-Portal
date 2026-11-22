@@ -103,12 +103,16 @@ test.describe('EduBridge End-to-End Smoke Test Flow', () => {
     // Step 2: Select University, Course, and enter Total Fee
     await page.waitForSelector('#university', { timeout: 10000 });
     const uniSelect = page.locator('#university');
-    await uniSelect.selectOption({ index: 1 });
+    await uniSelect.click();
+    await page.waitForSelector('[cmdk-item]', { timeout: 5000 });
+    await page.locator('[cmdk-item]').first().click();
 
     // Wait for courses to populate and select first course option
     const courseSelect = page.locator('#course');
     await expect(courseSelect).toBeEnabled({ timeout: 10000 });
-    await courseSelect.selectOption({ index: 1 });
+    await courseSelect.click();
+    await page.waitForSelector('[cmdk-item]', { timeout: 5000 });
+    await page.locator('[cmdk-item]').first().click();
 
     // Set Total Fee
     await page.fill('#totalFee', '5000');

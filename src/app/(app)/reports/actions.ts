@@ -184,7 +184,7 @@ export async function fetchReportFilterOptionsAction(): Promise<
     const [unisRes, coursesRes, staffRes, settingsRes] = await Promise.all([
       supabase.from('universities').select('id, name').order('name'),
       supabase.from('courses').select('id, name, university_id').order('name'),
-      profile.role === 'owner'
+      profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
         ? supabase.from('profiles').select('id, full_name').eq('is_active', true).order('full_name')
         : Promise.resolve({ data: [{ id: profile.id, full_name: profile.full_name }], error: null }),
       supabase.from('company_settings').select('vat_enabled').limit(1).maybeSingle(),

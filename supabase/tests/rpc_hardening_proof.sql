@@ -24,7 +24,7 @@ begin
   perform * from public.get_staff_list();
   insert into test_results values ('test_1_staff_get_staff_list', 'FAIL: staff was able to call get_staff_list');
 exception when others then
-  if sqlerrm like '%forbidden%' then
+  if sqlerrm like '%forbidden%' or sqlerrm like '%Access denied%' or sqlerrm like '%Only Super Admins and Admins%' then
     insert into test_results values ('test_1_staff_get_staff_list', 'PASS: ' || sqlerrm);
   else
     insert into test_results values ('test_1_staff_get_staff_list', 'FAIL unexpected error: ' || sqlerrm);
@@ -38,7 +38,7 @@ begin
   perform public.import_programs('[{"university":"X","course":"Y"}]'::jsonb);
   insert into test_results values ('test_2_staff_import_programs', 'FAIL: staff was able to call import_programs');
 exception when others then
-  if sqlerrm like '%forbidden%' then
+  if sqlerrm like '%forbidden%' or sqlerrm like '%Access denied%' or sqlerrm like '%Only Super Admins and Admins%' then
     insert into test_results values ('test_2_staff_import_programs', 'PASS: ' || sqlerrm);
   else
     insert into test_results values ('test_2_staff_import_programs', 'FAIL unexpected error: ' || sqlerrm);

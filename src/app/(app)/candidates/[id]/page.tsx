@@ -18,7 +18,7 @@ interface StudentPageProps {
 export default async function StudentDetailPage({ params }: StudentPageProps) {
   const { id } = await params
   const { user, profile } = await requireUser()
-  const isOwner = profile.role === 'owner'
+  const isOwner = profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
   const supabase = await createClient()
 
   // 1. Fetch student record with guardian details

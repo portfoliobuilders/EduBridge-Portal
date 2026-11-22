@@ -20,30 +20,39 @@ export type Database = {
           actor: string | null
           at: string
           created_at: string
+          details: Json | null
           diff: Json | null
           id: string
+          record_id: string | null
           row_id: string
           table_name: string
+          user_id: string | null
         }
         Insert: {
           action: string
           actor?: string | null
           at?: string
           created_at?: string
+          details?: Json | null
           diff?: Json | null
           id?: string
+          record_id?: string | null
           row_id: string
           table_name: string
+          user_id?: string | null
         }
         Update: {
           action?: string
           actor?: string | null
           at?: string
           created_at?: string
+          details?: Json | null
           diff?: Json | null
           id?: string
+          record_id?: string | null
           row_id?: string
           table_name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1221,10 +1230,12 @@ export type Database = {
       }
       current_app_role: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
-      dashboard_kpis: {
-        Args: { p_from: string; p_staff_id?: string; p_to: string }
-        Returns: Json
-      }
+      dashboard_kpis:
+        | { Args: never; Returns: Json }
+        | {
+            Args: { p_from: string; p_staff_id?: string; p_to: string }
+            Returns: Json
+          }
       get_candidate_documents_summary: {
         Args: { p_student_id: string }
         Returns: Json
@@ -1432,7 +1443,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      visible_user_ids: { Args: never; Returns: string[] }
+      visible_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       void_payment: {
         Args: { p_payment_id: string; p_reason: string }
         Returns: {

@@ -180,7 +180,7 @@ export async function createStudentAction(
 
   // Staff can only assign themselves as admission staff
   let admissionStaffId = data.admissionStaffId || user.id
-  if (profile.role !== 'owner') {
+  if (profile.role === 'staff') {
     admissionStaffId = user.id
   }
 
@@ -264,8 +264,8 @@ export async function updateStudentContactAction(
   const data = parsed.data
   const supabase = await createClient()
 
-  // Fetch student to verify creator if not owner
-  if (profile.role !== 'owner') {
+  // Fetch student to verify creator if staff
+  if (profile.role === 'staff') {
     const { data: existing, error: fetchErr } = await supabase
       .from('students')
       .select('created_by')
@@ -319,7 +319,7 @@ export async function updateStudentGuardianAction(
   const data = parsed.data
   const supabase = await createClient()
 
-  if (profile.role !== 'owner') {
+  if (profile.role === 'staff') {
     const { data: existing, error: fetchErr } = await supabase
       .from('students')
       .select('created_by')
@@ -373,8 +373,8 @@ export async function saveStudentAddressAction(
   const data = parsed.data
   const supabase = await createClient()
 
-  // Verify access permissions: owner or creator of student
-  if (profile.role !== 'owner') {
+  // Verify access permissions: admin/super_admin or creator of student
+  if (profile.role === 'staff') {
     const { data: student, error: sErr } = await supabase
       .from('students')
       .select('created_by')
@@ -542,7 +542,7 @@ export async function addStudentEnrollmentAction(
   const supabase = await createClient()
 
   let admissionStaffId = data.admissionStaffId || user.id
-  if (profile.role !== 'owner') {
+  if (profile.role === 'staff') {
     admissionStaffId = user.id
   }
 

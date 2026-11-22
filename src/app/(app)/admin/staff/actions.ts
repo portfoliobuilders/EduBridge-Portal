@@ -154,7 +154,7 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
 }
 
 export async function updateStaffAction(formData: FormData): Promise<ActionResult> {
-  const { user: callerUser, profile: callerProfile } = await requireAdminOrAbove()
+  const { profile: callerProfile } = await requireAdminOrAbove()
   const supabase = await createClient()
 
   const raw = {
