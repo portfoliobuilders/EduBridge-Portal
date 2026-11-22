@@ -1,19 +1,42 @@
 import React from 'react'
+import { requireUser } from '@/lib/auth'
 import { PageHeader } from '@/components/PageHeader'
-import { EmptyState } from '@/components/EmptyState'
-import { FileBarChart } from 'lucide-react'
+import { ReportsClient } from '@/components/reports/ReportsClient'
+import { fetchReportFilterOptionsAction } from './actions'
 
-export default function ReportsPage() {
+interface ReportsPageProps {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function ReportsPage({ searchParams }: ReportsPageProps) {
+  const { profile, user } = await requireUser()
+  const { tab } = await searchParams
+
+  const optionsRes = await fetchReportFilterOptionsAction()
+  const filterOptions = optionsRes.data || {
+    universities: [],
+    courses: [],
+    staffList: [],
+    vatEnabled: false,
+  }
+
+  const validTabs = ['collections', 'outstanding', 'dayend', 'voids', 'vat'] as const
+  const activeTab = validTabs.includes(tab as (typeof validTabs)[number])
+    ? (tab as (typeof validTabs)[number])
+    : 'collections'
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Collections & Financial Reports"
-        subtitle="Real-time collection reports, day-end cash summaries, and outstanding balances"
+        subtitle="Real-time collection reports, day-end cash summaries, and outstanding balances (Asia/Dubai)"
       />
-      <EmptyState
-        icon={FileBarChart}
-        title="Reporting suite will be activated in Part 7"
-        description="Staff view their own collections; owners view organization-wide revenue, staff leaderboards, and voided logs."
+
+      <ReportsClient
+        filterOptions={filterOptions}
+        userRole={profile.role}
+        userId={user.id}
+        initialTab={activeTab}
       />
     </div>
   )

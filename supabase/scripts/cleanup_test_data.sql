@@ -153,4 +153,8 @@ delete from public.receipt_counters;
 -- 8. Reset student counter so the next candidate will be EB-STU-00001
 update public.student_counters set last_no = 0 where id = 1;
 
+-- 9. Clean up rate limit tables
+delete from public.email_rate_limits;
+delete from public.public_rate_limits;
+
 commit;

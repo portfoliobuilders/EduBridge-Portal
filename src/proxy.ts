@@ -2,57 +2,50 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 
-// In-memory per-IP rate limiter for public routes (e.g. 30 requests/min)
-const publicRateLimits = new Map<string, { count: number; expiresAt: number }>()
-
-function isRateLimited(ip: string, maxRequests = 30, windowMs = 60_000): boolean {
-  const now = Date.now()
-  const record = publicRateLimits.get(ip)
-
-  if (publicRateLimits.size > 2000) {
-    for (const [key, val] of publicRateLimits.entries()) {
-      if (now > val.expiresAt) {
-        publicRateLimits.delete(key)
-      }
-    }
-  }
-
-  if (!record || now > record.expiresAt) {
-    publicRateLimits.set(ip, { count: 1, expiresAt: now + windowMs })
-    return false
-  }
-
-  if (record.count >= maxRequests) {
-    return true
-  }
-
-  record.count++
-  return false
-}
-
 // Next.js 16 uses proxy.ts with an exported `proxy` function.
 // (middleware.ts / export function middleware is deprecated in Next 16.)
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check rate limit on public endpoints (/r/ and /api/public)
+  // Check rate limit on public endpoints (/r/ and /api/public) via Postgres hit_rate_limit
   if (pathname.startsWith('/r/') || pathname.startsWith('/api/public')) {
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       request.headers.get('x-real-ip') ||
       '127.0.0.1'
 
-    if (isRateLimited(ip, 30, 60_000)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded: maximum 30 requests per minute.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': '60',
-            'Content-Type': 'application/json',
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
+          cookies: {
+            getAll: () => request.cookies.getAll(),
+            setAll: () => {},
           },
+        })
+        const { data: isLimited } = await supabase.rpc('hit_rate_limit', {
+          p_key: ip,
+          p_limit: 30,
+          p_window_seconds: 60,
+        })
+
+        if (isLimited) {
+          return NextResponse.json(
+            { error: 'Rate limit exceeded: maximum 30 requests per minute.' },
+            {
+              status: 429,
+              headers: {
+                'Retry-After': '60',
+                'Content-Type': 'application/json',
+              },
+            }
+          )
         }
-      )
+      } catch (err) {
+        console.error('Rate limit check error:', err)
+      }
     }
 
     return NextResponse.next({

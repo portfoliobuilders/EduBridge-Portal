@@ -483,6 +483,24 @@ export type Database = {
         }
         Relationships: []
       }
+      public_rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       receipt_counters: {
         Row: {
           last_no: number
@@ -891,6 +909,10 @@ export type Database = {
         }
         Returns: Json
       }
+      dashboard_kpis: {
+        Args: { p_from: string; p_staff_id?: string; p_to: string }
+        Returns: Json
+      }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_statement: { Args: { p_token: string }; Returns: Json }
       get_staff_list: {
@@ -906,6 +928,10 @@ export type Database = {
           phone: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
+      }
+      hit_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
       }
       import_programs: { Args: { p_rows: Json }; Returns: Json }
       is_active_user: { Args: never; Returns: boolean }
@@ -961,8 +987,42 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      report_collections: {
+        Args: {
+          p_course_id?: string
+          p_from: string
+          p_mode?: string
+          p_purpose?: string
+          p_staff_id?: string
+          p_to: string
+          p_university_id?: string
+        }
+        Returns: Json
+      }
+      report_dayend: {
+        Args: { p_date: string; p_staff_id?: string }
+        Returns: Json
+      }
+      report_outstanding: {
+        Args: {
+          p_course_id?: string
+          p_min_balance?: number
+          p_staff_id?: string
+          p_university_id?: string
+        }
+        Returns: Json
+      }
+      report_vat_summary: { Args: { p_year?: number }; Returns: Json }
+      report_voids: {
+        Args: { p_from: string; p_staff_id?: string; p_to: string }
+        Returns: Json
+      }
       rotate_enrollment_share_token: {
         Args: { p_enrollment_id: string }
+        Returns: string
+      }
+      rotate_receipt_share_token: {
+        Args: { p_payment_id: string }
         Returns: string
       }
       rotate_share_token: { Args: { p_payment_id: string }; Returns: string }
@@ -972,6 +1032,10 @@ export type Database = {
       }
       set_payment_share_enabled: {
         Args: { p_enabled: boolean; p_payment_id: string }
+        Returns: boolean
+      }
+      toggle_receipt_share_enabled: {
+        Args: { p_enabled?: boolean; p_payment_id: string }
         Returns: boolean
       }
       update_enrollment_fee: {
