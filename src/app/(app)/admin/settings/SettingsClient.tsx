@@ -38,6 +38,8 @@ export interface CompanySettingsData {
   whatsapp_statement_template: string
   email_subject_template: string
   email_body_template: string
+  whatsapp_doc_request_template?: string | null
+  email_doc_request_template?: string | null
 }
 
 const TEMPLATE_VARIABLES = [
@@ -46,6 +48,9 @@ const TEMPLATE_VARIABLES = [
   { tag: '{receipt_no}', desc: 'Receipt number (e.g. EB-RV-2026-0001)' },
   { tag: '{balance}', desc: 'Remaining balance (e.g. 37,500.00)' },
   { tag: '{public_link}', desc: 'Public link to view receipt / statement' },
+  { tag: '{upload_link}', desc: 'Self-upload link for candidate documents' },
+  { tag: '{expiry}', desc: 'Document request link validity/expiry duration' },
+  { tag: '{company_name}', desc: 'Company / business name' },
 ]
 
 export function SettingsClient({
@@ -67,7 +72,7 @@ export function SettingsClient({
 
   // Message preview active template
   const [previewTemplateType, setPreviewTemplateType] = useState<
-    'whatsapp_receipt' | 'whatsapp_statement' | 'email'
+    'whatsapp_receipt' | 'whatsapp_statement' | 'whatsapp_doc_request' | 'email' | 'email_doc_request'
   >('whatsapp_receipt')
 
   const handleInputChange = (field: keyof CompanySettingsData, value: string | boolean | number | null) => {
@@ -126,6 +131,12 @@ export function SettingsClient({
       formData.append('whatsapp_statement_template', settings.whatsapp_statement_template)
       formData.append('email_subject_template', settings.email_subject_template)
       formData.append('email_body_template', settings.email_body_template)
+      if (settings.whatsapp_doc_request_template) {
+        formData.append('whatsapp_doc_request_template', settings.whatsapp_doc_request_template)
+      }
+      if (settings.email_doc_request_template) {
+        formData.append('email_doc_request_template', settings.email_doc_request_template)
+      }
 
       const res = await updateCompanySettingsAction(formData)
       if (res.success) {
@@ -145,6 +156,9 @@ export function SettingsClient({
       .replace(/\{receipt_no\}/g, `${settings.receipt_prefix}-2026-0042`)
       .replace(/\{balance\}/g, '45,000.00')
       .replace(/\{public_link\}/g, 'https://edubridgeeducation.com/r/a1b2c3d4')
+      .replace(/\{upload_link\}/g, 'https://edubridgeeducation.com/u/doc_token_123')
+      .replace(/\{expiry\}/g, '7 days')
+      .replace(/\{company_name\}/g, settings.name || 'EduBridge Education')
   }
 
   return (
@@ -627,6 +641,49 @@ export function SettingsClient({
                   required
                 />
               </div>
+
+              <div className="pt-4 border-t border-border space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">Document Request Templates</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Custom messages sent to candidates when requesting documents via secure link.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">
+                    WhatsApp Document Request Template
+                  </Label>
+                  <Textarea
+                    value={settings.whatsapp_doc_request_template || ''}
+                    onChange={(e) =>
+                      handleInputChange('whatsapp_doc_request_template', e.target.value)
+                    }
+                    placeholder="Dear {student_name}, please upload your documents using this link: {upload_link} (link valid for {expiry}). - {company_name}"
+                    className="rounded-xl text-xs min-h-[75px]"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave blank to use the standard default request template.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">
+                    Email Document Request Template
+                  </Label>
+                  <Textarea
+                    value={settings.email_doc_request_template || ''}
+                    onChange={(e) =>
+                      handleInputChange('email_doc_request_template', e.target.value)
+                    }
+                    placeholder="Dear {student_name}, please upload your requested documents securely here: {upload_link}. This link will expire in {expiry}. Best regards, {company_name}"
+                    className="rounded-xl text-xs min-h-[100px]"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave blank to use the standard default request template.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -643,7 +700,7 @@ export function SettingsClient({
                 </p>
               </div>
 
-              <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl text-xs">
+              <div className="flex flex-wrap items-center gap-1 bg-neutral-100 p-1 rounded-xl text-xs">
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('whatsapp_receipt')}
@@ -653,7 +710,7 @@ export function SettingsClient({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  WhatsApp Receipt
+                  WA Receipt
                 </button>
                 <button
                   type="button"
@@ -664,7 +721,18 @@ export function SettingsClient({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  WhatsApp Statement
+                  WA Statement
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTemplateType('whatsapp_doc_request')}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                    previewTemplateType === 'whatsapp_doc_request'
+                      ? 'bg-white text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  WA Doc Request
                 </button>
                 <button
                   type="button"
@@ -675,7 +743,18 @@ export function SettingsClient({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Email
+                  Email Voucher
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTemplateType('email_doc_request')}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                    previewTemplateType === 'email_doc_request'
+                      ? 'bg-white text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Email Doc Request
                 </button>
               </div>
             </div>
@@ -693,13 +772,31 @@ export function SettingsClient({
                     {renderSamplePreview(settings.email_body_template)}
                   </pre>
                 </div>
+              ) : previewTemplateType === 'email_doc_request' ? (
+                <div className="space-y-3">
+                  <div className="pb-2 border-b border-border/80 text-xs">
+                    <span className="text-muted-foreground">Subject: </span>
+                    <span className="font-semibold text-foreground">
+                      Document Upload Request — Sarah Al Mansoori
+                    </span>
+                  </div>
+                  <pre className="font-sans text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                    {renderSamplePreview(
+                      settings.email_doc_request_template ||
+                        'Dear {student_name},\n\nPlease upload the required documents for your admission using this secure link:\n{upload_link}\n\nThis link is valid for {expiry}.\n\nBest regards,\n{company_name}'
+                    )}
+                  </pre>
+                </div>
               ) : (
                 <div className="bg-[#E6F6F2] p-4 rounded-xl border border-primary/20 max-w-md">
                   <p className="text-xs text-neutral-900 whitespace-pre-wrap leading-relaxed">
                     {renderSamplePreview(
                       previewTemplateType === 'whatsapp_receipt'
                         ? settings.whatsapp_receipt_template
-                        : settings.whatsapp_statement_template
+                        : previewTemplateType === 'whatsapp_statement'
+                        ? settings.whatsapp_statement_template
+                        : settings.whatsapp_doc_request_template ||
+                          'Dear {student_name}, please upload your admission documents using this secure upload link: {upload_link}\n(Note: This link will expire in {expiry}). Thank you!'
                     )}
                   </p>
                   <span className="text-[10px] text-neutral-500 float-right mt-1">10:45 AM ✓✓</span>

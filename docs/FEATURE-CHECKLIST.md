@@ -106,6 +106,19 @@ This document maps every feature from the official client quotation against its 
 
 ---
 
+## 9. Candidate Document Management & Self-Upload Links (6/6)
+
+| # | Feature | Where in the App (Route / Component) | How Verified (Test Name / SQL Proof) | Status |
+|---|---|---|---|:---:|
+| **9.1** | Master Document Types Catalog | `document_types` table, `CandidateDocumentsTab.tsx` (10th, 12th, Degree cert, transcript, ID proof [Aadhaar/Passport toggle], photo, other) | `supabase/tests/candidate_documents_proof.sql` (Test 1 & 2: 7 active document types seeded) | ✔ done |
+| **9.2** | Browser Compression, HEIC conversion & PDF Limits | `src/lib/documents/client-compress.ts`, `server-validate.ts` (max 1600px, quality ~0.7, PDF <= 2 MB with guidance, server magic bytes validation) | `src/lib/documents/server-validate.test.ts` (7 vitest unit tests passing) | ✔ done |
+| **9.3** | Private Storage & Structure | Private bucket `candidate-documents`, `<code_name>/<doc_slug>/<timestamp>_<n>.<ext>` | `supabase/tests/candidate_documents_proof.sql` (RLS blocks anon, access log, storage path generator test) | ✔ done |
+| **9.4** | Staff Document Management & Viewer | `CandidateDocumentsTab.tsx`, `DocumentViewerModal.tsx` (Documents tab, summary badge, drag-and-drop / mobile camera upload, image zoom & rotate, verify, reject with mandatory reason, archive) | `supabase/tests/candidate_documents_proof.sql` (Test 4, 5, 6, 7, 8: verify, reject with reason, archive, delete blocked by trigger) | ✔ done |
+| **9.5** | Candidate Self-Upload Portal | `src/app/u/[token]/page.tsx`, `UploadClient.tsx`, `RequestDocumentsModal.tsx` (candidate first name only, strictly upload-only, 3/7/14 day expiry, friendly 404, rate limits) | `tests/e2e/documents.spec.ts` (3 Playwright e2e tests passing, friendly 404, first name display) | ✔ done |
+| **9.6** | ZIP Download & Dashboard Tracking | `src/app/api/candidates/[id]/documents/zip/route.ts`, `StaffDashboard.tsx`, `OwnerDashboard.tsx` (Documents received widget, ZIP export with organized subfolders) | `tests/e2e/documents.spec.ts` (ZIP endpoint 401 unauthenticated check), `candidate_documents_proof.sql` (Test 10: `get_link_documents_stats`) | ✔ done |
+
+---
+
 ## Extras Delivered Beyond Quotation (6 Extra Features)
 
 | # | Extra Feature | Where in the App (Route / Component) | Value Delivered |
@@ -115,13 +128,14 @@ This document maps every feature from the official client quotation against its 
 | **E.3** | **Guardian Details Tracking** | `CreateStudentSheet.tsx`, `students` table (`guardian_name`, `guardian_phone`, `guardian_relation`) | Tracks parent/sponsor information for candidate fee settlement and emergency contact. |
 | **E.4** | **Billing & Shipping Address Support** | `student_addresses` table, `CreateStudentSheet.tsx`, `CandidateDetailClient.tsx` | Full multi-line address capture with Dubai/UAE defaults and PO Box support. |
 | **E.5** | **Historical Opening Balance Tracking** | `enrollments.opening_paid`, `enrollments.opening_paid_note`, `update_enrollment_opening_paid` RPC | Enables seamless migration of paper receipt book balances into the digital ledger with owner-only audit modification protection. |
-| **E.6** | **Streamlined Card Payment Flow** | `PaymentForm.tsx`, `0014_remove_card_approval_code.sql` | Removed legacy approval code field for card swipes while enforcing references for Payment Links and Bank Transfers. |
+| **E.6** | **Complete Payment Reference Removal** | `PaymentForm.tsx`, `0017_remove_reference_field_completely.sql` | Streamlined checkout across Card, Cash, Link, and Bank Transfer with optional Comments field. |
 
 ---
 
 ## Final Verification Summary
 - **Quotation Features Delivered**: **46 / 46 (100%)**
+- **Document Management Features Delivered**: **6 / 6 (100%)**
 - **Extra Features Delivered**: **6 / 6**
-- **Total Functional Checkpoints Verified**: **52 / 52**
-- **Test Suites Passing**: 8/8 SQL suites on live remote DB, 10/10 Vitest unit tests, 3/3 Playwright browser e2e tests.
-- **Production Build**: 0 errors across all 27 Next.js App Router routes.
+- **Total Functional Checkpoints Verified**: **58 / 58**
+- **Test Suites Passing**: 9/9 SQL suites on live remote DB, 17/17 Vitest unit tests, 6/6 Playwright browser e2e tests.
+- **Production Build**: 0 errors across all routes.

@@ -10,6 +10,8 @@ import {
   XCircle,
   Loader2,
   FileBarChart,
+  FileCheck,
+  ExternalLink,
 } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -51,11 +53,13 @@ interface OwnerDashboardKpis {
 interface OwnerDashboardProps {
   initialKpis: Record<string, unknown> | null
   initialRange: { from: string; to: string; label: string }
+  documentStats?: { total_received: number; unverified: number; active_links: number } | null
   profile: { full_name: string; role: string }
 }
 
 export function OwnerDashboard({
   initialKpis,
+  documentStats,
   profile,
 }: OwnerDashboardProps) {
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'custom'>('today')
@@ -174,6 +178,61 @@ export function OwnerDashboard({
           </div>
         )}
       </div>
+
+      {/* Candidate Documents via Link Widget (Last 7 Days) */}
+      {documentStats && (
+        <div className="bg-white p-5 rounded-2xl border border-[#E4E7E7] shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#E6F6F2] text-[#00A57E]">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[#0A0A0A] flex items-center gap-2">
+                  <span>Documents received via link</span>
+                  <span className="text-[11px] font-normal text-[#6B7272] bg-[#F5F6F6] px-2 py-0.5 rounded-full border border-[#E4E7E7]">
+                    Last 7 days
+                  </span>
+                </h3>
+                <p className="text-xs text-[#6B7272] mt-0.5">
+                  Candidate self-uploaded files awaiting verification or archived across all candidates.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="text-center sm:text-right">
+                <span className="text-xs text-[#6B7272] block">Received</span>
+                <span className="font-mono text-lg font-bold text-[#0A0A0A]">
+                  {documentStats.total_received}
+                </span>
+              </div>
+              <div className="text-center sm:text-right">
+                <span className="text-xs text-[#6B7272] block">Unverified</span>
+                <span
+                  className={`font-mono text-lg font-bold ${
+                    documentStats.unverified > 0 ? 'text-amber-600' : 'text-[#00805F]'
+                  }`}
+                >
+                  {documentStats.unverified}
+                </span>
+              </div>
+              <div className="text-center sm:text-right">
+                <span className="text-xs text-[#6B7272] block">Active Links</span>
+                <span className="font-mono text-lg font-bold text-[#6B7272]">
+                  {documentStats.active_links}
+                </span>
+              </div>
+              <Link href="/candidates">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs gap-1 h-9 border-[#E4E7E7]">
+                  <span>Candidates</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#00A57E]" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Overview Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">

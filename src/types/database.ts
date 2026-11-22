@@ -47,12 +47,108 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_documents: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          id: string
+          id_proof_kind: string | null
+          mime_type: string
+          notes: string | null
+          original_size_bytes: number | null
+          size_bytes: number
+          status: string
+          student_id: string
+          title: string
+          upload_link_id: string | null
+          uploaded_by: string | null
+          uploaded_via: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          id?: string
+          id_proof_kind?: string | null
+          mime_type: string
+          notes?: string | null
+          original_size_bytes?: number | null
+          size_bytes: number
+          status?: string
+          student_id: string
+          title: string
+          upload_link_id?: string | null
+          uploaded_by?: string | null
+          uploaded_via: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          document_type_id?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          id_proof_kind?: string | null
+          mime_type?: string
+          notes?: string | null
+          original_size_bytes?: number | null
+          size_bytes?: number
+          status?: string
+          student_id?: string
+          title?: string
+          upload_link_id?: string | null
+          uploaded_by?: string | null
+          uploaded_via?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_documents_upload_link_id_fkey"
+            columns: ["upload_link_id"]
+            isOneToOne: false
+            referencedRelation: "document_upload_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string
           created_at: string
           email: string
           email_body_template: string
+          email_doc_request_template: string | null
           email_subject_template: string
           footer_note: string | null
           id: string
@@ -69,6 +165,7 @@ export type Database = {
           vat_enabled: boolean
           vat_rate: number
           website: string
+          whatsapp_doc_request_template: string | null
           whatsapp_receipt_template: string
           whatsapp_statement_template: string
         }
@@ -77,6 +174,7 @@ export type Database = {
           created_at?: string
           email: string
           email_body_template?: string
+          email_doc_request_template?: string | null
           email_subject_template?: string
           footer_note?: string | null
           id?: string
@@ -93,6 +191,7 @@ export type Database = {
           vat_enabled?: boolean
           vat_rate?: number
           website: string
+          whatsapp_doc_request_template?: string | null
           whatsapp_receipt_template?: string
           whatsapp_statement_template?: string
         }
@@ -101,6 +200,7 @@ export type Database = {
           created_at?: string
           email?: string
           email_body_template?: string
+          email_doc_request_template?: string | null
           email_subject_template?: string
           footer_note?: string | null
           id?: string
@@ -117,6 +217,7 @@ export type Database = {
           vat_enabled?: boolean
           vat_rate?: number
           website?: string
+          whatsapp_doc_request_template?: string | null
           whatsapp_receipt_template?: string
           whatsapp_statement_template?: string
         }
@@ -159,6 +260,134 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_access_log: {
+        Row: {
+          action: string
+          actor: string
+          at: string
+          document_id: string | null
+          id: string
+          ip: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          at?: string
+          document_id?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          at?: string
+          document_id?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_access_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          helper_text: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          helper_text?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          helper_text?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      document_upload_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          requested_types: string[]
+          revoked_at: string | null
+          student_id: string
+          token: string
+          upload_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          requested_types: string[]
+          revoked_at?: string | null
+          student_id: string
+          token: string
+          upload_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          requested_types?: string[]
+          revoked_at?: string | null
+          student_id?: string
+          token?: string
+          upload_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_upload_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_upload_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -873,6 +1102,36 @@ export type Database = {
         }
         Returns: Json
       }
+      archive_candidate_document: {
+        Args: { p_document_id: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          id: string
+          id_proof_kind: string | null
+          mime_type: string
+          notes: string | null
+          original_size_bytes: number | null
+          size_bytes: number
+          status: string
+          student_id: string
+          title: string
+          upload_link_id: string | null
+          uploaded_by: string | null
+          uploaded_via: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "candidate_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       check_and_log_email_rate_limit: {
         Args: {
           p_email_type: string
@@ -913,6 +1172,11 @@ export type Database = {
         Args: { p_from: string; p_staff_id?: string; p_to: string }
         Returns: Json
       }
+      get_candidate_documents_summary: {
+        Args: { p_student_id: string }
+        Returns: Json
+      }
+      get_link_documents_stats: { Args: { p_days?: number }; Returns: Json }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_statement: { Args: { p_token: string }; Returns: Json }
       get_staff_list: {
@@ -1017,6 +1281,27 @@ export type Database = {
         Args: { p_from: string; p_staff_id?: string; p_to: string }
         Returns: Json
       }
+      revoke_document_upload_link: {
+        Args: { p_link_id: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          requested_types: string[]
+          revoked_at: string | null
+          student_id: string
+          token: string
+          upload_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "document_upload_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rotate_enrollment_share_token: {
         Args: { p_enrollment_id: string }
         Returns: string
@@ -1055,6 +1340,36 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      verify_candidate_document: {
+        Args: { p_document_id: string; p_notes?: string; p_status: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          id: string
+          id_proof_kind: string | null
+          mime_type: string
+          notes: string | null
+          original_size_bytes: number | null
+          size_bytes: number
+          status: string
+          student_id: string
+          title: string
+          upload_link_id: string | null
+          uploaded_by: string | null
+          uploaded_via: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "candidate_documents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       void_payment: {
         Args: { p_payment_id: string; p_reason: string }

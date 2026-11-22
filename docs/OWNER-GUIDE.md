@@ -89,10 +89,11 @@ Every payment recorded in the application generates a **permanent, gapless seque
 2. Select the candidate / enrollment. The live balance card shows the exact fee breakdown, total paid to date, and remaining balance due.
 3. Enter the **Amount in AED** (cannot exceed the remaining balance).
 4. Choose the **Payment Mode**:
-   - **Card**: Tap Card. No auth code is required.
-   - **Cash**: Select Cash. Handled by staff counter.
-   - **Payment Link**: Enter the required **Payment Link ID** (from your payment gateway).
-   - **Bank Transfer**: Enter the required **Bank Transfer / Wire Reference**.
+   - **Card**: Tap Card. No card approval code required.
+   - **Cash**: Select Cash. Handled at the counter.
+   - **Payment Link**: Tap Payment Link.
+   - **Bank Transfer**: Tap Bank Transfer.
+   - *Optional*: Enter details (e.g. bank transfer reference or notes) in the **Comments** field.
 5. Select **Payment Purpose** (*Admission Deposit*, *Tuition Installment*, or *Other*).
 6. Verify the **Payee Name** (defaulted to candidate name).
 7. Tap **Confirm & Record Payment**.
@@ -151,6 +152,43 @@ At the end of each working day:
 
 - **Installed App**: You can install EduBridge Receipts on iOS and Android devices by tapping "Add to Home Screen" in Safari / Chrome.
 - **Offline Protection**: If internet connection drops, the system displays an amber top warning: *"You're offline. Payment recording and receipts require an active internet connection."* Payments are never queued offline, guaranteeing that duplicate or corrupted receipt numbers can never occur.
+
+---
+
+## 11. Candidate Document Management & Self-Upload Links
+
+Candidates can submit their admission documents directly, or staff can upload them on their behalf. Nothing is mandatory.
+
+### Predefined Document Types
+- **10th certificate**: Secondary school certificate / mark sheet.
+- **12th certificate**: Higher secondary certificate / mark sheet.
+- **Degree certificate**: Bachelor / Master degree certificate.
+- **Degree marksheet / transcript**: Consolidated mark sheet or official semester transcripts.
+- **ID proof (Aadhaar or Passport)**: User selects which one to upload. For Aadhaar, instructions clearly inform the candidate to upload the **Masked Aadhaar** (only last 4 digits visible) from mAadhaar or UIDAI.
+- **Passport-size photo**: Recent photo on white background.
+- **Other**: Free title for additional documents (experience letter, SOP, CV).
+
+### Automatic Image Compression & PDF Limits
+- **Images**: Automatically compressed in the browser before upload (max 1600px, quality ~0.7, target ≤ 500 KB; photos ≤ 200 KB). EXIF and GPS location data are automatically stripped on the server for student privacy.
+- **PDFs**: Hard limit of 2 MB per PDF. If a candidate attempts to upload an oversized PDF, a friendly guide message advises them to compress it (e.g. using `ilovepdf.com/compress_pdf`) or scan at lower resolution.
+- **HEIC / HEIF (iPhones)**: Automatically converted to JPEG in the browser so counselors and university partners can always open them on any device.
+
+### Requesting Documents from Candidates (Self-Upload Link)
+1. Open the Candidate's profile (`/candidates/[id]`) and click the **Documents** tab.
+2. Tap **Request Documents**.
+3. Select which document types are required.
+4. Set link expiry duration (**3 days**, **7 days** (default), or **14 days**).
+5. Share via **WhatsApp** (pre-populated with candidate name, link, and expiry), **SMS**, **Email**, or tap **Copy link**.
+6. **Privacy Guarantee**: The candidate public page (`/u/[token]`) displays the candidate's **first name only** (e.g., *Fatima*) and requested document slots. It is strictly upload-only and **never** reveals fees, receipts, existing files, or other private data.
+
+### Verification & Review Workflow
+1. When a document is received, counselors see an **Unverified** badge on the candidate profile and dashboard widget.
+2. Tap any document card to open the **Document Viewer**:
+   - **Zoom & Rotate**: Inspect seals, marks, and signatures clearly.
+   - **Verify**: Marks the document as verified with counselor name and Dubai timestamp.
+   - **Reject**: Requires a mandatory explanation reason (e.g. *"Photo is blurred / please re-upload"*).
+   - **Archive**: Safely archives outdated or duplicate files without hard-deleting records.
+   - **Download All (ZIP)**: Generates a single organized archive named `<student_code>_<name>_documents.zip`.
 
 ---
 

@@ -28,6 +28,8 @@ const companySettingsSchema = z.object({
   whatsapp_statement_template: z.string().trim().min(1, 'WhatsApp statement template is required'),
   email_subject_template: z.string().trim().min(1, 'Email subject template is required'),
   email_body_template: z.string().trim().min(1, 'Email body template is required'),
+  whatsapp_doc_request_template: z.string().trim().optional().nullable(),
+  email_doc_request_template: z.string().trim().optional().nullable(),
 })
 
 export interface ActionResult<T = unknown> {
@@ -57,6 +59,12 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
     whatsapp_statement_template: String(formData.get('whatsapp_statement_template') ?? ''),
     email_subject_template: String(formData.get('email_subject_template') ?? ''),
     email_body_template: String(formData.get('email_body_template') ?? ''),
+    whatsapp_doc_request_template: formData.get('whatsapp_doc_request_template')
+      ? String(formData.get('whatsapp_doc_request_template'))
+      : null,
+    email_doc_request_template: formData.get('email_doc_request_template')
+      ? String(formData.get('email_doc_request_template'))
+      : null,
   }
 
   const parsed = companySettingsSchema.safeParse(raw)
@@ -85,6 +93,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       whatsapp_statement_template: data.whatsapp_statement_template,
       email_subject_template: data.email_subject_template,
       email_body_template: data.email_body_template,
+      whatsapp_doc_request_template: data.whatsapp_doc_request_template || null,
+      email_doc_request_template: data.email_doc_request_template || null,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

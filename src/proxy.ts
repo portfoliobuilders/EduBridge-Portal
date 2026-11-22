@@ -7,8 +7,8 @@ import type { Database } from '@/types/database'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check rate limit on public endpoints (/r/ and /api/public) via Postgres hit_rate_limit
-  if (pathname.startsWith('/r/') || pathname.startsWith('/api/public')) {
+  // Check rate limit on public endpoints (/r/, /u/, /api/public) via Postgres hit_rate_limit
+  if (pathname.startsWith('/r/') || pathname.startsWith('/u/') || pathname.startsWith('/api/public')) {
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       request.headers.get('x-real-ip') ||
@@ -27,13 +27,13 @@ export async function proxy(request: NextRequest) {
         })
         const { data: isLimited } = await supabase.rpc('hit_rate_limit', {
           p_key: ip,
-          p_limit: 30,
+          p_limit: 60,
           p_window_seconds: 60,
         })
 
         if (isLimited) {
           return NextResponse.json(
-            { error: 'Rate limit exceeded: maximum 30 requests per minute.' },
+            { error: 'Rate limit exceeded: maximum 60 requests per minute.' },
             {
               status: 429,
               headers: {
@@ -67,6 +67,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/brand') ||
     pathname.startsWith('/fonts') ||
     pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/manifest') ||
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/confirm') ||
     pathname === '/reset-password'

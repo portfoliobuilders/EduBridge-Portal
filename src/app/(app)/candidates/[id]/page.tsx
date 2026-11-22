@@ -73,6 +73,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       share_token,
       share_enabled,
       created_at,
+      admission_staff_id,
       universities ( name ),
       courses ( name, level ),
       specializations ( name ),
@@ -212,13 +213,16 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     diff: (a.diff as AuditLogItem['diff']) || null,
   }))
 
-  // 7. Metadata for add-enrollment modal
+  // 7. Metadata for add-enrollment modal & documents
   const [
     { data: universitiesData },
     { data: coursesData },
     { data: specializationsData },
     { data: staffData },
     { data: settingsData },
+    { data: rawDocTypes },
+    { data: rawCandidateDocs },
+    { data: rawUploadLinks },
   ] = await Promise.all([
     supabase
       .from('universities')
@@ -247,7 +251,53 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       .select('*')
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('document_types')
+      .select('id, name, slug, helper_text, display_order')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('candidate_documents')
+      .select('*')
+      .eq('student_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('document_upload_links')
+      .select('id, token, requested_types, expires_at, revoked_at, created_at, upload_count')
+      .eq('student_id', id)
+      .order('created_at', { ascending: false }),
   ])
+
+  // Collect user IDs for uploader and verifier profiles
+  const docUserIds = new Set<string>()
+  ;(rawCandidateDocs || []).forEach((d) => {
+    if (d.uploaded_by) docUserIds.add(d.uploaded_by)
+    if (d.verified_by) docUserIds.add(d.verified_by)
+  })
+
+  let userProfilesMap = new Map<string, string>()
+  if (docUserIds.size > 0) {
+    const { data: userProfiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', Array.from(docUserIds))
+    if (userProfiles) {
+      userProfilesMap = new Map(userProfiles.map((p) => [p.id, p.full_name]))
+    }
+  }
+
+  const documents = (rawCandidateDocs || []).map((d) => ({
+    ...d,
+    id_proof_kind: d.id_proof_kind as 'aadhaar_masked' | 'passport' | null,
+    status: d.status as 'received' | 'verified' | 'rejected',
+    uploaded_via: d.uploaded_via as 'staff' | 'candidate_link',
+    uploader_name: d.uploaded_by ? userProfilesMap.get(d.uploaded_by) || null : null,
+    verifier_name: d.verified_by ? userProfilesMap.get(d.verified_by) || null : null,
+  }))
+
+  const isAdmissionStaff =
+    enrollmentsList.some((e) => e.admission_staff_id === user.id) || student.created_by === user.id
+  const isOwnerOrAdmissionStaff = isOwner || isAdmissionStaff
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
@@ -281,6 +331,10 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
       courses={coursesData || []}
       specializations={specializationsData || []}
       staffList={staffData || []}
+      documentTypes={rawDocTypes || []}
+      documents={documents}
+      uploadLinks={rawUploadLinks || []}
+      isOwnerOrAdmissionStaff={isOwnerOrAdmissionStaff}
       currentUserId={user.id}
       isOwner={isOwner}
       settings={settingsData}

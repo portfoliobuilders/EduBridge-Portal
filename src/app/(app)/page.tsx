@@ -30,22 +30,32 @@ interface RecentReceiptRecord {
   status: string
 }
 
+export interface DocumentLinkStats {
+  total_received: number
+  unverified: number
+  active_links: number
+}
+
 export default async function HomePage() {
   const { profile } = await requireUser()
   const supabase = await createClient()
 
   if (profile.role === 'owner') {
     const todayRange = getDubaiDateRange('today')
-    const { data: kpis } = await supabase.rpc('dashboard_kpis', {
-      p_from: todayRange.from,
-      p_to: todayRange.to,
-      p_staff_id: undefined,
-    })
+    const [{ data: kpis }, { data: docStats }] = await Promise.all([
+      supabase.rpc('dashboard_kpis', {
+        p_from: todayRange.from,
+        p_to: todayRange.to,
+        p_staff_id: undefined,
+      }),
+      supabase.rpc('get_link_documents_stats', { p_days: 7 }),
+    ])
 
     return (
       <OwnerDashboard
         initialKpis={kpis as Record<string, unknown>}
         initialRange={todayRange}
+        documentStats={docStats as DocumentLinkStats | null}
         profile={{
           full_name: profile.full_name,
           role: profile.role,
@@ -66,6 +76,7 @@ export default async function HomePage() {
     candidatesCountRes,
     receiptsCountRes,
     settingsRes,
+    docStatsRes,
   ] = await Promise.all([
     supabase.rpc('dashboard_kpis', {
       p_from: todayRange.from,
@@ -99,6 +110,7 @@ export default async function HomePage() {
       .select('whatsapp_statement_template')
       .limit(1)
       .maybeSingle(),
+    supabase.rpc('get_link_documents_stats', { p_days: 7 }),
   ])
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://edubridgeeducation.com'
@@ -118,6 +130,7 @@ export default async function HomePage() {
       recentReceipts={recentReceiptsRows}
       myCandidateCount={candidatesCountRes.count || 0}
       myReceiptCount={receiptsCountRes.count || 0}
+      documentStats={docStatsRes.data as DocumentLinkStats | null}
       profile={{
         id: profile.id,
         full_name: profile.full_name,

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { BalancePill } from '@/components/BalancePill'
 import { formatAED } from '@/lib/money'
@@ -19,6 +20,7 @@ import {
   Clock,
   Send,
   ExternalLink,
+  FileText,
 } from 'lucide-react'
 import { EditStudentModal } from './EditStudentModal'
 import { EditFeeModal } from './EditFeeModal'
@@ -28,6 +30,12 @@ import {
   ContactsAndAddressesCard,
   type StudentAddress,
 } from './ContactsAndAddressesCard'
+import {
+  CandidateDocumentsTab,
+  type DocumentTypeFull,
+} from '@/components/documents/CandidateDocumentsTab'
+import type { CandidateDocItem } from '@/components/documents/DocumentViewerModal'
+import type { UploadLinkItem } from '@/components/documents/RequestDocumentsModal'
 import type {
   UniversityOption,
   CourseOption,
@@ -134,11 +142,16 @@ interface StudentDetailClientProps {
   courses: CourseOption[]
   specializations: SpecializationOption[]
   staffList: StaffOption[]
+  documentTypes?: DocumentTypeFull[]
+  documents?: CandidateDocItem[]
+  uploadLinks?: UploadLinkItem[]
+  isOwnerOrAdmissionStaff?: boolean
   currentUserId: string
   isOwner: boolean
   settings?: {
     name?: string
     whatsapp_statement_template?: string | null
+    whatsapp_doc_request_template?: string | null
   } | null
   appUrl?: string
 }
@@ -154,17 +167,34 @@ export function StudentDetailClient({
   courses,
   specializations,
   staffList,
+  documentTypes = [],
+  documents = [],
+  uploadLinks = [],
+  isOwnerOrAdmissionStaff = false,
   currentUserId,
   isOwner,
   settings,
   appUrl = 'http://localhost:3000',
 }: StudentDetailClientProps) {
+  const router = useRouter()
+  const [activeMainTab, setActiveMainTab] = useState<'overview' | 'documents'>('overview')
   const [activeEnrollmentId, setActiveEnrollmentId] = useState<string>(
     enrollments[0]?.id || ''
   )
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [editFeeOpen, setEditFeeOpen] = useState(false)
   const [addEnrollmentOpen, setAddEnrollmentOpen] = useState(false)
+
+  // Document summary computation (exclude 'other' slug from denominator)
+  const standardTypes = documentTypes.filter((t) => t.slug !== 'other')
+  const uploadedTypeIds = new Set(
+    documents.filter((d) => !d.archived_at).map((d) => d.document_type_id)
+  )
+  const uploadedStandardCount = standardTypes.filter((t) => uploadedTypeIds.has(t.id)).length
+  const totalStandardCount = standardTypes.length
+  const unverifiedDocsCount = documents.filter(
+    (d) => !d.archived_at && d.status === 'received'
+  ).length
 
   // Permission check: staff edit contact only if they created student; owner edits any
   const canEditContact = isOwner || student.created_by === currentUserId
@@ -196,6 +226,20 @@ export function StudentDetailClient({
               <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-[#E6F6F2] text-[#00805F] border border-[#CCEDE5]">
                 {student.student_code}
               </span>
+              <button
+                type="button"
+                onClick={() => setActiveMainTab('documents')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#F5F6F6] text-[#0A0A0A] border border-[#E4E7E7] hover:border-[#00A57E] hover:text-[#00A57E] transition cursor-pointer"
+                title="Click to view candidate documents"
+              >
+                <FileText className="h-3.5 w-3.5 text-[#00A57E]" />
+                <span>Documents: {uploadedStandardCount} of {totalStandardCount} types uploaded</span>
+                {unverifiedDocsCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    {unverifiedDocsCount} unverified
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Quick Contact Links */}
@@ -282,6 +326,62 @@ export function StudentDetailClient({
           </div>
         </div>
       </div>
+
+      {/* --------------------------------------------------------------------- */}
+      {/* 1.2. TOP-LEVEL NAVIGATION TABS                                        */}
+      {/* --------------------------------------------------------------------- */}
+      <div className="flex items-center gap-2 border-b border-[#E4E7E7]">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('overview')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-3 rounded-t-xl text-xs sm:text-sm font-semibold transition min-h-[44px] border-b-2 -mb-[1px] ${
+            activeMainTab === 'overview'
+              ? 'border-[#00A57E] text-[#00A57E] bg-white'
+              : 'border-transparent text-[#6B7272] hover:text-[#0A0A0A] hover:bg-white/60'
+          }`}
+        >
+          <Receipt className="h-4 w-4" />
+          <span>Overview & Ledger</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('documents')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-3 rounded-t-xl text-xs sm:text-sm font-semibold transition min-h-[44px] border-b-2 -mb-[1px] ${
+            activeMainTab === 'documents'
+              ? 'border-[#00A57E] text-[#00A57E] bg-white'
+              : 'border-transparent text-[#6B7272] hover:text-[#0A0A0A] hover:bg-white/60'
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          <span>Documents</span>
+          <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#E6F6F2] text-[#00805F]">
+            {uploadedStandardCount}/{totalStandardCount}
+          </span>
+          {unverifiedDocsCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              {unverifiedDocsCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeMainTab === 'documents' ? (
+        <CandidateDocumentsTab
+          studentId={student.id}
+          studentName={student.full_name}
+          studentCode={student.student_code}
+          studentPhone={student.mobile}
+          studentEmail={student.email}
+          guardianPhone={student.guardian_phone}
+          documentTypes={documentTypes}
+          documents={documents}
+          uploadLinks={uploadLinks}
+          isOwnerOrAdmissionStaff={isOwnerOrAdmissionStaff}
+          whatsappTemplate={settings?.whatsapp_doc_request_template || null}
+          onRefresh={() => router.refresh()}
+        />
+      ) : (
+        <>
 
       {/* --------------------------------------------------------------------- */}
       {/* 1.5. CONTACTS & ADDRESSES CARD                                         */}
@@ -708,6 +808,8 @@ export function StudentDetailClient({
             <span>Record Payment (Balance: {formatAED(activeEnrollment.ledger.balance)})</span>
           </Link>
         </div>
+      )}
+        </>
       )}
 
       {/* --------------------------------------------------------------------- */}

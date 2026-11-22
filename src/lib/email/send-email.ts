@@ -42,6 +42,19 @@ export function buildStatementMailtoUrl(params: {
   return `mailto:${params.to}?subject=${subject}&body=${body}`
 }
 
+export function buildDocumentRequestMailtoUrl(params: {
+  to: string
+  studentName: string
+  expiry: string
+  uploadLink: string
+}): string {
+  const subject = encodeURIComponent(`Document Upload Request - EduBridge Education`)
+  const body = encodeURIComponent(
+    `Dear ${params.studentName},\n\nPlease upload your documents for EduBridge Education using this secure link (valid until ${params.expiry}):\n${params.uploadLink}\n\nEduBridge Education\nDubai, UAE`
+  )
+  return `mailto:${params.to}?subject=${subject}&body=${body}`
+}
+
 export async function sendReceiptEmail(params: {
   to: string
   replyTo: string
@@ -376,6 +389,106 @@ export async function sendStatementEmail(params: {
     }
 
     return { success: true, message: `Fee statement successfully sent to ${params.to}` }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to send email'
+    return { success: false, error: message }
+  }
+}
+
+export async function sendDocumentRequestEmail(params: {
+  to: string
+  replyTo: string
+  studentName: string
+  expiry: string
+  uploadLink: string
+  requestedDocNames: string[]
+  companyName?: string
+  companyAddress?: string
+  companyTrn?: string
+}): Promise<EmailSendResult> {
+  const apiKey = process.env.RESEND_API_KEY
+
+  if (!apiKey || apiKey.startsWith('re_placeholder') || apiKey.length < 10) {
+    return {
+      success: false,
+      fallbackMailto: true,
+      mailtoUrl: buildDocumentRequestMailtoUrl({
+        to: params.to,
+        studentName: params.studentName,
+        expiry: params.expiry,
+        uploadLink: params.uploadLink,
+      }),
+      error: 'Resend API key not configured. Opened mailto client instead.',
+    }
+  }
+
+  const resend = new Resend(apiKey)
+  const from = process.env.EMAIL_FROM || 'EduBridge Education <receipts@edubridgeeducation.com>'
+  const subject = `Document Upload Request - ${params.studentName}`
+
+  const docListHtml = params.requestedDocNames
+    .map((name) => `<li style="margin-bottom: 4px; color: #0A0A0A;">${name}</li>`)
+    .join('')
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F6F6; margin: 0; padding: 24px; color: #0A0A0A;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; border: 1px solid #E4E7E7; overflow: hidden;">
+          <tr>
+            <td style="padding: 24px 32px; border-bottom: 1px solid #E4E7E7; background-color: #ffffff;">
+              <h2 style="margin: 0; color: #00A57E; font-size: 20px; font-weight: 700;">EduBridge Education</h2>
+              <p style="margin: 4px 0 0 0; color: #6B7272; font-size: 13px;">Document Upload Portal</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin-top: 0; font-size: 15px; line-height: 1.5;">Dear <strong>${params.studentName}</strong>,</p>
+              <p style="font-size: 14px; line-height: 1.6; color: #333333;">
+                Please upload the following documents for your admissions application with EduBridge Education:
+              </p>
+              <ul style="font-size: 14px; line-height: 1.6; padding-left: 20px;">
+                ${docListHtml}
+              </ul>
+              <div style="margin: 28px 0; text-align: center;">
+                <a href="${params.uploadLink}" style="background-color: #00A57E; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
+                  Upload Your Documents
+                </a>
+              </div>
+              <p style="font-size: 12px; color: #6B7272; line-height: 1.5; background-color: #E6F6F2; padding: 12px; border-radius: 8px; border: 1px solid #CCEDE5;">
+                <strong>Security Notice:</strong> This secure upload link is valid until <strong>${params.expiry}</strong>. PDFs must be under 2 MB. Photos are automatically optimized.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #F5F6F6; padding: 20px 32px; border-top: 1px solid #E4E7E7; font-size: 11px; color: #6B7272; text-align: center; line-height: 1.5;">
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: #0A0A0A;">
+                ${params.companyName || 'EduBridge Education'} · TRN: ${params.companyTrn || '105215478600003'}
+              </p>
+              <p style="margin: 0;">
+                ${params.companyAddress || 'M03, Royal House Building, Hor Al Anz East, Dubai – UAE'}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `
+
+  try {
+    const res = await resend.emails.send({
+      from,
+      to: params.to,
+      replyTo: params.replyTo,
+      subject,
+      html,
+    })
+
+    if (res.error) {
+      return { success: false, error: res.error.message }
+    }
+
+    return { success: true, message: `Upload request successfully sent to ${params.to}` }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to send email'
     return { success: false, error: message }
