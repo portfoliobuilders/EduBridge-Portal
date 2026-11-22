@@ -168,11 +168,10 @@ export function SettingsClient({
         <button
           type="button"
           onClick={() => setActiveTab('general')}
-          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === 'general'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'general'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <Building2 className="w-4 h-4" />
           General & Contact
@@ -180,11 +179,10 @@ export function SettingsClient({
         <button
           type="button"
           onClick={() => setActiveTab('branding')}
-          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === 'branding'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'branding'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <ImageIcon className="w-4 h-4" />
           Logo & Header
@@ -192,11 +190,10 @@ export function SettingsClient({
         <button
           type="button"
           onClick={() => setActiveTab('billing')}
-          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === 'billing'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'billing'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <Receipt className="w-4 h-4" />
           Prefixes & VAT
@@ -204,11 +201,10 @@ export function SettingsClient({
         <button
           type="button"
           onClick={() => setActiveTab('templates')}
-          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
-            activeTab === 'templates'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'templates'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <MessageSquare className="w-4 h-4" />
           Message Templates
@@ -499,14 +495,12 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={settings.vat_enabled}
                 onClick={() => handleInputChange('vat_enabled', !settings.vat_enabled)}
-                className={`w-12 h-6 rounded-full transition-colors relative focus:outline-hidden ${
-                  settings.vat_enabled ? 'bg-primary' : 'bg-neutral-300'
-                }`}
+                className={`w-12 h-6 rounded-full transition-colors relative focus:outline-hidden ${settings.vat_enabled ? 'bg-primary' : 'bg-neutral-300'
+                  }`}
               >
                 <span
-                  className={`block w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${
-                    settings.vat_enabled ? 'translate-x-6.5' : 'translate-x-0.5'
-                  }`}
+                  className={`block w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${settings.vat_enabled ? 'translate-x-6.5' : 'translate-x-0.5'
+                    }`}
                 />
               </button>
             </div>
@@ -704,55 +698,50 @@ export function SettingsClient({
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('whatsapp_receipt')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    previewTemplateType === 'whatsapp_receipt'
-                      ? 'bg-white text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${previewTemplateType === 'whatsapp_receipt'
+                    ? 'bg-white text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   WA Receipt
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('whatsapp_statement')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    previewTemplateType === 'whatsapp_statement'
-                      ? 'bg-white text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${previewTemplateType === 'whatsapp_statement'
+                    ? 'bg-white text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   WA Statement
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('whatsapp_doc_request')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    previewTemplateType === 'whatsapp_doc_request'
-                      ? 'bg-white text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${previewTemplateType === 'whatsapp_doc_request'
+                    ? 'bg-white text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   WA Doc Request
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('email')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    previewTemplateType === 'email'
-                      ? 'bg-white text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${previewTemplateType === 'email'
+                    ? 'bg-white text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   Email Voucher
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTemplateType('email_doc_request')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    previewTemplateType === 'email_doc_request'
-                      ? 'bg-white text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${previewTemplateType === 'email_doc_request'
+                    ? 'bg-white text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   Email Doc Request
                 </button>
@@ -783,7 +772,7 @@ export function SettingsClient({
                   <pre className="font-sans text-xs text-foreground whitespace-pre-wrap leading-relaxed">
                     {renderSamplePreview(
                       settings.email_doc_request_template ||
-                        'Dear {student_name},\n\nPlease upload the required documents for your admission using this secure link:\n{upload_link}\n\nThis link is valid for {expiry}.\n\nBest regards,\n{company_name}'
+                      'Dear {student_name},\n\nPlease upload the required documents for your admission using this secure link:\n{upload_link}\n\nThis link is valid for {expiry}.\n\nBest regards,\n{company_name}'
                     )}
                   </pre>
                 </div>
@@ -794,8 +783,8 @@ export function SettingsClient({
                       previewTemplateType === 'whatsapp_receipt'
                         ? settings.whatsapp_receipt_template
                         : previewTemplateType === 'whatsapp_statement'
-                        ? settings.whatsapp_statement_template
-                        : settings.whatsapp_doc_request_template ||
+                          ? settings.whatsapp_statement_template
+                          : settings.whatsapp_doc_request_template ||
                           'Dear {student_name}, please upload your admission documents using this secure upload link: {upload_link}\n(Note: This link will expire in {expiry}). Thank you!'
                     )}
                   </p>
