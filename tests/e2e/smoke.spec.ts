@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { deleteTestCandidate } from '../helpers/test-candidate';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || '';
@@ -57,8 +58,17 @@ test.describe('EduBridge End-to-End Smoke Test Flow', () => {
   });
 
   test.afterAll(async () => {
-    // Clean up disposable users
+    // Clean up test candidates and disposable users
     if (staffUserId) {
+      const { data: createdStudents } = await adminClient
+        .from('students')
+        .select('id')
+        .eq('created_by', staffUserId);
+      if (createdStudents) {
+        for (const s of createdStudents) {
+          await deleteTestCandidate(adminClient, s.id);
+        }
+      }
       await adminClient.auth.admin.deleteUser(staffUserId);
     }
     if (ownerUserId) {

@@ -24,8 +24,17 @@ test.describe('Admin Role Permissions & Scope E2E Scenario', () => {
   const password = `AdminP@ss_${runId}!Aa1`;
   let adminUserId: string;
   let testPaymentId: string;
+  let origAdminsCanVoid: boolean | undefined;
 
   test.beforeAll(async () => {
+    // Save original admins_can_void
+    const { data: origSettings } = await adminClient
+      .from('company_settings')
+      .select('admins_can_void')
+      .eq('singleton', true)
+      .single();
+    origAdminsCanVoid = origSettings?.admins_can_void;
+
     // 1. Create disposable Admin user (scope: team)
     const { data: adminData, error: adminErr } = await adminClient.auth.admin.createUser({
       email: adminEmail,
@@ -62,6 +71,12 @@ test.describe('Admin Role Permissions & Scope E2E Scenario', () => {
   });
 
   test.afterAll(async () => {
+    if (origAdminsCanVoid !== undefined) {
+      await adminClient
+        .from('company_settings')
+        .update({ admins_can_void: origAdminsCanVoid })
+        .eq('singleton', true);
+    }
     if (adminUserId) {
       await adminClient.auth.admin.deleteUser(adminUserId);
     }

@@ -40,12 +40,37 @@ test.describe('VAT Treatment End-to-End Suite & Screenshot Capture', () => {
 
   let noneStudentId: string;
   let nonePaymentId: string;
+  let origCompanySettings: {
+    vat_enabled: boolean;
+    vat_rate: number;
+    default_vat_treatment: string;
+    no_vat_reason: string;
+  } | null = null;
 
   test.beforeAll(async () => {
     const dir = path.resolve('docs/screenshots');
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
+
+    // Save original company settings and enable VAT for test duration
+    const { data: currentSettings } = await adminClient
+      .from('company_settings')
+      .select('vat_enabled, vat_rate, default_vat_treatment, no_vat_reason')
+      .eq('singleton', true)
+      .single();
+    if (currentSettings) {
+      origCompanySettings = currentSettings;
+    }
+    await adminClient
+      .from('company_settings')
+      .update({
+        vat_enabled: true,
+        vat_rate: 5.0,
+        default_vat_treatment: 'exclusive',
+        no_vat_reason: 'zero_rated',
+      })
+      .eq('singleton', true);
 
     // 1. Create owner test user
     const { data: userData, error: userErr } = await adminClient.auth.admin.createUser({
@@ -163,6 +188,18 @@ test.describe('VAT Treatment End-to-End Suite & Screenshot Capture', () => {
   });
 
   test.afterAll(async () => {
+    // Restore original company settings
+    if (origCompanySettings) {
+      await adminClient
+        .from('company_settings')
+        .update({
+          vat_enabled: origCompanySettings.vat_enabled,
+          vat_rate: origCompanySettings.vat_rate,
+          default_vat_treatment: origCompanySettings.default_vat_treatment,
+          no_vat_reason: origCompanySettings.no_vat_reason,
+        })
+        .eq('singleton', true);
+    }
     for (const sid of createdStudentIds) {
       await deleteTestCandidate(adminClient, sid);
     }

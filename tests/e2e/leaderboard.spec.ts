@@ -27,8 +27,17 @@ test.describe('Staff Leaderboard E2E & API Verification', () => {
 
   let staffId: string;
   let adminId: string;
+  let origShowAedToStaff: boolean | undefined;
 
   test.beforeAll(async () => {
+    // Save original show_aed_to_staff
+    const { data: origSettings } = await adminClient
+      .from('company_settings')
+      .select('show_aed_to_staff')
+      .eq('singleton', true)
+      .single();
+    origShowAedToStaff = origSettings?.show_aed_to_staff;
+
     // 1. Create Staff User
     const { data: staffData, error: staffErr } = await adminClient.auth.admin.createUser({
       email: staffEmail,
@@ -74,8 +83,10 @@ test.describe('Staff Leaderboard E2E & API Verification', () => {
   });
 
   test.afterAll(async () => {
-    // Revert settings to default and delete test users
-    await adminClient.from('company_settings').update({ show_aed_to_staff: false }).eq('singleton', true);
+    // Revert settings to original and delete test users
+    if (origShowAedToStaff !== undefined) {
+      await adminClient.from('company_settings').update({ show_aed_to_staff: origShowAedToStaff }).eq('singleton', true);
+    }
     if (staffId) await adminClient.auth.admin.deleteUser(staffId);
     if (adminId) await adminClient.auth.admin.deleteUser(adminId);
   });
