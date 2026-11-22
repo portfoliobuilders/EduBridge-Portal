@@ -201,24 +201,24 @@ export function AppShell({
           </Link>
 
           <div className="border-t border-[#E4E7E7] pt-3">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col min-w-0 pr-1">
-                <span className="text-xs font-semibold text-[#0A0A0A] truncate">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-xs font-semibold text-[#0A0A0A] leading-snug break-words" title={profile.full_name}>
                   {profile.full_name}
                 </span>
                 {profile.job_title && (
-                  <span className="text-[11px] text-[#6B7272] truncate font-medium">
+                  <span className="text-[11px] text-[#6B7272] font-medium leading-tight mt-0.5 break-words" title={profile.job_title}>
                     {profile.job_title}
                   </span>
                 )}
-                <div className="mt-1">
+                <div className="mt-1.5 flex items-center">
                   <RoleBadge role={profile.role} />
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setLogoutDialogOpen(true)}
-                className="h-8 w-8 flex items-center justify-center text-[#6B7272] hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                className="h-8 w-8 shrink-0 flex items-center justify-center text-[#6B7272] hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />

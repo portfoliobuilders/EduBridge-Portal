@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { createTestCandidateWithEnrollment, deleteTestCandidate } from '../helpers/test-candidate';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || '';
@@ -37,22 +38,13 @@ test.describe('Candidate Documents & Self-Upload Link Flow', () => {
       .update({ role: 'staff', is_active: true, full_name: `Doc Staff ${runId}` })
       .eq('id', staffUserId);
 
-    // 2. Create test candidate
-    const { data: studentData, error: studentErr } = await adminClient
-      .from('students')
-      .insert({
-        student_code: `EB-DOC-${runId.toString().slice(-5)}`,
-        full_name: 'Fatima Al Mansoori',
-        mobile: '+971581073898',
-        created_by: staffUserId,
-      })
-      .select('id')
-      .single();
-
-    if (studentErr || !studentData) {
-      throw new Error(`Failed to create test candidate: ${studentErr?.message}`);
-    }
-    testStudentId = studentData.id;
+    // 2. Create test candidate through atomic RPC
+    const candidate = await createTestCandidateWithEnrollment(adminClient, {
+      fullName: 'Fatima Al Mansoori',
+      mobile: `+97158${runId.toString().slice(-7)}`,
+      staffUserId,
+    });
+    testStudentId = candidate.studentId;
 
     // Get 10th and 12th certificate types
     const { data: docTypes } = await adminClient
@@ -221,5 +213,14 @@ test.describe('Candidate Documents & Self-Upload Link Flow', () => {
   test('ZIP download endpoint rejects unauthenticated request with 401', async ({ request }) => {
     const res = await request.get(`/api/candidates/${testStudentId}/documents/zip`);
     expect(res.status()).toBe(401);
+  });
+
+  test.afterAll(async () => {
+    if (testStudentId) {
+      await deleteTestCandidate(adminClient, testStudentId);
+    }
+    if (staffUserId) {
+      await adminClient.auth.admin.deleteUser(staffUserId);
+    }
   });
 });

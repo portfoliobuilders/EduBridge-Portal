@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1116,6 +1116,7 @@ export type Database = {
       }
       student_directory_view: {
         Row: {
+          candidate_status: string | null
           course_ids: string[] | null
           course_names: string | null
           created_at: string | null
@@ -1124,16 +1125,19 @@ export type Database = {
           enrollment_count: number | null
           full_name: string | null
           id: string | null
+          is_active: boolean | null
           last_payment_at: string | null
           mobile: string | null
           notes: string | null
           student_code: string | null
           total_balance: number | null
+          total_doc_types_count: number | null
           total_net_fee: number | null
           total_paid: number | null
           university_ids: string[] | null
           university_names: string | null
           updated_at: string | null
+          verified_docs_count: number | null
           whatsapp: string | null
         }
         Relationships: [
@@ -1236,6 +1240,22 @@ export type Database = {
             Args: { p_from: string; p_staff_id?: string; p_to: string }
             Returns: Json
           }
+      delete_test_candidate: {
+        Args: { p_student_id: string }
+        Returns: undefined
+      }
+      get_candidate_directory_kpis: {
+        Args: never
+        Returns: {
+          balance_due_count: number
+          collected_this_month: number
+          fully_paid_count: number
+          no_enrollment_count: number
+          outstanding_balance: number
+          overdue_count: number
+          total_candidates: number
+        }[]
+      }
       get_candidate_documents_summary: {
         Args: { p_student_id: string }
         Returns: Json

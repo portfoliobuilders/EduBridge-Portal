@@ -34,7 +34,7 @@ export function RoleBadge({ role, className, size = 'sm' }: RoleBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center font-semibold rounded-full border tracking-wide uppercase',
+        'inline-flex items-center font-semibold rounded-full border tracking-wide uppercase whitespace-nowrap shrink-0',
         styles,
         sizeStyles,
         className

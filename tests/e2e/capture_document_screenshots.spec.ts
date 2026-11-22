@@ -2,6 +2,7 @@ import { test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import crypto from 'crypto';
+import { createTestCandidateWithEnrollment, deleteTestCandidate } from '../helpers/test-candidate';
 
 const envFile = fs.readFileSync('.env.local', 'utf-8');
 const env: Record<string, string> = {};
@@ -44,20 +45,13 @@ test.describe('Capture Candidate Document Screenshots', () => {
       .update({ role: 'owner', is_active: true, full_name: 'Screenshot Tester' })
       .eq('id', testUserId);
 
-    // 2. Create test candidate
-    const { data: studentData, error: studentErr } = await supabase
-      .from('students')
-      .insert({
-        student_code: `EB-DOC-SCR-${runId.toString().slice(-4)}`,
-        full_name: 'Fatima Al Mansoori',
-        mobile: '+971581073898',
-        created_by: testUserId,
-      })
-      .select('id')
-      .single();
-
-    if (studentErr || !studentData) throw studentErr || new Error('Student creation failed');
-    testStudentId = studentData.id;
+    // 2. Create test candidate through atomic RPC
+    const candidate = await createTestCandidateWithEnrollment(supabase, {
+      fullName: 'Fatima Al Mansoori',
+      mobile: `+97158${runId.toString().slice(-7)}`,
+      staffUserId: testUserId,
+    });
+    testStudentId = candidate.studentId;
 
     // Get 10th and 12th certificate types
     const { data: docTypes } = await supabase
@@ -190,5 +184,14 @@ test.describe('Capture Candidate Document Screenshots', () => {
       path: 'docs/screenshots/public_expired_link_375.png',
       fullPage: false,
     });
+  });
+
+  test.afterAll(async () => {
+    if (testStudentId) {
+      await deleteTestCandidate(supabase, testStudentId);
+    }
+    if (testUserId) {
+      await supabase.auth.admin.deleteUser(testUserId);
+    }
   });
 });
