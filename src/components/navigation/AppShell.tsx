@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -15,6 +15,7 @@ import {
   KeyRound,
   ChevronRight,
   User,
+  Bell,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,14 +35,20 @@ import {
 } from '@/components/ui/dialog'
 import { signOutAction } from '@/app/(auth)/login/actions'
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { CelebrantTopStrip } from '@/components/celebrations/CelebrantTopStrip'
+import { CelebrationBanner } from '@/components/celebrations/CelebrationBanner'
+import type { CelebrationPerson } from '@/components/celebrations/actions'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/lib/auth'
 
 export function AppShell({
   profile,
+  initialCelebrations = [],
   children,
 }: {
   profile: Profile
+  initialCelebrations?: CelebrationPerson[]
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -52,6 +59,15 @@ export function AppShell({
   const [isAnyModalOpen, setIsAnyModalOpen] = useState(false)
   const isAdminOrAbove =
     profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
+
+  const enrichedCelebrations: CelebrationPerson[] = useMemo(() => {
+    return initialCelebrations.map((c: CelebrationPerson) => ({
+      ...c,
+      is_self: c.user_id === profile.id,
+    }))
+  }, [initialCelebrations, profile.id])
+
+  const selfCelebration = enrichedCelebrations.find((c: CelebrationPerson) => c.is_self) || null
 
   // Cmd+K / Ctrl+K keyboard shortcut for Search
   useEffect(() => {
@@ -113,6 +129,8 @@ export function AppShell({
     { href: '/candidates', label: 'Candidates', icon: Users },
     { href: '/reports', label: 'Reports', icon: FileBarChart },
     ...(isAdminOrAbove ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
+    { href: '/profile', label: 'My Profile', icon: User },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
   ]
 
   return (
@@ -121,8 +139,10 @@ export function AppShell({
 
       {/* Desktop Left Sidebar (>= 1024px) */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-[#E4E7E7] shrink-0 fixed inset-y-0 z-30">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-[#E4E7E7] shrink-0">
+        <CelebrantTopStrip celebration={selfCelebration} />
+
+        {/* Logo & Notification Bell */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-[#E4E7E7] shrink-0">
           <Link href="/" className="inline-flex items-center">
             <Image
               src="/brand/edubridge-logo-color.svg"
@@ -134,6 +154,7 @@ export function AppShell({
               className="h-8 w-auto max-h-8 object-contain"
             />
           </Link>
+          <NotificationBell userId={profile.id} />
         </div>
 
         {/* Global Search Button */}
@@ -202,19 +223,46 @@ export function AppShell({
 
           <div className="border-t border-[#E4E7E7] pt-3">
             <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-semibold text-[#0A0A0A] leading-snug break-words" title={profile.full_name}>
-                  {profile.full_name}
-                </span>
-                {profile.job_title && (
-                  <span className="text-[11px] text-[#6B7272] font-medium leading-tight mt-0.5 break-words" title={profile.job_title}>
-                    {profile.job_title}
-                  </span>
-                )}
-                <div className="mt-1.5 flex items-center">
-                  <RoleBadge role={profile.role} />
+              <Link
+                href="/profile"
+                className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-85 transition-opacity group"
+                title="View your profile & preferences"
+              >
+                <div className="w-9 h-9 rounded-full bg-[#00A57E] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden relative ring-2 ring-[#E6F6F2]">
+                  {profile.avatar_url ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={profile.full_name}
+                      width={36}
+                      height={36}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    profile.full_name[0]
+                  )}
+                  {selfCelebration && (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 text-[10px]"
+                      title={selfCelebration.kind === 'birthday' ? 'Birthday today' : 'Anniversary today'}
+                    >
+                      {selfCelebration.kind === 'birthday' ? '🎂' : '🏆'}
+                    </span>
+                  )}
                 </div>
-              </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold text-[#0A0A0A] leading-snug truncate group-hover:text-[#00A57E]">
+                    {profile.full_name}
+                  </span>
+                  {profile.job_title && (
+                    <span className="text-[11px] text-[#6B7272] font-medium leading-tight truncate">
+                      {profile.job_title}
+                    </span>
+                  )}
+                  <div className="mt-1 flex items-center">
+                    <RoleBadge role={profile.role} />
+                  </div>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => setLogoutDialogOpen(true)}
@@ -234,7 +282,9 @@ export function AppShell({
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
-        {/* Mobile Top Header (< 1024px): Logo + Search only */}
+        <CelebrantTopStrip celebration={selfCelebration} />
+
+        {/* Mobile Top Header (< 1024px): Logo + Notifications + Search */}
         <header className="lg:hidden h-16 bg-white border-b border-[#E4E7E7] px-4 flex items-center justify-between sticky top-0 z-20">
           <Link href="/" className="inline-flex items-center">
             <Image
@@ -248,7 +298,8 @@ export function AppShell({
             />
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <NotificationBell userId={profile.id} />
             <Button
               variant="outline"
               size="icon"
@@ -260,6 +311,9 @@ export function AppShell({
             </Button>
           </div>
         </header>
+
+        {/* Global Celebration Banner for colleagues */}
+        <CelebrationBanner celebrations={enrichedCelebrations} />
 
         {/* Page Children (mobile padded for bottom nav + FAB) */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-28 lg:pb-8">
@@ -368,6 +422,30 @@ export function AppShell({
           </SheetHeader>
 
           <div className="space-y-2 pt-4">
+            <Link
+              href="/profile"
+              onClick={() => setAccountOpen(false)}
+              className="flex items-center justify-between p-3.5 rounded-2xl border border-[#E4E7E7] hover:bg-[#F5F6F6] text-sm font-medium text-[#0A0A0A] transition"
+            >
+              <span className="flex items-center gap-3">
+                <User className="w-5 h-5 text-[#00A57E]" />
+                My Profile & Preferences
+              </span>
+              <ChevronRight className="w-4 h-4 text-[#6B7272]" />
+            </Link>
+
+            <Link
+              href="/notifications"
+              onClick={() => setAccountOpen(false)}
+              className="flex items-center justify-between p-3.5 rounded-2xl border border-[#E4E7E7] hover:bg-[#F5F6F6] text-sm font-medium text-[#0A0A0A] transition"
+            >
+              <span className="flex items-center gap-3">
+                <Bell className="w-5 h-5 text-[#00A57E]" />
+                Notifications
+              </span>
+              <ChevronRight className="w-4 h-4 text-[#6B7272]" />
+            </Link>
+
             {isAdminOrAbove && (
               <Link
                 href="/admin"

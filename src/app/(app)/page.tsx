@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getDubaiDateRange } from '@/lib/date'
 import { OwnerDashboard } from '@/components/dashboard/OwnerDashboard'
 import { StaffDashboard } from '@/components/dashboard/StaffDashboard'
+import { CelebrantHero } from '@/components/celebrations/CelebrantHero'
+import type { CelebrationPerson } from '@/components/celebrations/actions'
 
 interface OutstandingRecord {
   enrollment_id: string
@@ -42,25 +44,34 @@ export default async function HomePage() {
 
   if (profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner') {
     const todayRange = getDubaiDateRange('today')
-    const [{ data: kpis }, { data: docStats }] = await Promise.all([
+    const [{ data: kpis }, { data: docStats }, { data: celebrations }] = await Promise.all([
       supabase.rpc('dashboard_kpis', {
         p_from: todayRange.from,
         p_to: todayRange.to,
         p_staff_id: undefined,
       }),
       supabase.rpc('get_link_documents_stats', { p_days: 7 }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.rpc as any)('get_celebrations_today'),
     ])
 
+    const selfCelebration = Array.isArray(celebrations)
+      ? (celebrations.find((c: { user_id: string }) => c.user_id === profile.id) as CelebrationPerson | undefined)
+      : undefined
+
     return (
-      <OwnerDashboard
-        initialKpis={kpis as Record<string, unknown>}
-        initialRange={todayRange}
-        documentStats={docStats as DocumentLinkStats | null}
-        profile={{
-          full_name: profile.full_name,
-          role: profile.role,
-        }}
-      />
+      <div className="space-y-6">
+        {selfCelebration && <CelebrantHero celebration={selfCelebration} />}
+        <OwnerDashboard
+          initialKpis={kpis as Record<string, unknown>}
+          initialRange={todayRange}
+          documentStats={docStats as DocumentLinkStats | null}
+          profile={{
+            full_name: profile.full_name,
+            role: profile.role,
+          }}
+        />
+      </div>
     )
   }
 
@@ -77,6 +88,7 @@ export default async function HomePage() {
     receiptsCountRes,
     settingsRes,
     docStatsRes,
+    celebrationsRes,
   ] = await Promise.all([
     supabase.rpc('dashboard_kpis', {
       p_from: todayRange.from,
@@ -111,6 +123,8 @@ export default async function HomePage() {
       .limit(1)
       .maybeSingle(),
     supabase.rpc('get_link_documents_stats', { p_days: 7 }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.rpc as any)('get_celebrations_today'),
   ])
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://edubridgeeducation.com'
@@ -122,22 +136,29 @@ export default async function HomePage() {
     (((recentReceiptsRes.data as Record<string, unknown>)?.rows as RecentReceiptRecord[]) || []).slice(0, 10)
   )
 
+  const selfCelebration = Array.isArray(celebrationsRes.data)
+    ? (celebrationsRes.data.find((c: { user_id: string }) => c.user_id === profile.id) as CelebrationPerson | undefined)
+    : undefined
+
   return (
-    <StaffDashboard
-      todayKpis={todayKpisRes.data as Record<string, unknown>}
-      monthKpis={monthKpisRes.data as Record<string, unknown>}
-      pendingBalances={outstandingRows}
-      recentReceipts={recentReceiptsRows}
-      myCandidateCount={candidatesCountRes.count || 0}
-      myReceiptCount={receiptsCountRes.count || 0}
-      documentStats={docStatsRes.data as DocumentLinkStats | null}
-      profile={{
-        id: profile.id,
-        full_name: profile.full_name,
-        role: profile.role,
-      }}
-      whatsappTemplate={settingsRes.data?.whatsapp_statement_template || undefined}
-      appUrl={appUrl}
-    />
+    <div className="space-y-6">
+      {selfCelebration && <CelebrantHero celebration={selfCelebration} />}
+      <StaffDashboard
+        todayKpis={todayKpisRes.data as Record<string, unknown>}
+        monthKpis={monthKpisRes.data as Record<string, unknown>}
+        pendingBalances={outstandingRows}
+        recentReceipts={recentReceiptsRows}
+        myCandidateCount={candidatesCountRes.count || 0}
+        myReceiptCount={receiptsCountRes.count || 0}
+        documentStats={docStatsRes.data as DocumentLinkStats | null}
+        profile={{
+          id: profile.id,
+          full_name: profile.full_name,
+          role: profile.role,
+        }}
+        whatsappTemplate={settingsRes.data?.whatsapp_statement_template || undefined}
+        appUrl={appUrl}
+      />
+    </div>
   )
 }

@@ -46,6 +46,7 @@ export interface CompanySettingsData {
   email_doc_request_template?: string | null
   admins_can_void?: boolean
   support_access_enabled?: boolean
+  celebration_emails_enabled?: boolean
 }
 
 const TEMPLATE_VARIABLES = [
@@ -147,6 +148,7 @@ export function SettingsClient({
       }
       formData.append('admins_can_void', String(Boolean(settings.admins_can_void)))
       formData.append('support_access_enabled', String(Boolean(settings.support_access_enabled)))
+      formData.append('celebration_emails_enabled', String(Boolean(settings.celebration_emails_enabled ?? true)))
 
       const res = await updateCompanySettingsAction(formData)
       if (res.success) {
@@ -896,6 +898,34 @@ export function SettingsClient({
           </div>
 
           <div className="space-y-4">
+            {/* Celebration Milestone Emails */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Staff Celebration Emails
+                </span>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  Automatically send branded congratulations emails to staff on their birthdays and work anniversaries at 08:30 Asia/Dubai. In-app notifications and dashboard reminders for admins remain active regardless.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(settings.celebration_emails_enabled ?? true)}
+                onClick={() => handleInputChange('celebration_emails_enabled', !(settings.celebration_emails_enabled ?? true))}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  (settings.celebration_emails_enabled ?? true) ? 'bg-primary' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    (settings.celebration_emails_enabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
             {/* Admins can void receipts switch */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
               <div className="space-y-0.5">

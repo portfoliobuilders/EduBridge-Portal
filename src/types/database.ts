@@ -151,10 +151,174 @@ export type Database = {
           },
         ]
       }
+      candidate_transfers: {
+        Row: {
+          at: string
+          enrollment_id: string | null
+          from_user: string
+          id: string
+          reason: string
+          student_id: string
+          to_user: string
+          transferred_by: string
+        }
+        Insert: {
+          at?: string
+          enrollment_id?: string | null
+          from_user: string
+          id?: string
+          reason: string
+          student_id: string
+          to_user: string
+          transferred_by: string
+        }
+        Update: {
+          at?: string
+          enrollment_id?: string | null
+          from_user?: string
+          id?: string
+          reason?: string
+          student_id?: string
+          to_user?: string
+          transferred_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_transfers_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_ledger"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      celebration_wishes: {
+        Row: {
+          celebrant_id: string
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          message: string
+          year: number
+        }
+        Insert: {
+          celebrant_id: string
+          created_at?: string
+          from_user: string
+          id?: string
+          kind: string
+          message: string
+          year: number
+        }
+        Update: {
+          celebrant_id?: string
+          created_at?: string
+          from_user?: string
+          id?: string
+          kind?: string
+          message?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "celebration_wishes_celebrant_id_fkey"
+            columns: ["celebrant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "celebration_wishes_celebrant_id_fkey"
+            columns: ["celebrant_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "celebration_wishes_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "celebration_wishes_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string
           admins_can_void: boolean
+          celebration_emails_enabled: boolean
           created_at: string
           default_vat_treatment: string
           email: string
@@ -185,6 +349,7 @@ export type Database = {
         Insert: {
           address: string
           admins_can_void?: boolean
+          celebration_emails_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
           email: string
@@ -215,6 +380,7 @@ export type Database = {
         Update: {
           address?: string
           admins_can_void?: boolean
+          celebration_emails_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
           email?: string
@@ -446,6 +612,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "email_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       enrollments: {
@@ -527,6 +700,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "enrollments_admission_staff_id_fkey"
+            columns: ["admission_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "enrollments_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
@@ -538,6 +718,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
           {
@@ -593,6 +780,60 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -717,6 +958,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payments_received_by_fkey"
+            columns: ["received_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -737,47 +985,93 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_voided_by_fkey"
+            columns: ["voided_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
         Row: {
+          address: string | null
           admin_scope: string
+          avatar_url: string | null
+          celebrate_anniversary: boolean
+          celebrate_birthday: boolean
           created_at: string
+          display_name: string | null
+          dob: string | null
+          email_digest_enabled: boolean
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string | null
           full_name: string
           id: string
           is_active: boolean
           is_support: boolean
           job_title: string | null
+          joining_date: string | null
+          personal_email: string | null
           phone: string | null
           reports_to: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
+          work_email: string | null
         }
         Insert: {
+          address?: string | null
           admin_scope?: string
+          avatar_url?: string | null
+          celebrate_anniversary?: boolean
+          celebrate_birthday?: boolean
           created_at?: string
+          display_name?: string | null
+          dob?: string | null
+          email_digest_enabled?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
           full_name: string
           id: string
           is_active?: boolean
           is_support?: boolean
           job_title?: string | null
+          joining_date?: string | null
+          personal_email?: string | null
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          work_email?: string | null
         }
         Update: {
+          address?: string | null
           admin_scope?: string
+          avatar_url?: string | null
+          celebrate_anniversary?: boolean
+          celebrate_birthday?: boolean
           created_at?: string
+          display_name?: string | null
+          dob?: string | null
+          email_digest_enabled?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
           is_support?: boolean
           job_title?: string | null
+          joining_date?: string | null
+          personal_email?: string | null
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          work_email?: string | null
         }
         Relationships: [
           {
@@ -785,6 +1079,13 @@ export type Database = {
             columns: ["reports_to"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
         ]
@@ -885,6 +1186,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "share_logs_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       specializations: {
@@ -918,6 +1226,51 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_sensitive_details: {
+        Row: {
+          address: string | null
+          dob: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          personal_email: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          dob?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          personal_email?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          dob?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          personal_email?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_sensitive_details_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_sensitive_details_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1021,6 +1374,7 @@ export type Database = {
           is_active: boolean
           mobile: string
           notes: string | null
+          owner_id: string | null
           student_code: string
           updated_at: string
           whatsapp: string | null
@@ -1039,6 +1393,7 @@ export type Database = {
           is_active?: boolean
           mobile: string
           notes?: string | null
+          owner_id?: string | null
           student_code: string
           updated_at?: string
           whatsapp?: string | null
@@ -1057,6 +1412,7 @@ export type Database = {
           is_active?: boolean
           mobile?: string
           notes?: string | null
+          owner_id?: string | null
           student_code?: string
           updated_at?: string
           whatsapp?: string | null
@@ -1067,6 +1423,137 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfer_requests: {
+        Row: {
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          reason: string
+          requested_by: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          student_id: string
+          to_user: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          reason: string
+          requested_by: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          student_id: string
+          to_user: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          reason?: string
+          requested_by?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          student_id?: string
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_ledger"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1136,8 +1623,52 @@ export type Database = {
           },
         ]
       }
+      staff_directory_view: {
+        Row: {
+          address: string | null
+          admin_scope: string | null
+          avatar_url: string | null
+          celebrate_anniversary: boolean | null
+          celebrate_birthday: boolean | null
+          created_at: string | null
+          display_name: string | null
+          dob: string | null
+          email_digest_enabled: boolean | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          job_title: string | null
+          joining_date: string | null
+          personal_email: string | null
+          phone: string | null
+          reports_to: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+          work_email: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_directory_view: {
         Row: {
+          admission_staff_ids: string[] | null
           candidate_status: string | null
           course_ids: string[] | null
           course_names: string | null
@@ -1151,6 +1682,9 @@ export type Database = {
           last_payment_at: string | null
           mobile: string | null
           notes: string | null
+          owner_avatar_url: string | null
+          owner_id: string | null
+          owner_name: string | null
           student_code: string | null
           total_balance: number | null
           total_doc_types_count: number | null
@@ -1168,6 +1702,27 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1231,6 +1786,18 @@ export type Database = {
         }
         Returns: Json
       }
+      create_notification: {
+        Args: {
+          p_body: string
+          p_entity_id?: string
+          p_entity_type?: string
+          p_link?: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       create_student_with_enrollment: {
         Args: {
           p_admission_staff_id?: string
@@ -1273,6 +1840,12 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      get_admin_recipients_for: {
+        Args: { p_staff_id?: string }
+        Returns: {
+          admin_id: string
+        }[]
+      }
       get_candidate_directory_kpis: {
         Args: never
         Returns: {
@@ -1288,6 +1861,31 @@ export type Database = {
       get_candidate_documents_summary: {
         Args: { p_student_id: string }
         Returns: Json
+      }
+      get_celebration_wishes_feed: {
+        Args: { p_celebrant_id: string; p_kind: string; p_year?: number }
+        Returns: {
+          can_delete: boolean
+          created_at: string
+          from_user_avatar: string
+          from_user_id: string
+          from_user_name: string
+          id: string
+          message: string
+        }[]
+      }
+      get_celebrations_today: {
+        Args: { p_date?: string }
+        Returns: {
+          avatar_url: string
+          first_name: string
+          full_name: string
+          is_self: boolean
+          joined_month_year: string
+          kind: string
+          user_id: string
+          years: number
+        }[]
       }
       get_link_documents_stats: { Args: { p_days?: number }; Returns: Json }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
@@ -1311,6 +1909,18 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_upcoming_celebrations_this_week: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          celebration_date: string
+          days_away: number
+          full_name: string
+          kind: string
+          user_id: string
+          years: number
+        }[]
+      }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -1318,8 +1928,16 @@ export type Database = {
       import_programs: { Args: { p_data: Json }; Returns: Json }
       is_active_user: { Args: never; Returns: boolean }
       is_admin_or_above: { Args: never; Returns: boolean }
+      is_candidate_visible: {
+        Args: { p_owner_id: string; p_student_id: string }
+        Returns: boolean
+      }
       is_owner: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      lookup_candidate_for_payment: { Args: { p_query: string }; Returns: Json }
+      mark_all_notifications_read: { Args: never; Returns: number }
+      mark_notification_read: { Args: { p_id: string }; Returns: boolean }
+      process_daily_celebrations: { Args: { p_date?: string }; Returns: Json }
       record_payment: {
         Args: {
           p_amount: number
@@ -1403,6 +2021,32 @@ export type Database = {
         Args: { p_from: string; p_staff_id?: string; p_to: string }
         Returns: Json
       }
+      request_candidate_transfer: {
+        Args: {
+          p_enrollment_id?: string
+          p_reason: string
+          p_student_id: string
+          p_to_user: string
+        }
+        Returns: {
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          reason: string
+          requested_by: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          student_id: string
+          to_user: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfer_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       revoke_document_upload_link: {
         Args: { p_link_id: string }
         Returns: {
@@ -1433,6 +2077,24 @@ export type Database = {
         Returns: string
       }
       rotate_share_token: { Args: { p_payment_id: string }; Returns: string }
+      send_celebration_wish: {
+        Args: { p_celebrant_id: string; p_kind: string; p_message: string }
+        Returns: {
+          celebrant_id: string
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          message: string
+          year: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "celebration_wishes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_enrollment_share_enabled: {
         Args: { p_enabled: boolean; p_enrollment_id: string }
         Returns: boolean
@@ -1442,9 +2104,38 @@ export type Database = {
         Returns: boolean
       }
       team_member_ids: { Args: { p_manager: string }; Returns: string[] }
+      thank_celebration_wishes: {
+        Args: { p_kind: string; p_message?: string }
+        Returns: number
+      }
       toggle_receipt_share_enabled: {
         Args: { p_enabled?: boolean; p_payment_id: string }
         Returns: boolean
+      }
+      transfer_candidate: {
+        Args: {
+          p_enrollment_id?: string
+          p_reason?: string
+          p_scope: string
+          p_student_id: string
+          p_to_user: string
+        }
+        Returns: {
+          at: string
+          enrollment_id: string | null
+          from_user: string
+          id: string
+          reason: string
+          student_id: string
+          to_user: string
+          transferred_by: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "candidate_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_enrollment_fee: {
         Args: {
@@ -1465,6 +2156,53 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      update_my_profile: {
+        Args: {
+          p_address?: string
+          p_avatar_url?: string
+          p_celebrate_anniversary?: boolean
+          p_celebrate_birthday?: boolean
+          p_display_name?: string
+          p_dob?: string
+          p_email_digest_enabled?: boolean
+          p_emergency_contact_name?: string
+          p_emergency_contact_phone?: string
+          p_personal_email?: string
+          p_phone?: string
+        }
+        Returns: {
+          address: string | null
+          admin_scope: string
+          avatar_url: string | null
+          celebrate_anniversary: boolean
+          celebrate_birthday: boolean
+          created_at: string
+          display_name: string | null
+          dob: string | null
+          email_digest_enabled: boolean
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          is_support: boolean
+          job_title: string | null
+          joining_date: string | null
+          personal_email: string | null
+          phone: string | null
+          reports_to: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          work_email: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       verify_candidate_document: {
         Args: { p_document_id: string; p_notes?: string; p_status: string }
@@ -1705,4 +2443,3 @@ export const Constants = {
 } as const
 
 export type StudentDirectoryRow = Database['public']['Views']['student_directory_view']['Row']
-

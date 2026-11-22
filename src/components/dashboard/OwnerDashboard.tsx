@@ -26,6 +26,7 @@ import {
   StaffCollectionsChart,
   TopEntitiesChart,
 } from '@/components/dashboard/OwnerCharts'
+import { UpcomingCelebrationsWidget } from '@/components/celebrations/UpcomingCelebrationsWidget'
 
 interface StaffLeaderboardRow {
   staff_id: string
@@ -182,6 +183,9 @@ export function OwnerDashboard({
           </div>
         )}
       </div>
+
+      {/* Upcoming Celebrations Widget */}
+      <UpcomingCelebrationsWidget />
 
       {/* Candidate Documents via Link Widget (Last 7 Days) */}
       {documentStats && (

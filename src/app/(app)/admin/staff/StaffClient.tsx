@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
+import Link from 'next/link'
 import {
   UserPlus,
   Search,
@@ -430,9 +431,12 @@ export function StaffClient({
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold text-foreground text-sm">
+                              <Link
+                                href={`/admin/staff/${member.id}`}
+                                className="font-semibold text-foreground text-sm hover:text-primary hover:underline transition-colors"
+                              >
                                 {member.full_name}
-                              </span>
+                              </Link>
                               {isSelf && (
                                 <Badge variant="outline" className="text-[10px] py-0 px-1.5 text-primary border-primary/30">
                                   You

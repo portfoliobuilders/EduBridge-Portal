@@ -12,7 +12,7 @@ const securityHeaders = [
         : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://bhbgkhyewxaacqnjltwr.supabase.co",
-      "connect-src 'self' https://bhbgkhyewxaacqnjltwr.supabase.co",
+      "connect-src 'self' https://bhbgkhyewxaacqnjltwr.supabase.co wss://bhbgkhyewxaacqnjltwr.supabase.co",
       "font-src 'self' data:",
       "worker-src 'self' blob:",
       "child-src 'self' blob:",

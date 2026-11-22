@@ -229,6 +229,82 @@ Candidates can submit their admission documents directly, or staff can upload th
 
 ---
 
+---
+
+## 12. Staff Profiles & Confidential Details Management
+
+Counselors and administrators can manage their personal profiles, while administrators configure official corporate credentials.
+
+### Counselor Self-Service (`/profile`)
+- **Profile Photo**: Counselors can upload a professional headshot (compressed automatically, ≤ 1 MB, square-cropped). Stored in a private, encrypted storage bucket.
+- **Personal Details**: Display name, phone, personal email, date of birth, residential address, and emergency contact details.
+- **Admin-Locked Fields**: Corporate attributes such as **Job Title**, **Employee ID**, **Joining Date**, and **Work Email** are strictly locked for staff and can only be set or edited by an Administrator or Owner.
+- **Privacy Enforcement**: Highly sensitive personal data (Date of Birth year, residential address, and emergency contact information) are isolated in a dedicated table (`staff_sensitive_details`) protected by PostgreSQL Row-Level Security. Peers cannot view sensitive personal details.
+- **Celebration Opt-Outs**: Staff can independently toggle whether they wish to celebrate their birthday or work anniversary.
+
+### Admin Staff Management (`/admin/staff/[id]`)
+- Administrators can click any staff member in the staff directory to access their administrative profile.
+- Edit official **Job Title**, unique **Employee ID**, **Joining Date**, system **Role**, and reporting hierarchy.
+- Confidential details (DOB, address, emergency contact) are visible only to authorized administrators within the staff member's administrative scope.
+
+---
+
+## 13. Milestone Celebrations (Birthdays & Work Anniversaries)
+
+The system automatically recognizes team member milestones in Dubai local time (Asia/Dubai) with a warm, professional celebration experience.
+
+### Daily Processing & Privacy Standards
+- **Automated Daily Engine**: Runs at 08:30 Asia/Dubai daily. Recognizes birthdays and work anniversaries (1+ years of service).
+- **Leap Year Safe**: In non-leap years, staff born on February 29 have their celebration automatically recognized on February 28.
+- **Zero Birth-Year Leakage**: The system **never** reveals a team member's birth year, birth date, or age to colleagues or in notifications. Only their first name and milestone occasion are shared.
+- **Email Notification Control**: The Owner can toggle **Staff Celebration Emails** on or off in **Company Settings → Security**. When enabled, staff receive branded celebratory emails via Resend. In-app notifications remain active regardless.
+
+### Celebrant Experience
+- On their celebration day, the celebrant enjoys:
+  - A celebratory gradient top strip across the app shell (birthday soft gold or anniversary trophy gold).
+  - A dashboard hero banner on Home: *"Happy Birthday, [Name]! 🎂"* or *"Happy [N]-Year Work Anniversary, [Name]! 🎉"*.
+  - A brief, graceful confetti burst on initial daily login (respects `prefers-reduced-motion`).
+  - An interactive **Wishes Wall** displaying warm wishes from colleagues with avatars and timestamps.
+  - A one-click **"Thank everyone"** button that posts a thank-you notification to all well-wishers.
+  - A subtle milestone badge (🎂 or 🏆) on their avatar across the app.
+
+### Colleague & Team Experience
+- Colleagues see a slim, dismissible notification banner under the header: *"🎂 It's [Name]'s birthday today — send your wishes"*.
+- Tap **"Wish [Name]"** to open the celebration modal, write a personal note (up to 280 characters), and use quick-insert emojis.
+- Tap **"Dismiss"** to hide the banner for the remainder of the day (stored locally).
+- Financial, receipting, PDF, and candidate-facing screens are **strictly un-themed** to preserve business focus.
+
+---
+
+## 14. In-App Notifications & Live Realtime Updates
+
+Stay informed of key operational and team events with the header notification bell:
+- **Header Notification Bell**: Displayed in the desktop sidebar and mobile top bar with a live unread count badge.
+- **Automated Event Notifications**:
+  - **Payment Recorded**: Automatically notifies the candidate's primary counselor, their administrative supervisor, and owners.
+  - **New Enrollment / Sale**: Dispatched to supervisors and owners.
+  - **Receipt Voided**: Alerts the admissions counselor and administrative team immediately.
+  - **Candidate Self-Uploaded Documents**: Alerts the counselor as soon as a candidate submits files via their link.
+  - **Candidate Transfers**: Notifies the previous counselor, new counselor, and administrative supervisors.
+  - **Staff Celebrations**: Reminder notifications for colleague birthdays and work anniversaries.
+- **Interactive Panel & Page**: Grouped by **Today** and **Earlier**. Tap any notification to mark it read and navigate directly to the relevant record. Filter notifications by category on `/notifications`.
+- **Live Realtime Updates**: Powered by Supabase Realtime for instant notification delivery without page refresh.
+
+---
+
+## 15. Candidate Ownership & Counselor Transfers
+
+Ensure clear accountability and seamless counselor transitions:
+- **Primary Counselor Ownership**: Every candidate has a designated primary counselor (`students.owner_id`), while individual program enrollments track their admitting counselor (`admission_staff_id`).
+- **Visibility Boundaries**:
+  - Staff counselors list and view only their own assigned candidates.
+  - Administrators view candidates assigned to staff in their supervision scope.
+  - Super Admins and Owners view all candidates across the organization.
+- **Counter Lookup Exception**: Staff can quickly process a payment for a colleague's candidate using the **Record Payment** counter lookup. Requires an exact mobile number or candidate code match. Access is minimal and read-only, sales credit remains with the assigned counselor, and every lookup is logged in the audit trail.
+- **Candidate Transfers**: Administrators can transfer candidate ownership or enrollment credit with a mandatory explanation reason (`transfer_candidate` RPC). Every transfer is permanently logged in `candidate_transfers` and visible on the candidate activity timeline.
+
+---
+
 ## Summary & Support Contacts
 
 For system questions, user credentials, or urgent technical assistance:

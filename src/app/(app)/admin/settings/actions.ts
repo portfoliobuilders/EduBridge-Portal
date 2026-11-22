@@ -35,6 +35,7 @@ const companySettingsSchema = z
     email_doc_request_template: z.string().trim().optional().nullable(),
     admins_can_void: z.boolean().default(false),
     support_access_enabled: z.boolean().default(false),
+    celebration_emails_enabled: z.boolean().default(true),
   })
   .superRefine((data, ctx) => {
     if (data.vat_enabled && (!data.trn || data.trn.trim() === '')) {
@@ -83,6 +84,7 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       : null,
     admins_can_void: formData.get('admins_can_void') === 'true',
     support_access_enabled: formData.get('support_access_enabled') === 'true',
+    celebration_emails_enabled: formData.get('celebration_emails_enabled') !== 'false',
   }
 
   const parsed = companySettingsSchema.safeParse(raw)
@@ -117,6 +119,7 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       email_doc_request_template: data.email_doc_request_template || null,
       admins_can_void: data.admins_can_void,
       support_access_enabled: data.support_access_enabled,
+      celebration_emails_enabled: data.celebration_emails_enabled,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

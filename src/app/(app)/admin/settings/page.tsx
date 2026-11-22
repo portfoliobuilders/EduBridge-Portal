@@ -49,6 +49,7 @@ export default async function SettingsPage() {
       'Dear {student_name},\n\nThank you for your payment of AED {amount} to EduBridge Education.\n\nReceipt No: {receipt_no}\nBalance: AED {balance}\nView or download your official receipt voucher here: {public_link}\n\nKeep your receipt vouchers for future references.\n\nEduBridge Education\nDubai, UAE',
     admins_can_void: settings?.admins_can_void ?? false,
     support_access_enabled: settings?.support_access_enabled ?? false,
+    celebration_emails_enabled: settings?.celebration_emails_enabled ?? true,
   }
 
   return (

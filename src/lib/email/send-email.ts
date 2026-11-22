@@ -494,3 +494,103 @@ export async function sendDocumentRequestEmail(params: {
     return { success: false, error: message }
   }
 }
+
+export async function sendCelebrationEmail(params: {
+  to: string
+  fullName: string
+  kind: 'birthday' | 'anniversary'
+  years?: number
+  companyName?: string
+}): Promise<EmailSendResult> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    return { success: false, message: 'Resend API key not configured' }
+  }
+
+  const resend = new Resend(apiKey)
+  const from =
+    process.env.EMAIL_FROM ||
+    'EduBridge Education <receipts@edubridgeeducation.com>'
+
+  const firstName = params.fullName.split(' ')[0]
+  const isBirthday = params.kind === 'birthday'
+
+  const subject = isBirthday
+    ? 'Happy birthday from EduBridge 🎉'
+    : `Happy ${params.years}-year work anniversary, ${firstName}! 🏆`
+
+  const headline = isBirthday
+    ? `Happy Birthday, ${firstName}! 🎂`
+    : `Happy ${params.years}-Year Work Anniversary! 🏆`
+
+  const bodyText = isBirthday
+    ? `Wishing you a fantastic birthday filled with happiness and success! Thank you for your energy, dedication, and being an invaluable part of the EduBridge family.`
+    : `Congratulations on completing ${params.years} year${(params.years || 1) > 1 ? 's' : ''} at EduBridge Education! We celebrate your loyalty, hard work, and the remarkable contributions you bring to our team every day.`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F5F6F6; margin: 0; padding: 24px; }
+        </style>
+      </head>
+      <body style="font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F5F6F6; margin: 0; padding: 24px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E4E7E7;">
+          <tr>
+            <td style="background-color: #00A57E; padding: 36px 32px; text-align: center;">
+              <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">${headline}</h1>
+              <p style="color: #CCEDE5; margin: 8px 0 0 0; font-size: 14px; font-weight: 500;">EduBridge Education</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 36px 32px;">
+              <p style="color: #0A0A0A; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+                Dear <strong>${params.fullName}</strong>,
+              </p>
+              <p style="color: #0A0A0A; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                ${bodyText}
+              </p>
+              <div style="background-color: #E6F6F2; border-left: 4px solid #00A57E; padding: 16px 20px; border-radius: 8px; margin: 24px 0;">
+                <p style="margin: 0; color: #00805F; font-size: 14px; font-weight: 600;">
+                  ${isBirthday ? '✨ Have a joyful and memorable day ahead!' : '🌟 Here is to many more successful milestones together!'}
+                </p>
+              </div>
+              <p style="color: #6B7272; font-size: 13px; line-height: 1.5; margin: 24px 0 0 0;">
+                Warmest regards,<br>
+                <strong style="color: #0A0A0A;">Team EduBridge</strong>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #F5F6F6; padding: 20px 32px; border-top: 1px solid #E4E7E7; font-size: 11px; color: #6B7272; text-align: center; line-height: 1.5;">
+              <p style="margin: 0; font-weight: 500;">
+                EduBridge Education · Royal House Building, Hor Al Anz East, Dubai – UAE
+              </p>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `
+
+  try {
+    const res = await resend.emails.send({
+      from,
+      to: params.to,
+      subject,
+      html,
+    })
+
+    if (res.error) {
+      return { success: false, error: res.error.message }
+    }
+
+    return { success: true, message: `Celebration email sent to ${params.to}` }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to send celebration email'
+    return { success: false, error: message }
+  }
+}

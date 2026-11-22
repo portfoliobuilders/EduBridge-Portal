@@ -79,6 +79,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/manifest') ||
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/confirm') ||
+    pathname.startsWith('/api/cron/') ||
     pathname === '/reset-password'
   ) {
     return response

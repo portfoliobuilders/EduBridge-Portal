@@ -16,6 +16,8 @@ const addStaffSchema = z.object({
   reports_to: z.string().uuid().optional().nullable(),
   admin_scope: z.enum(['team', 'company']).default('team'),
   is_support: z.boolean().default(false),
+  employee_id: z.string().trim().optional().nullable(),
+  joining_date: z.string().optional().nullable(),
 })
 
 const updateStaffSchema = z.object({
@@ -28,6 +30,8 @@ const updateStaffSchema = z.object({
   admin_scope: z.enum(['team', 'company']).default('team'),
   is_support: z.boolean().default(false),
   is_active: z.boolean().default(true),
+  employee_id: z.string().trim().optional().nullable(),
+  joining_date: z.string().optional().nullable(),
 })
 
 export interface ActionResult<T = unknown> {
@@ -167,6 +171,8 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
     admin_scope: (formData.get('admin_scope') as 'team' | 'company') ?? 'team',
     is_support: formData.get('is_support') === 'true',
     is_active: formData.get('is_active') !== 'false',
+    employee_id: formData.get('employee_id') ? String(formData.get('employee_id')) : null,
+    joining_date: formData.get('joining_date') ? String(formData.get('joining_date')) : null,
   }
 
   const parsed = updateStaffSchema.safeParse(raw)
@@ -207,6 +213,8 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
       admin_scope: data.role === 'admin' ? data.admin_scope : 'team',
       is_support: callerProfile.role === 'super_admin' ? data.is_support : undefined,
       is_active: data.is_active,
+      employee_id: data.employee_id || null,
+      joining_date: data.joining_date || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', data.userId)
@@ -216,7 +224,25 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
   }
 
   revalidatePath('/admin/staff')
+  revalidatePath(`/admin/staff/${data.userId}`)
   return { success: true }
+}
+
+export async function getStaffMemberForAdminAction(id: string) {
+  await requireAdminOrAbove()
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('staff_directory_view')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, staff: data }
 }
 
 export async function toggleStaffRoleAction(
