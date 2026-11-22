@@ -51,6 +51,10 @@ const createStudentSchema = z.object({
   // Opening balance fields
   openingPaid: z.coerce.number().min(0, 'Opening paid cannot be negative').default(0),
   openingPaidNote: z.string().trim().optional().nullable(),
+  // VAT treatment fields
+  vatTreatment: z.enum(['exclusive', 'inclusive', 'none']).optional().nullable(),
+  vatRate: z.coerce.number().min(0).max(100).optional().nullable(),
+  noVatReason: z.enum(['zero_rated', 'exempt', 'out_of_scope']).optional().nullable(),
   // Address fields
   billingAddress: addressSchema.optional().nullable(),
   shippingAddress: addressSchema.optional().nullable(),
@@ -106,6 +110,8 @@ const updateFeeSchema = z.object({
   totalFee: z.coerce.number().min(0, 'Total fee must be 0 or greater'),
   discount: z.coerce.number().min(0, 'Discount must be 0 or greater').default(0),
   reason: z.string().trim().optional().nullable(),
+  vatTreatment: z.enum(['exclusive', 'inclusive', 'none']).optional().nullable(),
+  noVatReason: z.enum(['zero_rated', 'exempt', 'out_of_scope']).optional().nullable(),
 }).refine((data) => data.discount <= data.totalFee, {
   message: 'Discount cannot exceed total fee',
   path: ['discount'],
@@ -120,6 +126,11 @@ const addEnrollmentSchema = z.object({
   discount: z.coerce.number().min(0, 'Discount must be positive').default(0),
   intake: z.string().trim().optional().nullable(),
   admissionStaffId: z.string().uuid().optional().nullable().or(z.literal('')),
+  vatTreatment: z.enum(['exclusive', 'inclusive', 'none']).optional().nullable(),
+  vatRate: z.coerce.number().min(0).max(100).optional().nullable(),
+  noVatReason: z.enum(['zero_rated', 'exempt', 'out_of_scope']).optional().nullable(),
+  openingPaid: z.coerce.number().min(0).default(0),
+  openingPaidNote: z.string().trim().optional().nullable(),
 }).refine((data) => data.discount <= data.totalFee, {
   message: 'Discount cannot exceed total fee',
   path: ['discount'],
@@ -226,6 +237,9 @@ export async function createStudentAction(
     p_guardian_email: data.guardianEmail || undefined,
     p_opening_paid: data.openingPaid || 0,
     p_opening_paid_note: data.openingPaidNote || undefined,
+    p_vat_treatment: data.vatTreatment || undefined,
+    p_vat_rate: data.vatRate || undefined,
+    p_no_vat_reason: data.noVatReason || undefined,
     p_billing_address: billingPayload,
     p_shipping_address: shippingPayload,
   })
@@ -514,6 +528,8 @@ export async function updateEnrollmentFeeAction(
     p_total_fee: data.totalFee,
     p_discount: data.discount,
     p_reason: data.reason || undefined,
+    p_vat_treatment: data.vatTreatment || undefined,
+    p_no_vat_reason: data.noVatReason || undefined,
   })
 
   if (error) {
@@ -555,6 +571,11 @@ export async function addStudentEnrollmentAction(
     p_discount: data.discount,
     p_intake: data.intake || undefined,
     p_admission_staff_id: admissionStaffId,
+    p_vat_treatment: data.vatTreatment || undefined,
+    p_vat_rate: data.vatRate || undefined,
+    p_no_vat_reason: data.noVatReason || undefined,
+    p_opening_paid: data.openingPaid || 0,
+    p_opening_paid_note: data.openingPaidNote || undefined,
   })
 
   if (error) {

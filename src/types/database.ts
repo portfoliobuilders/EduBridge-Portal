@@ -156,6 +156,7 @@ export type Database = {
           address: string
           admins_can_void: boolean
           created_at: string
+          default_vat_treatment: string
           email: string
           email_body_template: string
           email_doc_request_template: string | null
@@ -164,6 +165,7 @@ export type Database = {
           id: string
           logo_path: string | null
           name: string
+          no_vat_reason: string
           phone: string
           receipt_prefix: string
           singleton: boolean
@@ -184,6 +186,7 @@ export type Database = {
           address: string
           admins_can_void?: boolean
           created_at?: string
+          default_vat_treatment?: string
           email: string
           email_body_template?: string
           email_doc_request_template?: string | null
@@ -192,6 +195,7 @@ export type Database = {
           id?: string
           logo_path?: string | null
           name: string
+          no_vat_reason?: string
           phone: string
           receipt_prefix?: string
           singleton?: boolean
@@ -212,6 +216,7 @@ export type Database = {
           address?: string
           admins_can_void?: boolean
           created_at?: string
+          default_vat_treatment?: string
           email?: string
           email_body_template?: string
           email_doc_request_template?: string | null
@@ -220,6 +225,7 @@ export type Database = {
           id?: string
           logo_path?: string | null
           name?: string
+          no_vat_reason?: string
           phone?: string
           receipt_prefix?: string
           singleton?: boolean
@@ -451,6 +457,7 @@ export type Database = {
           discount: number
           id: string
           intake: string | null
+          no_vat_reason: string | null
           opening_paid: number
           opening_paid_note: string | null
           share_enabled: boolean
@@ -462,6 +469,7 @@ export type Database = {
           university_id: string
           updated_at: string
           vat_rate: number
+          vat_treatment: string
           vat_type: string
         }
         Insert: {
@@ -472,6 +480,7 @@ export type Database = {
           discount?: number
           id?: string
           intake?: string | null
+          no_vat_reason?: string | null
           opening_paid?: number
           opening_paid_note?: string | null
           share_enabled?: boolean
@@ -483,6 +492,7 @@ export type Database = {
           university_id: string
           updated_at?: string
           vat_rate?: number
+          vat_treatment?: string
           vat_type?: string
         }
         Update: {
@@ -493,6 +503,7 @@ export type Database = {
           discount?: number
           id?: string
           intake?: string | null
+          no_vat_reason?: string | null
           opening_paid?: number
           opening_paid_note?: string | null
           share_enabled?: boolean
@@ -504,6 +515,7 @@ export type Database = {
           university_id?: string
           updated_at?: string
           vat_rate?: number
+          vat_treatment?: string
           vat_type?: string
         }
         Relationships: [
@@ -607,8 +619,10 @@ export type Database = {
           share_token: string
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
+          taxable_amount: number
           vat_amount: number
           vat_rate: number
+          vat_treatment: string
           vat_type: string
           void_reason: string | null
           voided_at: string | null
@@ -638,8 +652,10 @@ export type Database = {
           share_token?: string
           status?: Database["public"]["Enums"]["payment_status"]
           student_id: string
+          taxable_amount?: number
           vat_amount?: number
           vat_rate?: number
+          vat_treatment?: string
           vat_type?: string
           void_reason?: string | null
           voided_at?: string | null
@@ -669,8 +685,10 @@ export type Database = {
           share_token?: string
           status?: Database["public"]["Enums"]["payment_status"]
           student_id?: string
+          taxable_amount?: number
           vat_amount?: number
           vat_rate?: number
+          vat_treatment?: string
           vat_type?: string
           void_reason?: string | null
           voided_at?: string | null
@@ -1086,15 +1104,19 @@ export type Database = {
           enrollment_id: string | null
           last_payment_at: string | null
           net_fee: number | null
+          no_vat_reason: string | null
           opening_paid: number | null
           opening_paid_note: string | null
           payment_count: number | null
           student_id: string | null
+          taxable: number | null
           total_fee: number | null
           total_paid: number | null
           total_payable: number | null
           vat_amount: number | null
           vat_rate: number | null
+          vat_total: number | null
+          vat_treatment: string | null
           vat_type: string | null
         }
         Relationships: [
@@ -1158,10 +1180,15 @@ export type Database = {
           p_course_id: string
           p_discount?: number
           p_intake?: string
+          p_no_vat_reason?: string
+          p_opening_paid?: number
+          p_opening_paid_note?: string
           p_specialization_id?: string
           p_student_id: string
           p_total_fee?: number
           p_university_id: string
+          p_vat_rate?: number
+          p_vat_treatment?: string
         }
         Returns: Json
       }
@@ -1219,6 +1246,7 @@ export type Database = {
           p_guardian_whatsapp?: string
           p_intake?: string
           p_mobile: string
+          p_no_vat_reason?: string
           p_notes?: string
           p_opening_paid?: number
           p_opening_paid_note?: string
@@ -1227,6 +1255,7 @@ export type Database = {
           p_total_fee?: number
           p_university_id?: string
           p_vat_rate?: number
+          p_vat_treatment?: string
           p_vat_type?: string
           p_whatsapp?: string
         }
@@ -1328,8 +1357,10 @@ export type Database = {
           share_token: string
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
+          taxable_amount: number
           vat_amount: number
           vat_rate: number
+          vat_treatment: string
           vat_type: string
           void_reason: string | null
           voided_at: string | null
@@ -1419,8 +1450,10 @@ export type Database = {
         Args: {
           p_discount: number
           p_enrollment_id: string
+          p_no_vat_reason?: string
           p_reason?: string
           p_total_fee: number
+          p_vat_treatment?: string
         }
         Returns: Json
       }
@@ -1495,8 +1528,10 @@ export type Database = {
           share_token: string
           status: Database["public"]["Enums"]["payment_status"]
           student_id: string
+          taxable_amount: number
           vat_amount: number
           vat_rate: number
+          vat_treatment: string
           vat_type: string
           void_reason: string | null
           voided_at: string | null
@@ -1668,3 +1703,6 @@ export const Constants = {
     },
   },
 } as const
+
+export type StudentDirectoryRow = Database['public']['Views']['student_directory_view']['Row']
+

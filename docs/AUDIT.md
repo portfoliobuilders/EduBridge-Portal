@@ -98,6 +98,64 @@ A comprehensive, automated and manual functional audit was conducted across ever
    - Fixed bottom action bar displaying real-time payment amount and prominent "Issue Receipt" button positioned above the mobile safe area.
 3. **Quick Amount Chips:**
    - 1-click presets for Full Balance, 50%, and 25% of current outstanding balance.
+
+---
+
+## 5. Candidates Directory Redesign & Data Integrity Audit (2026-11-22)
+
+### Part 1 — Data Integrity & Constraint Enforcement
+1. **Candidate Code Format Check (`CHECK NOT VALID`):**
+   - Added `CHECK (student_code ~ '^EB-STU-[0-9]{5}$') NOT VALID` in migration `0031_candidates_data_integrity_and_directory.sql`. Added as `NOT VALID` so pre-existing test data is not rejected before production cleanup; scheduled for validation in `docs/GO-LIVE.md`.
+2. **Server-Generated Trigger Code Protection:**
+   - Trigger `generate_student_code_trigger` enforces that any insert supplying a non-null/non-empty `student_code` from the client is rejected with exception: `Direct assignment of student_code is not permitted`.
+   - Legacy duplicate trigger `trg_students_code_gen` dropped in migration `0032_drop_duplicate_student_code_trigger.sql` to eliminate trigger collisions.
+3. **Identification & Isolation of Leaked Test Candidates:**
+   - Identified 7 legacy test candidates with `EB-DOC-*` codes:
+     - `fa35fc91-36d5-40eb-b257-5c683ed40a4a` (`EB-DOC-86184`)
+     - `7c86db38-b93e-4b0a-80e8-95c210027631` (`EB-DOC-SCR-6034`)
+     - `a75c0756-728a-4f26-826a-5cccf9c29154` (`EB-DOC-15539`)
+     - `7159888d-36f4-4556-a9aa-a3d40ff3b84a` (`EB-DOC-79564`)
+     - `ac5ecced-4318-41b5-927d-8612347926d8` (`EB-DOC-28688`)
+     - `7f8d656b-cf6e-4a37-ad56-c76405e1998b` (`EB-DOC-64705`)
+     - `8992df4a-93ff-4aed-9337-07769ff6e4f0` (`EB-DOC-SCR-4703`)
+   - Added all 7 IDs + linked documents, links, and logs to `supabase/scripts/cleanup_test_data.sql`.
+   - Created `tests/helpers/test-candidate.ts` providing `createTestCandidateWithEnrollment` and `deleteTestCandidate` for automated, isolated test candidate lifecycle.
+4. **Candidate Status Calculation in SQL (`student_directory_view`):**
+   - Recreated `student_directory_view` with `security_invoker = true` to strictly enforce RLS.
+   - Status computed directly in SQL:
+     - `'No enrollment'`: active candidate with 0 active enrollments.
+     - `'Fully paid'`: net balance <= 0 and active enrollment exists.
+     - `'Overdue'`: active enrollment with balance > 0 and (no payment in 30 days or never paid and enrolled > 30 days).
+     - `'Balance due'`: active enrollment with balance > 0 and paid within 30 days (or enrolled <= 30 days).
+
+### Part 2 — Candidates Directory Redesign (`/candidates`)
+- **Layout & Spacing:** Max-width 1280px centered layout, brand colors (`#00A57E`, `#0A0A0A`, `#FFFFFF`, neutral borders `#E4E7E7`), 14px border radius, 4/8px spacing grid, and tabular money formatting.
+- **KPI Strip:** 4 interactive metric cards from `get_candidate_directory_kpis()` (Total Candidates, Outstanding Balance, Collected this Month, Fully Paid); clicking applies filter.
+- **Toolbar & Search:** Debounced 250ms search by candidate name, code, mobile, email with instant clear button; 5 status tabs with exact live SQL count badges; searchable Comboboxes for University and Course; "My candidates" toggle; sort dropdown. All parameters synchronized to URL query string.
+- **Desktop Table (>=1024px):**
+  - Columns: Checkbox, Candidate (deterministic color avatar, name, code, document chip, multi-program chip), Contact (formatted phone `+971 58 107 3898`, call button, WhatsApp button, email), Program (university and course lines, tooltip), Payment progress bar (`AED X of Y`), Balance status pill (No enrollment gray, Balance due amber, Overdue red, Fully paid green), Last payment relative time with exact Dubai time tooltip, Quick Actions.
+  - Full row clickable as accessible link navigating to `/candidates/[id]`.
+  - Floating Bulk Selection action bar with sequential WhatsApp reminders review dialog (no auto-send).
+- **Mobile Card View (<1024px):**
+  - Responsive cards with avatar, name, code, status pill, program box, payment progress bar, last paid timestamp, quick Pay and WhatsApp buttons.
+  - Filters bottom sheet with count badge; horizontally scrolling status tabs; zero page-level horizontal overflow at 375px.
+- **SQL Performance Benchmark:**
+  - EXPLAIN ANALYZE on 5,000 seeded candidate rows inside transactional rollback:
+    - Planning Time: 0.997 ms
+    - Execution Time: 64.155 ms
+
+### Part 3 — Sidebar User Card
+- Role badge updated with `whitespace-nowrap shrink-0` ensuring "SUPER ADMIN" / "OWNER" / "STAFF" never truncate.
+- Full name and job title displayed cleanly with zero layout collisions or overlaps at 1024px and 1280px.
+
+### Verification Proofs Executed (Real Outputs)
+- SQL proofs: client `student_code` rejection (PASS), all 4 statuses logic (PASS), duplicate phone+name rejection (PASS), 5k rows query benchmark 64ms (PASS).
+- Unit tests (`npm run test`): 4 test files, 38 tests passing (PASS).
+- Typecheck (`npx tsc --noEmit`): 0 errors (PASS).
+- Linter (`npm run lint`): 0 errors (PASS).
+- Production build (`npm run build`): 31 routes compiled successfully (PASS).
+- Playwright E2E (`tests/e2e/candidates.spec.ts`): 2 passed (PASS).
+- Playwright Screenshots (`tests/e2e/capture_candidates_screenshots.spec.ts`): 15 screenshots captured across 375, 768, 1280, 1536 viewports (PASS).
 4. **Counter Cash Prioritized:**
    - Cash set as initial default payment mode with dedicated counter receipt handling.
 

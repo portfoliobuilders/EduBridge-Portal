@@ -34,6 +34,8 @@ export interface CompanySettingsData {
   statement_prefix: string
   vat_enabled: boolean
   vat_rate: number
+  default_vat_treatment: 'exclusive' | 'inclusive' | 'none'
+  no_vat_reason: 'zero_rated' | 'exempt' | 'out_of_scope'
   footer_note: string | null
   terms: string | null
   whatsapp_receipt_template: string
@@ -129,6 +131,8 @@ export function SettingsClient({
       formData.append('statement_prefix', settings.statement_prefix)
       formData.append('vat_enabled', String(settings.vat_enabled))
       formData.append('vat_rate', String(settings.vat_rate))
+      formData.append('default_vat_treatment', settings.default_vat_treatment || 'exclusive')
+      formData.append('no_vat_reason', settings.no_vat_reason || 'zero_rated')
       if (settings.footer_note) formData.append('footer_note', settings.footer_note)
       if (settings.terms) formData.append('terms', settings.terms)
       formData.append('whatsapp_receipt_template', settings.whatsapp_receipt_template)
@@ -522,26 +526,97 @@ export function SettingsClient({
               </button>
             </div>
 
-            {settings.vat_enabled && (
-              <div className="space-y-1.5 max-w-xs">
-                <Label className="text-xs font-semibold">
-                  VAT Rate (%) <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={settings.vat_rate}
-                    onChange={(e) => handleInputChange('vat_rate', e.target.value)}
-                    className="h-10 rounded-xl font-mono"
-                    required
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                    %
-                  </span>
+            {settings.vat_enabled ? (
+              <div className="space-y-4 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
+                      VAT Rate (%) <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={settings.vat_rate}
+                        onChange={(e) => handleInputChange('vat_rate', e.target.value)}
+                        className="h-10 rounded-xl font-mono"
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                        %
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Default VAT Treatment</Label>
+                    <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-xl border border-neutral-200">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('default_vat_treatment', 'exclusive')}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
+                          settings.default_vat_treatment === 'exclusive'
+                            ? 'bg-white text-foreground shadow-xs'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        + VAT on top
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('default_vat_treatment', 'inclusive')}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
+                          settings.default_vat_treatment === 'inclusive'
+                            ? 'bg-white text-foreground shadow-xs'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        Includes VAT
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('default_vat_treatment', 'none')}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
+                          settings.default_vat_treatment === 'none'
+                            ? 'bg-white text-foreground shadow-xs'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        No VAT
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
+                {settings.default_vat_treatment === 'none' && (
+                  <div className="space-y-1.5 max-w-sm">
+                    <Label className="text-xs font-semibold">Default No-VAT Reason</Label>
+                    <select
+                      value={settings.no_vat_reason}
+                      onChange={(e) => handleInputChange('no_vat_reason', e.target.value)}
+                      className="w-full h-10 px-3 text-xs bg-white border border-border rounded-xl focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="zero_rated">Zero-rated (0%)</option>
+                      <option value="exempt">Exempt</option>
+                      <option value="out_of_scope">Out of scope</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-muted-foreground">
+                  <strong>Note:</strong> Changing settings never changes existing enrollments — historical enrollments retain their stored VAT treatment and rate snapshot.
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-muted-foreground space-y-1">
+                <p>
+                  <strong>VAT is currently disabled:</strong> VAT treatment is automatically set to &ldquo;No VAT&rdquo; for all new enrollments, and VAT options are hidden on fee forms.
+                </p>
+                <p className="text-[11px] text-muted-foreground/80">
+                  Existing historical enrollments retain their original stored VAT treatment and rate.
+                </p>
               </div>
             )}
 

@@ -31,6 +31,8 @@ export default async function SettingsPage() {
     statement_prefix: settings?.statement_prefix ?? 'EB-FS',
     vat_enabled: settings?.vat_enabled ?? false,
     vat_rate: Number(settings?.vat_rate ?? 5.0),
+    default_vat_treatment: (settings?.default_vat_treatment as 'exclusive' | 'inclusive' | 'none') ?? 'exclusive',
+    no_vat_reason: (settings?.no_vat_reason as 'zero_rated' | 'exempt' | 'out_of_scope') ?? 'zero_rated',
     footer_note: settings?.footer_note ?? 'Keep your receipt vouchers for future references.',
     terms: settings?.terms ?? null,
     whatsapp_receipt_template:

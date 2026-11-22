@@ -78,3 +78,33 @@ export function getDubaiDateRange(
     label: `${f} to ${t}`,
   }
 }
+
+/**
+ * Formats a timestamp into friendly relative time: "Today", "Yesterday", "3 days ago", or "X weeks/months ago"
+ */
+export function formatRelativeTime(date: string | Date | null | undefined): string {
+  if (!date) return '—'
+  const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) return '—'
+
+  const now = new Date()
+  const diffMs = now.getTime() - d.getTime()
+  if (diffMs < 0) return 'Just now'
+
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHours = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 30) return `${diffDays} days ago`
+  if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30)
+    return months === 1 ? '1 month ago' : `${months} months ago`
+  }
+  const years = Math.floor(diffDays / 365)
+  return years === 1 ? '1 year ago' : `${years} years ago`
+}

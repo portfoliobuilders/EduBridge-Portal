@@ -5,34 +5,46 @@ import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/auth'
 import { z } from 'zod'
 
-const companySettingsSchema = z.object({
-  name: z.string().trim().min(1, 'Company name is required'),
-  address: z.string().trim().min(1, 'Address is required'),
-  phone: z.string().trim().min(1, 'Phone is required'),
-  email: z.string().trim().email('Invalid email address'),
-  website: z.string().trim().url('Invalid website URL'),
-  trn: z.string().trim().min(1, 'TRN is required'),
-  receipt_prefix: z.string().trim().min(1, 'Receipt prefix is required'),
-  statement_prefix: z.string().trim().min(1, 'Statement prefix is required'),
-  vat_enabled: z.boolean(),
-  vat_rate: z
-    .string()
-    .trim()
-    .refine(
-      (val) => /^\d+(\.\d{1,2})?$/.test(val) && Number(val) >= 0 && Number(val) <= 100,
-      'VAT rate must be between 0.00 and 100.00 with up to 2 decimal places'
-    ),
-  footer_note: z.string().trim().optional().nullable(),
-  terms: z.string().trim().optional().nullable(),
-  whatsapp_receipt_template: z.string().trim().min(1, 'WhatsApp receipt template is required'),
-  whatsapp_statement_template: z.string().trim().min(1, 'WhatsApp statement template is required'),
-  email_subject_template: z.string().trim().min(1, 'Email subject template is required'),
-  email_body_template: z.string().trim().min(1, 'Email body template is required'),
-  whatsapp_doc_request_template: z.string().trim().optional().nullable(),
-  email_doc_request_template: z.string().trim().optional().nullable(),
-  admins_can_void: z.boolean().default(false),
-  support_access_enabled: z.boolean().default(false),
-})
+const companySettingsSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Company name is required'),
+    address: z.string().trim().min(1, 'Address is required'),
+    phone: z.string().trim().min(1, 'Phone is required'),
+    email: z.string().trim().email('Invalid email address'),
+    website: z.string().trim().url('Invalid website URL'),
+    trn: z.string().trim(),
+    receipt_prefix: z.string().trim().min(1, 'Receipt prefix is required'),
+    statement_prefix: z.string().trim().min(1, 'Statement prefix is required'),
+    vat_enabled: z.boolean(),
+    vat_rate: z
+      .string()
+      .trim()
+      .refine(
+        (val) => /^\d+(\.\d{1,2})?$/.test(val) && Number(val) >= 0 && Number(val) <= 100,
+        'VAT rate must be between 0.00 and 100.00 with up to 2 decimal places'
+      ),
+    default_vat_treatment: z.enum(['exclusive', 'inclusive', 'none']).default('exclusive'),
+    no_vat_reason: z.enum(['zero_rated', 'exempt', 'out_of_scope']).default('zero_rated'),
+    footer_note: z.string().trim().optional().nullable(),
+    terms: z.string().trim().optional().nullable(),
+    whatsapp_receipt_template: z.string().trim().min(1, 'WhatsApp receipt template is required'),
+    whatsapp_statement_template: z.string().trim().min(1, 'WhatsApp statement template is required'),
+    email_subject_template: z.string().trim().min(1, 'Email subject template is required'),
+    email_body_template: z.string().trim().min(1, 'Email body template is required'),
+    whatsapp_doc_request_template: z.string().trim().optional().nullable(),
+    email_doc_request_template: z.string().trim().optional().nullable(),
+    admins_can_void: z.boolean().default(false),
+    support_access_enabled: z.boolean().default(false),
+  })
+  .superRefine((data, ctx) => {
+    if (data.vat_enabled && (!data.trn || data.trn.trim() === '')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['trn'],
+        message: 'Tax Registration Number (TRN) is required when VAT registered',
+      })
+    }
+  })
 
 export interface ActionResult<T = unknown> {
   success: boolean
@@ -55,6 +67,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
     statement_prefix: String(formData.get('statement_prefix') ?? 'EB-FS'),
     vat_enabled: formData.get('vat_enabled') === 'true',
     vat_rate: String(formData.get('vat_rate') ?? '5.00'),
+    default_vat_treatment: String(formData.get('default_vat_treatment') ?? 'exclusive'),
+    no_vat_reason: String(formData.get('no_vat_reason') ?? 'zero_rated'),
     footer_note: formData.get('footer_note') ? String(formData.get('footer_note')) : null,
     terms: formData.get('terms') ? String(formData.get('terms')) : null,
     whatsapp_receipt_template: String(formData.get('whatsapp_receipt_template') ?? ''),
@@ -91,6 +105,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       statement_prefix: data.statement_prefix,
       vat_enabled: data.vat_enabled,
       vat_rate: Number(data.vat_rate),
+      default_vat_treatment: data.default_vat_treatment,
+      no_vat_reason: data.no_vat_reason,
       footer_note: data.footer_note || null,
       terms: data.terms || null,
       whatsapp_receipt_template: data.whatsapp_receipt_template,
