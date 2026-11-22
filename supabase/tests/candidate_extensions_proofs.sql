@@ -161,7 +161,7 @@ begin
     admission_staff_id,
     total_fee,
     discount,
-    vat_type,
+    vat_treatment,
     vat_rate,
     opening_paid,
     opening_paid_note,

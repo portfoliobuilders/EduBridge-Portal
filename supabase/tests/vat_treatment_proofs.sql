@@ -49,6 +49,10 @@ begin
   -- Set authenticated context
   perform set_config('request.jwt.claims', json_build_object('sub', v_staff_id::text, 'role', 'authenticated')::text, true);
 
+  -- Ensure company has VAT enabled for proofs 1-9 within this transaction (rolled back at end)
+  select vat_enabled into v_comp_orig_vat from public.company_settings limit 1;
+  update public.company_settings set vat_enabled = true;
+
   -- ---------------------------------------------------------------------------
   -- PROOF 1: Exclusive 10,000 -> payable 10,500, VAT 500
   -- ---------------------------------------------------------------------------

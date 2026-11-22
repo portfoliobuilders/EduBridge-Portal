@@ -92,8 +92,8 @@ begin
   values ('Candidate Fully Paid', '+971504444444', true, v_owner_id)
   returning id into v_student_fully_paid;
 
-  insert into public.enrollments (student_id, university_id, course_id, total_fee, discount, status, created_at, created_by, admission_staff_id)
-  values (v_student_fully_paid, v_uni_id, v_course_id, 5000, 0, 'active', now(), v_owner_id, v_owner_id)
+  insert into public.enrollments (student_id, university_id, course_id, total_fee, discount, status, created_at, created_by, admission_staff_id, vat_treatment)
+  values (v_student_fully_paid, v_uni_id, v_course_id, 5000, 0, 'active', now(), v_owner_id, v_owner_id, 'none')
   returning id into v_enr_id;
 
   insert into public.payments (enrollment_id, student_id, amount, mode, purpose, status, paid_at, receipt_no, received_by, fee_snapshot, paid_before_snapshot, balance_after_snapshot)

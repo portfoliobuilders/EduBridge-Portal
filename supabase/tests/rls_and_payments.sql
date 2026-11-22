@@ -63,8 +63,8 @@ begin
   returning id into v_student_id;
 
   -- Enrollment: Total fee 10,000, discount 1,000 => net fee 9,000
-  insert into enrollments (id, student_id, university_id, course_id, admission_staff_id, total_fee, discount, created_by)
-  values ('00000000-0000-0000-0000-000000000020'::uuid, v_student_id, v_uni_id, v_course_id, v_staff_id, 10000.00, 1000.00, v_staff_id)
+  insert into enrollments (id, student_id, university_id, course_id, admission_staff_id, total_fee, discount, created_by, vat_treatment)
+  values ('00000000-0000-0000-0000-000000000020'::uuid, v_student_id, v_uni_id, v_course_id, v_staff_id, 10000.00, 1000.00, v_staff_id, 'none')
   returning id into v_enrollment_id;
 
   -- ---------------------------------------------------------------------------

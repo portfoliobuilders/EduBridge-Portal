@@ -52,7 +52,12 @@ begin
     '7159888d-36f4-4556-a9aa-a3d40ff3b84a'::uuid,
     'ac5ecced-4318-41b5-927d-8612347926d8'::uuid,
     '7f8d656b-cf6e-4a37-ad56-c76405e1998b'::uuid,
-    '8992df4a-93ff-4aed-9337-07769ff6e4f0'::uuid
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0'::uuid,
+    -- VAT & Smoke test candidates from test runs
+    'a807d221-5164-4b86-bc75-8b15577828d7'::uuid,
+    '7cddd478-5f1a-4cf1-a099-ce7e6e4bd828'::uuid,
+    'd988dadc-28ba-4a70-92bd-79b86d976e04'::uuid,
+    'fc833ad2-5114-4279-a22a-45fa49a24ccf'::uuid
   );
   if v_unexpected_students > 0 then
     raise exception 'CLEANUP ABORTED: Found % student(s) not in approved test-ID list', v_unexpected_students;
@@ -70,7 +75,10 @@ begin
     'f618fe29-66ac-4e70-88b5-c5bb010885ee'::uuid,
     '3ee55f10-9a19-43af-8b48-e1b4319ecd35'::uuid,
     '105daccc-dbe8-4f27-8e15-2900f15a7f4f'::uuid,
-    '49e67be4-1156-43ba-b79e-2dde6f094150'::uuid
+    '49e67be4-1156-43ba-b79e-2dde6f094150'::uuid,
+    -- Test payments from smoke test runs
+    '821c5ea0-4089-40c4-ad0d-b98a05931cd3'::uuid,
+    '9e609f9e-4fe2-45aa-abb2-f9fee6cb8e7d'::uuid
   );
   if v_unexpected_payments > 0 then
     raise exception 'CLEANUP ABORTED: Found % payment(s) not in approved test-ID list', v_unexpected_payments;
@@ -100,7 +108,9 @@ where enrollment_id in (
   'f618fe29-66ac-4e70-88b5-c5bb010885ee',
   '3ee55f10-9a19-43af-8b48-e1b4319ecd35',
   '105daccc-dbe8-4f27-8e15-2900f15a7f4f',
-  '49e67be4-1156-43ba-b79e-2dde6f094150'
+  '49e67be4-1156-43ba-b79e-2dde6f094150',
+  '821c5ea0-4089-40c4-ad0d-b98a05931cd3',
+  '9e609f9e-4fe2-45aa-abb2-f9fee6cb8e7d'
 );
 
 -- 2. Remove audit logs for test enrollments and students
@@ -141,7 +151,11 @@ where (
     '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
     'ac5ecced-4318-41b5-927d-8612347926d8',
     '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
-    '8992df4a-93ff-4aed-9337-07769ff6e4f0'
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0',
+    'a807d221-5164-4b86-bc75-8b15577828d7',
+    '7cddd478-5f1a-4cf1-a099-ce7e6e4bd828',
+    'd988dadc-28ba-4a70-92bd-79b86d976e04',
+    'fc833ad2-5114-4279-a22a-45fa49a24ccf'
   )
 );
 
@@ -156,7 +170,11 @@ where document_id in (
     '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
     'ac5ecced-4318-41b5-927d-8612347926d8',
     '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
-    '8992df4a-93ff-4aed-9337-07769ff6e4f0'
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0',
+    'a807d221-5164-4b86-bc75-8b15577828d7',
+    '7cddd478-5f1a-4cf1-a099-ce7e6e4bd828',
+    'd988dadc-28ba-4a70-92bd-79b86d976e04',
+    'fc833ad2-5114-4279-a22a-45fa49a24ccf'
   )
 );
 
@@ -209,7 +227,9 @@ where enrollment_id in (
   'f618fe29-66ac-4e70-88b5-c5bb010885ee',
   '3ee55f10-9a19-43af-8b48-e1b4319ecd35',
   '105daccc-dbe8-4f27-8e15-2900f15a7f4f',
-  '49e67be4-1156-43ba-b79e-2dde6f094150'
+  '49e67be4-1156-43ba-b79e-2dde6f094150',
+  '821c5ea0-4089-40c4-ad0d-b98a05931cd3',
+  '9e609f9e-4fe2-45aa-abb2-f9fee6cb8e7d'
 );
 
 -- 4. Remove test student addresses
@@ -249,7 +269,11 @@ where id in (
   '82ea3709-f719-4565-9040-5235f3463951',
   '937f4036-5433-410f-97f4-629e23eefad6',
   '8f2507bd-f6fe-474f-96b4-84a7eb3a0827',
-  '497f9976-cb1b-414d-a906-f1c9d6e89961'
+  '497f9976-cb1b-414d-a906-f1c9d6e89961',
+  'a740380f-ad9f-4f7e-8111-0b42a644d4fd',
+  '587cdbbf-c0dc-45de-9767-25bc0191677a',
+  '619cdf36-eb4b-4939-9106-d5436924c648',
+  '15417989-0df1-4d0a-8c9c-85ab97bb8626'
 );
 
 -- 6. Remove test students
@@ -273,7 +297,11 @@ where id in (
   '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
   'ac5ecced-4318-41b5-927d-8612347926d8',
   '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
-  '8992df4a-93ff-4aed-9337-07769ff6e4f0'
+  '8992df4a-93ff-4aed-9337-07769ff6e4f0',
+  'a807d221-5164-4b86-bc75-8b15577828d7',
+  '7cddd478-5f1a-4cf1-a099-ce7e6e4bd828',
+  'd988dadc-28ba-4a70-92bd-79b86d976e04',
+  'fc833ad2-5114-4279-a22a-45fa49a24ccf'
 );
 
 -- 7. Reset receipt counters so the next receipt will be EB-RV-<year>-00001

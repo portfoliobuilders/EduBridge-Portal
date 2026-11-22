@@ -89,33 +89,33 @@ begin
   end if;
 
   -- 3. Setup Candidates & Enrollments with opening_paid
-  insert into public.students (id, student_code, full_name, mobile, email, created_by)
+  insert into public.students (id, full_name, mobile, email, created_by)
   values
-    ('00000000-0000-0000-0000-000000000091'::uuid, 'EB-DEMO-001', 'Demo Student A', '+971501110001', 'demo.a@test.com', v_staff_a_id),
-    ('00000000-0000-0000-0000-000000000092'::uuid, 'EB-DEMO-002', 'Demo Student B', '+971501110002', 'demo.b@test.com', v_staff_b_id)
+    ('00000000-0000-0000-0000-000000000091'::uuid, 'Demo Student A', '+971501110001', 'demo.a@test.com', v_staff_a_id),
+    ('00000000-0000-0000-0000-000000000092'::uuid, 'Demo Student B', '+971501110002', 'demo.b@test.com', v_staff_b_id)
   on conflict (id) do nothing;
 
   -- Enrollment A: total 200,000, discount 10,000, opening_paid 25,000 -> payable 190,000, balance after opening 165,000
   insert into public.enrollments (
     id, student_id, university_id, course_id, admission_staff_id,
-    total_fee, discount, opening_paid, status, created_at, created_by
+    total_fee, discount, opening_paid, status, created_at, created_by, vat_treatment
   ) values (
     '00000000-0000-0000-0000-000000000081'::uuid,
     '00000000-0000-0000-0000-000000000091'::uuid,
     v_uni_id, v_course_id, v_staff_a_id,
-    200000.00, 10000.00, 25000.00, 'active', '2026-11-20 10:00:00+04', v_staff_a_id
+    200000.00, 10000.00, 25000.00, 'active', '2026-11-20 10:00:00+04', v_staff_a_id, 'none'
   ) on conflict (id) do nothing
   returning id into v_enrollment_id;
 
   -- Enrollment B: total 150,000, discount 0, opening_paid 10,000
   insert into public.enrollments (
     id, student_id, university_id, course_id, admission_staff_id,
-    total_fee, discount, opening_paid, status, created_at, created_by
+    total_fee, discount, opening_paid, status, created_at, created_by, vat_treatment
   ) values (
     '00000000-0000-0000-0000-000000000082'::uuid,
     '00000000-0000-0000-0000-000000000092'::uuid,
     v_uni_id, v_course_id, v_staff_b_id,
-    150000.00, 0.00, 10000.00, 'active', '2026-11-20 11:00:00+04', v_staff_b_id
+    150000.00, 0.00, 10000.00, 'active', '2026-11-20 11:00:00+04', v_staff_b_id, 'none'
   ) on conflict (id) do nothing
   returning id into v_enrollment_b_id;
 

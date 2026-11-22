@@ -75,12 +75,10 @@ begin
 
   -- Create test candidate
   insert into public.students (
-    student_code,
     full_name,
     mobile,
     created_by
   ) values (
-    'EB-TEST-DOC',
     'Test Candidate For Docs',
     '+971501234567',
     v_staff_id
