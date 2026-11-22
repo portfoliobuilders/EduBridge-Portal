@@ -98,7 +98,7 @@ function LoginForm() {
         <div className="mb-5 flex justify-start">
           <Image
             src="/brand/edubridge-logo-color.svg"
-            alt="EduBridge Education"
+            alt="EduBridge Portal"
             width={140}
             height={36}
             priority
@@ -271,7 +271,7 @@ export default function LoginPage() {
         <div className="shrink-0 z-10">
           <Image
             src="/brand/edubridge-logo-white.svg"
-            alt="EduBridge Education"
+            alt="EduBridge Portal"
             width={220}
             height={50}
             priority
@@ -287,10 +287,10 @@ export default function LoginPage() {
               Admissions &amp; Billing
             </span>
             <h1 className="text-[clamp(32px,2.8vw,48px)] font-semibold leading-[1.15] font-display text-white">
-              Receipt &amp; Billing Management
+              EduBridge Portal
             </h1>
             <p className="text-white/85 text-sm leading-relaxed line-clamp-2">
-              Issue official gapless receipts, track candidate ledgers, and share verified statements via WhatsApp and email.
+              Admissions, billing &amp; team — in one place
             </p>
           </div>
 
@@ -328,7 +328,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-6">
           <Image
             src="/brand/edubridge-logo-white.svg"
-            alt="EduBridge Education"
+            alt="EduBridge Portal"
             width={160}
             height={38}
             priority
@@ -337,10 +337,10 @@ export default function LoginPage() {
           />
           <div className="border-l border-white/25 pl-6 hidden md:block">
             <h2 className="text-sm font-semibold font-display text-white">
-              Receipt &amp; Billing Management
+              EduBridge Portal
             </h2>
             <p className="text-[11px] text-white/80">
-              EduBridge Education · Dubai, UAE
+              Admissions, billing &amp; team — in one place
             </p>
           </div>
         </div>

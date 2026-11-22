@@ -1,11 +1,11 @@
-# EduBridge Education — Management & Owner Operating Guide
-**Receipt, Fee Billing & Candidate Accounting System**
+# EduBridge Portal — Management & Owner Operating Guide
+**Admissions, Billing & Candidate Accounting System**
 
 ---
 
-## Welcome to EduBridge Receipts
+## Welcome to EduBridge Portal
 
-Welcome to the **EduBridge Education Receipt & Billing System**, designed specifically for our Dubai, UAE admissions consultancy operations. This system completely replaces paper receipt books with secure, tamper-proof, gapless digital receipt vouchers and live fee ledgers.
+Welcome to the **EduBridge Portal**, designed specifically for our Dubai, UAE admissions consultancy operations. This system completely replaces paper receipt books with secure, tamper-proof, gapless digital receipt vouchers, live fee ledgers, and staff performance workflows.
 
 ### Key Business Identity
 - **Legal Entity**: EduBridge Education
@@ -14,7 +14,7 @@ Welcome to the **EduBridge Education Receipt & Billing System**, designed specif
 - **Phone**: +971 58 107 3898 | +971 56 127 3536
 - **Email**: `info@edubridgeeducation.com`
 - **Web**: `https://edubridgeeducation.com`
-- **System Portal**: `https://billing.edubridgeeducation.com`
+- **System Portal**: `https://portal.edubridgeeducation.com`
 
 ---
 
@@ -28,7 +28,7 @@ The system enforces strict role-based separation of duties:
 | **Staff** | Admissions Counselors & Counselors | Quick-add candidates, enroll students in university programs, record payments, issue receipts, share via WhatsApp/Email, and track their personal collection reports. | Cannot void receipts, cannot edit company settings, cannot access `/admin` or view other staff member's collections unless permitted. |
 
 ### Logging In
-1. Open your web browser or home screen PWA icon on your mobile phone or computer: `https://billing.edubridgeeducation.com/login`.
+1. Open your web browser or home screen PWA icon on your mobile phone or computer: `https://portal.edubridgeeducation.com/login`.
 2. Enter your authorized email address and password.
 3. Tap **Sign In**.
 
@@ -144,7 +144,7 @@ Once recorded, the official receipt voucher is displayed immediately:
 - **WhatsApp (1-Click)**: Tap the **WhatsApp** button to open a pre-formatted friendly message with candidate name, receipt voucher number, amount paid, and live verification link.
 - **Email PDF**: Tap **Email Receipt**. Resend delivers an email directly to the candidate with the branded PDF attached.
 - **Download PDF**: Tap **Download PDF** to save or print the official letterhead receipt formatted in high-resolution Poppins typography with UAE TRN.
-- **QR Code Verification**: Every PDF and web receipt contains an authentic QR code. Anyone scanning it with a smartphone camera is directed to `https://billing.edubridgeeducation.com/r/<token>` to confirm the voucher's authenticity.
+- **QR Code Verification**: Every PDF and web receipt contains an authentic QR code. Anyone scanning it with a smartphone camera is directed to `https://portal.edubridgeeducation.com/r/<token>` to confirm the voucher's authenticity.
 
 ---
 
@@ -310,4 +310,4 @@ Ensure clear accountability and seamless counselor transitions:
 For system questions, user credentials, or urgent technical assistance:
 - **Managing Director**: EduBridge Education Dubai
 - **Technical Support**: `info@edubridgeeducation.com`
-- **Application Portal**: `https://billing.edubridgeeducation.com`
+- **Application Portal**: `https://portal.edubridgeeducation.com`

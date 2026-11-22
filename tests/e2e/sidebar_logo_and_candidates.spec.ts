@@ -75,7 +75,7 @@ test.describe('Sidebar Logo Height & Candidates Table Overflow Verification', ()
       await page.waitForLoadState('networkidle');
 
       // Desktop sidebar logo
-      const desktopLogo = page.locator('aside img[alt="EduBridge Education"]');
+      const desktopLogo = page.locator('aside img[alt="EduBridge Portal"]');
       await expect(desktopLogo).toBeVisible();
 
       const box = await desktopLogo.boundingBox();

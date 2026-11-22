@@ -1,5 +1,10 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { requireOwner } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Company Settings',
+}
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/PageHeader'
 import { AdminNav } from '@/components/admin/AdminNav'

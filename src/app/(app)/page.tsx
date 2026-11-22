@@ -1,5 +1,10 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { requireUser } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+}
 import { createClient } from '@/lib/supabase/server'
 import { getDubaiDateRange } from '@/lib/date'
 import { OwnerDashboard } from '@/components/dashboard/OwnerDashboard'

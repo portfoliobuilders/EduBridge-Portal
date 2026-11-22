@@ -1,6 +1,6 @@
-# EduBridge Receipt & Billing Application — Production Deployment Guide
+# EduBridge Portal — Production Deployment Guide
 
-This guide describes the complete, reproducible process for deploying the EduBridge Receipt & Billing application to Vercel connected to the production Supabase PostgreSQL backend, Hostinger DNS, and Resend transactional email service.
+This guide describes the complete, reproducible process for deploying the EduBridge Portal application to Vercel connected to the production Supabase PostgreSQL backend, Hostinger DNS, and Resend transactional email service.
 
 ---
 
@@ -8,8 +8,8 @@ This guide describes the complete, reproducible process for deploying the EduBri
 
 - **Framework**: Next.js 15+ App Router, TypeScript strict, Server Actions
 - **Database & Auth**: Supabase (Hosted PostgreSQL with Row-Level Security)
-- **Domain**: `billing.edubridgeeducation.com` (DNS managed via Hostinger)
-- **Transactional Email**: Resend (`receipts@edubridgeeducation.com`)
+- **Domain**: `portal.edubridgeeducation.com` (DNS managed via Hostinger)
+- **Transactional Email**: Resend (`receipts@edubridgeeducation.com` for receipts/statements, `portal@edubridgeeducation.com` for system notices)
 - **Hosting Platform**: Vercel (Edge Network + Serverless Node.js runtime)
 
 ---
@@ -24,8 +24,9 @@ Set the following variables in the **Vercel Project Settings → Environment Var
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production & Preview | Supabase public anon API key (browser safe) | `sb_publishable_...` |
 | `SUPABASE_SECRET_KEY` | Production Only | Supabase Service Role Secret Key (**SERVER ONLY** - never expose client-side) | `sb_secret_...` |
 | `RESEND_API_KEY` | Production Only | API key from Resend dashboard for sending transactional receipts | `re_...` |
-| `EMAIL_FROM` | Production & Preview | Verified sender name & email address | `EduBridge Education <receipts@edubridgeeducation.com>` |
-| `NEXT_PUBLIC_APP_URL` | Production | Canonical public URL used in QR codes, public links, and emails | `https://billing.edubridgeeducation.com` |
+| `EMAIL_FROM` | Production & Preview | Candidate email sender (receipts & statements) | `EduBridge Education <receipts@edubridgeeducation.com>` |
+| `SYSTEM_EMAIL_FROM` | Production & Preview | System notices sender | `EduBridge Portal <portal@edubridgeeducation.com>` |
+| `NEXT_PUBLIC_APP_URL` | Production | Canonical public URL used in QR codes, public links, and emails | `https://portal.edubridgeeducation.com` |
 
 > [!CAUTION]
 > Ensure `SUPABASE_SECRET_KEY` and `RESEND_API_KEY` are unflagged for client-side access. They are strictly imported into server modules guarded by `import 'server-only'`.
@@ -56,18 +57,18 @@ Set the following variables in the **Vercel Project Settings → Environment Var
 
 ## 4. Custom Domain Setup (Hostinger DNS)
 
-EduBridge's primary website runs on `edubridgeeducation.com`. The billing app is hosted at the subdomain `billing.edubridgeeducation.com`.
+EduBridge's primary website runs on `edubridgeeducation.com`. The application portal is hosted at the subdomain `portal.edubridgeeducation.com`.
 
 1. **In Vercel Dashboard**:
    - Go to **Project Settings → Domains**.
-   - Enter `billing.edubridgeeducation.com` and click **Add**.
+   - Enter `portal.edubridgeeducation.com` and click **Add**.
    - Vercel displays the required DNS target: `cname.vercel-dns.com`.
 
 2. **In Hostinger DNS Management**:
    - Log in to Hostinger hPanel → Domains → `edubridgeeducation.com` → **DNS / Nameservers**.
    - Add a new DNS Record:
      - **Type**: `CNAME`
-     - **Name / Subdomain**: `billing`
+     - **Name / Subdomain**: `portal`
      - **Target / Value**: `cname.vercel-dns.com`
      - **TTL**: `300` (or `Automatic`)
    - Click **Add Record**.
@@ -83,11 +84,11 @@ EduBridge's primary website runs on `edubridgeeducation.com`. The billing app is
 To ensure secure authentication redirects and password reset flows:
 
 1. In Supabase Dashboard → **Authentication → URL Configuration**:
-   - **Site URL**: `https://billing.edubridgeeducation.com`
+   - **Site URL**: `https://portal.edubridgeeducation.com`
    - **Redirect URLs**:
-     - `https://billing.edubridgeeducation.com/**`
-     - `https://billing.edubridgeeducation.com/auth/callback`
-     - `https://billing.edubridgeeducation.com/reset-password`
+     - `https://portal.edubridgeeducation.com/**`
+     - `https://portal.edubridgeeducation.com/auth/callback`
+     - `https://portal.edubridgeeducation.com/reset-password`
      - `http://localhost:3000/**` (for local development)
 
 2. Under **Authentication → Email Templates**:

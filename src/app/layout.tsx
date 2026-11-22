@@ -37,8 +37,11 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'EduBridge Education — Receipt & Billing System',
-  description: 'Admissions receipt and fee statement system for EduBridge Education, Dubai, UAE',
+  title: {
+    default: 'EduBridge Portal',
+    template: '%s · EduBridge Portal',
+  },
+  description: 'Admissions, billing & team portal for EduBridge Education, Dubai, UAE',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [

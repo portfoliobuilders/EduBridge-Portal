@@ -1,10 +1,15 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { PageHeader } from '@/components/PageHeader'
 import { PaymentForm, PreselectedEnrollment } from '@/components/receipts/PaymentForm'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'New Receipt',
+}
 
 export default async function NewReceiptPage({
   searchParams,

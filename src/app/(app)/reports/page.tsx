@@ -1,5 +1,10 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { requireUser } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Reports',
+}
 import { PageHeader } from '@/components/PageHeader'
 import { ReportsClient } from '@/components/reports/ReportsClient'
 import { fetchReportFilterOptionsAction } from './actions'

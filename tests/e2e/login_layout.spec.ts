@@ -69,7 +69,7 @@ test.describe('Login Full Redesign & Responsive Layout E2E', () => {
         expect(scrollHeight).toBeLessThanOrEqual(clientHeight + 1);
 
         // Verify 2-column structure
-        const leftPanel = page.locator('h1:has-text("Receipt & Billing Management")');
+        const leftPanel = page.locator('h1:has-text("EduBridge Portal")');
         await expect(leftPanel).toBeVisible();
 
         // Verify 3 feature bullets on desktop

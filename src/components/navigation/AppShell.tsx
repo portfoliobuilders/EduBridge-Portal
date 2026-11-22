@@ -148,7 +148,7 @@ export function AppShell({
           <Link href="/" className="inline-flex items-center">
             <Image
               src="/brand/edubridge-logo-color.svg"
-              alt="EduBridge Education"
+              alt="EduBridge Portal"
               width={160}
               height={32}
               priority
@@ -291,7 +291,7 @@ export function AppShell({
           <Link href="/" className="inline-flex items-center">
             <Image
               src="/brand/edubridge-logo-color.svg"
-              alt="EduBridge Education"
+              alt="EduBridge Portal"
               width={160}
               height={32}
               priority

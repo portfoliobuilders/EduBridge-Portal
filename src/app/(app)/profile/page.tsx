@@ -1,6 +1,11 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { getMyProfileAction } from './actions'
 import { StaffProfileForm } from '@/components/profile/StaffProfileForm'
+
+export const metadata: Metadata = {
+  title: 'My Profile',
+}
 
 export default async function ProfilePage() {
   const res = await getMyProfileAction()

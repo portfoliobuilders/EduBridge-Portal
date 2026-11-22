@@ -509,8 +509,8 @@ export async function sendCelebrationEmail(params: {
 
   const resend = new Resend(apiKey)
   const from =
-    process.env.EMAIL_FROM ||
-    'EduBridge Education <receipts@edubridgeeducation.com>'
+    process.env.SYSTEM_EMAIL_FROM ||
+    'EduBridge Portal <portal@edubridgeeducation.com>'
 
   const firstName = params.fullName.split(' ')[0]
   const isBirthday = params.kind === 'birthday'

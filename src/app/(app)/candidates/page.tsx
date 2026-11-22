@@ -1,5 +1,10 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { requireUser } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Candidates',
+}
 import { createClient } from '@/lib/supabase/server'
 import { CreateStudentSheet } from './CreateStudentSheet'
 import { CandidatesHeader } from './CandidatesHeader'

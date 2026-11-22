@@ -1,4 +1,4 @@
-# EduBridge Receipt & Billing Application — Go-Live Checklist
+# EduBridge Portal — Go-Live Checklist
 
 This checklist must be executed in sequence before turning over the live application to staff and candidate-facing operations.
 
@@ -8,13 +8,13 @@ This checklist must be executed in sequence before turning over the live applica
 
 ### 1. Environment & Infrastructure
 - [ ] **Vercel Production Deployment**: Build succeeds with 0 errors across all routes.
-- [ ] **Custom Domain Active**: `https://billing.edubridgeeducation.com` resolves with valid HTTPS SSL certificate.
+- [ ] **Custom Domain Active**: `https://portal.edubridgeeducation.com` resolves with valid HTTPS SSL certificate.
 - [ ] **Security Headers Verified**:
   - `Content-Security-Policy` active
   - `X-Frame-Options: DENY`
   - `X-Content-Type-Options: nosniff`
   - `Referrer-Policy: strict-origin-when-cross-origin`
-- [ ] **Supabase URL Configuration**: `https://billing.edubridgeeducation.com` configured as default Site URL.
+- [ ] **Supabase URL Configuration**: `https://portal.edubridgeeducation.com` configured as default Site URL.
 - [ ] **Resend Transactional Email Active**: Domain DKIM and SPF records verified.
 
 ---
@@ -68,11 +68,11 @@ This checklist must be executed in sequence before turning over the live applica
 ---
 
 ### 4. End-to-End Operational Smoke Test
-- [ ] Staff signs in at `https://billing.edubridgeeducation.com/login`.
+- [ ] Staff signs in at `https://portal.edubridgeeducation.com/login`.
 - [ ] Staff quick-adds a real or pilot candidate and creates enrollment.
 - [ ] Staff records a payment (Card, Cash, or Link).
 - [ ] Receipt voucher generates with gapless number `EB-RV-2026-XXXXX`.
-- [ ] QR code on the receipt scans directly to public receipt page `https://billing.edubridgeeducation.com/r/<token>`.
+- [ ] QR code on the receipt scans directly to public receipt page `https://portal.edubridgeeducation.com/r/<token>`.
 - [ ] Download official PDF and confirm EduBridge brand letterhead, Poppins typography, and UAE TRN number.
 - [ ] WhatsApp receipt link delivers correct candidate prefilled message.
 - [ ] Email receipt delivery confirmed via Resend.

@@ -1,5 +1,10 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { requireAdminOrAbove } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Admin Console',
+}
 import { PageHeader } from '@/components/PageHeader'
 import { AdminNav } from '@/components/admin/AdminNav'
 import { BookOpen, UserCog, Settings as SettingsIcon, FileSpreadsheet } from 'lucide-react'

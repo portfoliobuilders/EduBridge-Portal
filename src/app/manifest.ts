@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'EduBridge Receipts',
+    name: 'EduBridge Portal',
     short_name: 'EduBridge',
-    description: 'Admissions receipt and fee statement system for EduBridge Education, Dubai, UAE',
+    description: 'Admissions, billing & team portal for EduBridge Education, Dubai, UAE',
     start_url: '/',
     display: 'standalone',
     background_color: '#FFFFFF',
