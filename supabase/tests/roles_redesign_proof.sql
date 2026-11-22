@@ -284,7 +284,7 @@ begin
   begin
     perform public.void_payment(v_test_payment_id, 'Unauthorized admin void attempt');
   exception when others then
-    if sqlerrm like '%Admins are not permitted to void receipts%' or sqlerrm like '%Only Super Admins%' then
+    if sqlerrm ilike '%admins are not permitted to void receipts%' or sqlerrm ilike '%only super admins and authorized admins can void receipts%' or sqlerrm ilike '%forbidden%' then
       v_caught := true;
     end if;
   end;

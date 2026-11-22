@@ -130,8 +130,8 @@ export function AppShell({
               width={160}
               height={30}
               priority
-              style={{ width: 'auto', height: '30px' }}
-              className="w-auto"
+              style={{ width: 'auto', height: 'auto' }}
+              className="h-[30px] w-auto"
             />
           </Link>
         </div>

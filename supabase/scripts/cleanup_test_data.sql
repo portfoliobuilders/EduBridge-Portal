@@ -43,7 +43,16 @@ begin
     '8e0d5d72-6f9a-487c-9417-53191b608a97'::uuid,
     'e5e5fcec-9708-443b-a266-b3545afc4081'::uuid,
     '7d445c12-7271-4c3a-8f09-1d0e0f6b2cae'::uuid,
-    '01b0ce44-7a69-4cae-93cc-8120607e1512'::uuid
+    '01b0ce44-7a69-4cae-93cc-8120607e1512'::uuid,
+    'b2bb8b35-34dc-4b7b-8555-4a7f305f95bb'::uuid,
+    -- EB-DOC test candidates
+    'fa35fc91-36d5-40eb-b257-5c683ed40a4a'::uuid,
+    '7c86db38-b93e-4b0a-80e8-95c210027631'::uuid,
+    'a75c0756-728a-4f26-826a-5cccf9c29154'::uuid,
+    '7159888d-36f4-4556-a9aa-a3d40ff3b84a'::uuid,
+    'ac5ecced-4318-41b5-927d-8612347926d8'::uuid,
+    '7f8d656b-cf6e-4a37-ad56-c76405e1998b'::uuid,
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0'::uuid
   );
   if v_unexpected_students > 0 then
     raise exception 'CLEANUP ABORTED: Found % student(s) not in approved test-ID list', v_unexpected_students;
@@ -124,8 +133,57 @@ where (
     '8e0d5d72-6f9a-487c-9417-53191b608a97',
     'e5e5fcec-9708-443b-a266-b3545afc4081',
     '7d445c12-7271-4c3a-8f09-1d0e0f6b2cae',
-    '01b0ce44-7a69-4cae-93cc-8120607e1512'
+    '01b0ce44-7a69-4cae-93cc-8120607e1512',
+    'b2bb8b35-34dc-4b7b-8555-4a7f305f95bb',
+    'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+    '7c86db38-b93e-4b0a-80e8-95c210027631',
+    'a75c0756-728a-4f26-826a-5cccf9c29154',
+    '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+    'ac5ecced-4318-41b5-927d-8612347926d8',
+    '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0'
   )
+);
+
+-- 2b. Remove test candidate documents and upload links
+delete from public.document_access_log
+where document_id in (
+  select id from public.candidate_documents
+  where student_id in (
+    'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+    '7c86db38-b93e-4b0a-80e8-95c210027631',
+    'a75c0756-728a-4f26-826a-5cccf9c29154',
+    '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+    'ac5ecced-4318-41b5-927d-8612347926d8',
+    '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+    '8992df4a-93ff-4aed-9337-07769ff6e4f0'
+  )
+);
+
+alter table public.candidate_documents disable trigger trg_prevent_candidate_document_delete;
+
+delete from public.candidate_documents
+where student_id in (
+  'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+  '7c86db38-b93e-4b0a-80e8-95c210027631',
+  'a75c0756-728a-4f26-826a-5cccf9c29154',
+  '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+  'ac5ecced-4318-41b5-927d-8612347926d8',
+  '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+  '8992df4a-93ff-4aed-9337-07769ff6e4f0'
+);
+
+alter table public.candidate_documents enable trigger trg_prevent_candidate_document_delete;
+
+delete from public.document_upload_links
+where student_id in (
+  'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+  '7c86db38-b93e-4b0a-80e8-95c210027631',
+  'a75c0756-728a-4f26-826a-5cccf9c29154',
+  '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+  'ac5ecced-4318-41b5-927d-8612347926d8',
+  '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+  '8992df4a-93ff-4aed-9337-07769ff6e4f0'
 );
 
 -- 3. Remove test payments
@@ -167,7 +225,15 @@ where student_id in (
   '8e0d5d72-6f9a-487c-9417-53191b608a97',
   'e5e5fcec-9708-443b-a266-b3545afc4081',
   '7d445c12-7271-4c3a-8f09-1d0e0f6b2cae',
-  '01b0ce44-7a69-4cae-93cc-8120607e1512'
+  '01b0ce44-7a69-4cae-93cc-8120607e1512',
+  'b2bb8b35-34dc-4b7b-8555-4a7f305f95bb',
+  'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+  '7c86db38-b93e-4b0a-80e8-95c210027631',
+  'a75c0756-728a-4f26-826a-5cccf9c29154',
+  '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+  'ac5ecced-4318-41b5-927d-8612347926d8',
+  '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+  '8992df4a-93ff-4aed-9337-07769ff6e4f0'
 );
 
 -- 5. Remove test enrollments
@@ -199,7 +265,15 @@ where id in (
   '8e0d5d72-6f9a-487c-9417-53191b608a97',
   'e5e5fcec-9708-443b-a266-b3545afc4081',
   '7d445c12-7271-4c3a-8f09-1d0e0f6b2cae',
-  '01b0ce44-7a69-4cae-93cc-8120607e1512'
+  '01b0ce44-7a69-4cae-93cc-8120607e1512',
+  'b2bb8b35-34dc-4b7b-8555-4a7f305f95bb',
+  'fa35fc91-36d5-40eb-b257-5c683ed40a4a',
+  '7c86db38-b93e-4b0a-80e8-95c210027631',
+  'a75c0756-728a-4f26-826a-5cccf9c29154',
+  '7159888d-36f4-4556-a9aa-a3d40ff3b84a',
+  'ac5ecced-4318-41b5-927d-8612347926d8',
+  '7f8d656b-cf6e-4a37-ad56-c76405e1998b',
+  '8992df4a-93ff-4aed-9337-07769ff6e4f0'
 );
 
 -- 7. Reset receipt counters so the next receipt will be EB-RV-<year>-00001
