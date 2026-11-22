@@ -13,6 +13,7 @@ import {
   Info,
   ShieldCheck,
   KeyRound,
+  Trophy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,6 +48,8 @@ export interface CompanySettingsData {
   admins_can_void?: boolean
   support_access_enabled?: boolean
   celebration_emails_enabled?: boolean
+  show_aed_to_staff?: boolean
+  monthly_top_performer_notification?: boolean
 }
 
 const TEMPLATE_VARIABLES = [
@@ -149,6 +152,8 @@ export function SettingsClient({
       formData.append('admins_can_void', String(Boolean(settings.admins_can_void)))
       formData.append('support_access_enabled', String(Boolean(settings.support_access_enabled)))
       formData.append('celebration_emails_enabled', String(Boolean(settings.celebration_emails_enabled ?? true)))
+      formData.append('show_aed_to_staff', String(Boolean(settings.show_aed_to_staff)))
+      formData.append('monthly_top_performer_notification', String(Boolean(settings.monthly_top_performer_notification)))
 
       const res = await updateCompanySettingsAction(formData)
       if (res.success) {
@@ -921,6 +926,62 @@ export function SettingsClient({
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                     (settings.celebration_emails_enabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Show AED amounts to staff on leaderboard */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-primary" />
+                  Show AED Amounts to Staff on Leaderboard
+                </span>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  When disabled (default), staff see admissions counts and rank order only; collections revenue amounts are hidden at the API level. When enabled, staff can view AED collection amounts.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(settings.show_aed_to_staff)}
+                onClick={() => handleInputChange('show_aed_to_staff', !settings.show_aed_to_staff)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  settings.show_aed_to_staff ? 'bg-primary' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    settings.show_aed_to_staff ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Monthly Top Performer Notification to All */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-primary" />
+                  Monthly Top Performer Notification
+                </span>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  Send an automatic celebration notification to all staff on the 1st of each month recognizing the top performers of the previous month.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(settings.monthly_top_performer_notification)}
+                onClick={() => handleInputChange('monthly_top_performer_notification', !settings.monthly_top_performer_notification)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  settings.monthly_top_performer_notification ? 'bg-primary' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    settings.monthly_top_performer_notification ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>

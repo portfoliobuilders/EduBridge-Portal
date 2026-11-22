@@ -36,6 +36,8 @@ const companySettingsSchema = z
     admins_can_void: z.boolean().default(false),
     support_access_enabled: z.boolean().default(false),
     celebration_emails_enabled: z.boolean().default(true),
+    show_aed_to_staff: z.boolean().default(false),
+    monthly_top_performer_notification: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
     if (data.vat_enabled && (!data.trn || data.trn.trim() === '')) {
@@ -85,6 +87,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
     admins_can_void: formData.get('admins_can_void') === 'true',
     support_access_enabled: formData.get('support_access_enabled') === 'true',
     celebration_emails_enabled: formData.get('celebration_emails_enabled') !== 'false',
+    show_aed_to_staff: formData.get('show_aed_to_staff') === 'true',
+    monthly_top_performer_notification: formData.get('monthly_top_performer_notification') === 'true',
   }
 
   const parsed = companySettingsSchema.safeParse(raw)
@@ -120,6 +124,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       admins_can_void: data.admins_can_void,
       support_access_enabled: data.support_access_enabled,
       celebration_emails_enabled: data.celebration_emails_enabled,
+      show_aed_to_staff: data.show_aed_to_staff,
+      monthly_top_performer_notification: data.monthly_top_performer_notification,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

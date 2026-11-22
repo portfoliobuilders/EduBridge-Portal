@@ -168,3 +168,18 @@ All 14 SQL test suites executed against the live remote Supabase database (`bhbg
 - **Physical Phone Camera Test**: **PENDING — user to verify** (camera input shortcut `<input type="file" accept="image/*" capture="environment">` integrated on both `/u/[token]` and candidate Documents tab; requires testing on physical mobile device).
 - **Unit & E2E Tests**: 40/40 Vitest unit tests, Playwright browser E2E suites (`celebrations_notifications.spec.ts`, etc.) passing.
 - **Production Build**: 0 errors across all routes with production-hardened CSP, WebSocket support, and strict type checking.
+
+### 11. Staff Performance Leaderboard (`/leaderboard`)
+- **Route & Access**: Available to all roles at `/leaderboard` with dedicated desktop sidebar navigation and mobile account sheet shortcuts.
+- **Time Periods (Asia/Dubai)**: "This week" (Mon-Sun), "This month" (1st to end), and "This quarter" (Q1–Q4) with historical comparisons against previous period.
+- **Dual Performance Metrics**:
+  - **Admissions** (default): Net new candidate enrollments credited to each admission counsellor.
+  - **Collections**: Net valid payment voucher revenue collected.
+- **Brand Light Podium**: Top 3 visual podium featuring elevated 1st place gold, 2nd place silver, and 3rd place bronze badge styling with staff avatars and delta indicators.
+- **Full Ranked Table**: Complete standings showing rank, avatar, full name, job title, admissions count, collections amount, and change vs previous period (▲, ▼, —).
+- **Sticky Viewer Position**: Floating viewer status indicator displaying personal rank, delta, and current period score.
+- **Company Settings & Privacy**:
+  - `show_aed_to_staff` setting: When disabled, staff see rank and admissions count only; AED revenue amounts are strictly masked to `NULL` at the database and API level.
+  - `monthly_top_performer_notification`: Toggle for automatic #1 performer announcement on the 1st of each month.
+- **Dashboard Widget**: Compact "Top 3 this month" widget integrated into both owner and staff dashboards with one-click full leaderboard drill-down.
+- **Automated Verification**: Full SQL proof suite (`supabase/tests/leaderboard_proofs.sql`) verifying period sums, role-aware masking, tie-breaking, inactive/support account exclusion, and team scoping.

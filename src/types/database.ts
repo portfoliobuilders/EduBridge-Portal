@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -328,10 +328,12 @@ export type Database = {
           footer_note: string | null
           id: string
           logo_path: string | null
+          monthly_top_performer_notification: boolean
           name: string
           no_vat_reason: string
           phone: string
           receipt_prefix: string
+          show_aed_to_staff: boolean
           singleton: boolean
           statement_prefix: string
           support_access_enabled: boolean
@@ -359,10 +361,12 @@ export type Database = {
           footer_note?: string | null
           id?: string
           logo_path?: string | null
+          monthly_top_performer_notification?: boolean
           name: string
           no_vat_reason?: string
           phone: string
           receipt_prefix?: string
+          show_aed_to_staff?: boolean
           singleton?: boolean
           statement_prefix?: string
           support_access_enabled?: boolean
@@ -390,10 +394,12 @@ export type Database = {
           footer_note?: string | null
           id?: string
           logo_path?: string | null
+          monthly_top_performer_notification?: boolean
           name?: string
           no_vat_reason?: string
           phone?: string
           receipt_prefix?: string
+          show_aed_to_staff?: boolean
           singleton?: boolean
           statement_prefix?: string
           support_access_enabled?: boolean
@@ -1890,6 +1896,29 @@ export type Database = {
       get_link_documents_stats: { Args: { p_days?: number }; Returns: Json }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_statement: { Args: { p_token: string }; Returns: Json }
+      get_staff_leaderboard: {
+        Args: {
+          p_from?: string
+          p_metric?: string
+          p_period?: string
+          p_team_id?: string
+          p_to?: string
+        }
+        Returns: {
+          admissions_count: number
+          avatar_url: string
+          collections_amount: number
+          first_name: string
+          full_name: string
+          is_self: boolean
+          job_title: string
+          prev_rank: number
+          rank: number
+          rank_delta: number
+          user_id: string
+          value_delta: number
+        }[]
+      }
       get_staff_list: {
         Args: never
         Returns: {
