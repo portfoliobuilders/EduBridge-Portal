@@ -819,12 +819,13 @@ export function PaymentForm({
       )}
 
       {/* Submit Button */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={() => router.back()}
           disabled={isPending}
+          className="w-full sm:w-auto h-11 rounded-xl border-[#E4E7E7]"
         >
           Cancel
         </Button>
@@ -832,7 +833,7 @@ export function PaymentForm({
           id="btn-issue-receipt"
           type="submit"
           disabled={isPending || !selectedEnrollment}
-          className="bg-[#00A57E] hover:bg-[#00805F] text-white min-w-[160px] font-semibold"
+          className="bg-[#00A57E] hover:bg-[#00805F] text-white w-full sm:w-auto min-w-[180px] h-11 rounded-xl font-semibold shadow-xs"
         >
           {isPending ? (
             <>

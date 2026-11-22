@@ -8,7 +8,6 @@ import {
   Users,
   AlertCircle,
   XCircle,
-  PlusCircle,
   Loader2,
   FileBarChart,
 } from 'lucide-react'
@@ -109,12 +108,6 @@ export function OwnerDashboard({
             <Button variant="outline" className="border-[#E4E7E7] rounded-xl text-xs gap-1.5 h-10">
               <FileBarChart className="w-4 h-4 text-muted-foreground" />
               Reports
-            </Button>
-          </Link>
-          <Link href="/receipts/new">
-            <Button className="bg-[#00A57E] hover:bg-[#00805F] text-white rounded-xl shadow-xs gap-2 h-10">
-              <PlusCircle className="w-4 h-4" />
-              + New Receipt
             </Button>
           </Link>
         </div>

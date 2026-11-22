@@ -41,7 +41,7 @@ export interface CompanySettingsData {
 }
 
 const TEMPLATE_VARIABLES = [
-  { tag: '{student_name}', desc: 'Student full name' },
+  { tag: '{student_name}', desc: 'Candidate full name' },
   { tag: '{amount}', desc: 'Payment amount (e.g. 12,500.00)' },
   { tag: '{receipt_no}', desc: 'Receipt number (e.g. EB-RV-2026-0001)' },
   { tag: '{balance}', desc: 'Remaining balance (e.g. 37,500.00)' },
