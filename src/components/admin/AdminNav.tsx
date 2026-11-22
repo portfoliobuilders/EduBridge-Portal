@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, UserCog, Settings as SettingsIcon, LayoutDashboard, FileSpreadsheet } from 'lucide-react'
+import { BookOpen, UserCog, Settings as SettingsIcon, LayoutDashboard, FileSpreadsheet, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function AdminNav() {
@@ -11,6 +11,7 @@ export function AdminNav() {
 
   const tabs = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
+    { href: '/admin/attendance', label: 'Attendance', icon: Clock },
     { href: '/admin/programs', label: 'Programmes', icon: BookOpen },
     { href: '/admin/programs/import', label: 'Bulk Import', icon: FileSpreadsheet, exact: true },
     { href: '/admin/staff', label: 'Staff', icon: UserCog },

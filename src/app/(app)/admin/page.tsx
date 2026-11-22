@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 }
 import { PageHeader } from '@/components/PageHeader'
 import { AdminNav } from '@/components/admin/AdminNav'
-import { BookOpen, UserCog, Settings as SettingsIcon, FileSpreadsheet } from 'lucide-react'
+import { BookOpen, UserCog, Settings as SettingsIcon, FileSpreadsheet, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -25,7 +25,26 @@ export default async function AdminPage() {
 
       <AdminNav />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <Link
+          href="/admin/attendance"
+          className="bg-white p-6 rounded-2xl border border-border shadow-xs hover:border-primary/50 transition-all flex flex-col justify-between group"
+        >
+          <div>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+              <Clock className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1 font-display">
+              Workforce &amp; Attendance
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Today&apos;s geofenced check-ins, approvals queue, monthly team sheet, and office geofence map settings.
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-primary mt-6 inline-flex items-center">
+            Open Attendance Console &rarr;
+          </span>
+        </Link>
         <Link
           href="/admin/programs"
           className="bg-white p-6 rounded-2xl border border-border shadow-xs hover:border-primary/50 transition-all flex flex-col justify-between group"

@@ -17,6 +17,7 @@ import {
   User,
   Bell,
   Trophy,
+  Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,6 +38,7 @@ import {
 import { signOutAction } from '@/app/(auth)/login/actions'
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { HomePunchCard } from '@/components/attendance/HomePunchCard'
 import { CelebrantTopStrip } from '@/components/celebrations/CelebrantTopStrip'
 import { CelebrationBanner } from '@/components/celebrations/CelebrationBanner'
 import type { CelebrationPerson } from '@/components/celebrations/actions'
@@ -128,6 +130,7 @@ export function AppShell({
   const desktopNavItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/candidates', label: 'Candidates', icon: Users },
+    { href: '/attendance', label: 'Attendance', icon: Clock },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/reports', label: 'Reports', icon: FileBarChart },
     ...(isAdminOrAbove ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
@@ -423,7 +426,23 @@ export function AppShell({
             </div>
           </SheetHeader>
 
-          <div className="space-y-2 pt-4">
+          <div className="pt-4 pb-1">
+            <HomePunchCard compact />
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <Link
+              href="/attendance"
+              onClick={() => setAccountOpen(false)}
+              className="flex items-center justify-between p-3.5 rounded-2xl border border-[#E4E7E7] hover:bg-[#F5F6F6] text-sm font-medium text-[#0A0A0A] transition"
+            >
+              <span className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-[#00A57E]" />
+                Attendance &amp; Leave
+              </span>
+              <ChevronRight className="w-4 h-4 text-[#6B7272]" />
+            </Link>
+
             <Link
               href="/profile"
               onClick={() => setAccountOpen(false)}

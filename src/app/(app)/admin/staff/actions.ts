@@ -223,8 +223,32 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
     return { success: false, error: error.message }
   }
 
+  // Attendance settings update if provided
+  const officeId = formData.get('office_id') ? String(formData.get('office_id')) : null
+  const shiftStart = formData.get('shift_start') ? String(formData.get('shift_start')) : null
+  const shiftEnd = formData.get('shift_end') ? String(formData.get('shift_end')) : null
+  const graceMinutes = formData.get('grace_minutes') ? parseInt(String(formData.get('grace_minutes')), 10) : null
+  const attendanceRequired = formData.get('attendance_required') !== null ? formData.get('attendance_required') === 'true' : null
+  const allowFieldPunch = formData.get('allow_field_punch') !== null ? formData.get('allow_field_punch') === 'true' : null
+
+  if (formData.has('office_id') || formData.has('shift_start') || formData.has('attendance_required')) {
+    await supabase
+      .from('staff_attendance_settings')
+      .upsert({
+        user_id: data.userId,
+        office_id: officeId || null,
+        shift_start: shiftStart || '09:00:00',
+        shift_end: shiftEnd || '18:00:00',
+        grace_minutes: graceMinutes ?? 15,
+        attendance_required: attendanceRequired ?? true,
+        allow_field_punch: allowFieldPunch ?? false,
+        updated_at: new Date().toISOString(),
+      })
+  }
+
   revalidatePath('/admin/staff')
   revalidatePath(`/admin/staff/${data.userId}`)
+  revalidatePath('/admin/attendance')
   return { success: true }
 }
 

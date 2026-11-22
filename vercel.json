@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/celebrations",
       "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/attendance?action=close",
+      "schedule": "59 19 * * *"
+    },
+    {
+      "path": "/api/cron/attendance?action=absences",
+      "schedule": "0 2 * * *"
     }
   ]
 }

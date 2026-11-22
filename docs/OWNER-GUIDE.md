@@ -305,6 +305,53 @@ Ensure clear accountability and seamless counselor transitions:
 
 ---
 
+## 16. Attendance, Geofencing, Leaves & Workforce Tracking
+
+The system provides complete, mobile-first attendance management designed for admissions teams and field counselors, verified server-side in Asia/Dubai local time.
+
+### Mobile-First Geofenced Punching
+- **One-Tap Punch**: Directly accessible on the **Home Dashboard** and inside the **Mobile Account Sheet**.
+- **Server-Verified Geofencing**: Geolocation is calculated on the server using the high-accuracy Haversine distance formula:
+  - Staff must be within their assigned office geofence radius (configurable from 30m to 1000m; default 100m).
+  - An accuracy padding buffer (capped at 50m) prevents false rejections caused by indoor GPS drift while blocking spoofed locations.
+  - Rejections show exact actionable reasons (e.g., *"You are 230m from Royal House Building Office. Please move within 100m or connect to office Wi-Fi"*).
+- **Location Privacy Commitment**:
+  - **Zero Background Tracking**: The application **never** tracks staff locations in the background. Location is sampled **only** when the user actively taps "Punch in" or "Punch out".
+  - Staff are presented with a clear, one-time privacy consent notice on their first punch explaining exact location usage.
+- **Office Network Matching**: Optional public IP verification (`allowed_public_ips`) ensures punches originate from designated office internet lines or Wi-Fi networks when enabled.
+- **Field Punches for BDMs**:
+  - Staff with `allow_field_punch` enabled (e.g. Business Development Managers visiting partner universities or recruitment fairs) can punch outside the geofence.
+  - Requires a mandatory descriptive note (minimum 5 characters) explaining their field location.
+  - Automatically flagged as `pending_approval` until reviewed by an administrator.
+
+### Automated Daily Attendance Engine
+- **Auto-Close Unclosed Sessions (23:59 Asia/Dubai)**:
+  - If a staff member forgets to punch out, the system automatically closes the day at 23:59 with a `missing_checkout` status.
+  - Worked minutes for unclosed sessions remain **uncounted (0 hours)** until the staff member submits a regularization request with their actual departure time and an administrator approves it.
+- **Automatic Absence Marking (06:00 Asia/Dubai)**:
+  - Every morning at 06:00, the system scans the previous working day. Any staff member required to attend who has no accepted punch and no approved leave is automatically flagged as `absent`.
+  - Notifications are dispatched to the staff member and their administrative supervisor.
+
+### Leave & Regularization Requests
+- **Self-Service Leave Management** (`/attendance`):
+  - Staff can submit leave requests with date ranges, leave types (*Casual, Sick, Annual, Unpaid*), full-day or half-day flags, and mandatory reasons.
+  - Approved leaves automatically mark the corresponding attendance days as `on_leave`.
+- **Punch Regularization Requests**:
+  - Staff who missed a checkout or experienced technical issues can request punch corrections with requested in/out times and explanations.
+  - Admin approval automatically recalculates worked minutes and updates the attendance ledger with `regularized = true` and a complete audit trail in `audit_log`.
+
+### Admin Workforce Console (`/admin/attendance`)
+- **Today Board**: Real-time snapshot of staff status (*Punched In, Late, Not In Yet, On Leave, Awaiting Field Punch Approval*).
+- **Team Monthly Matrix**: Full-month grid view showing all staff members and daily status indicators with color coding (Present, Late, Half Day, Absent, Leave, Holiday, Off).
+- **Approvals Queue**: Centralized inbox to review and approve/reject pending field punches, leave requests, and regularization requests.
+- **Offices & Geofencing Management**:
+  - Interactive **OpenStreetMap + Leaflet** map picker with draggable location pin and dynamic radius circle.
+  - "Use my current location" GPS helper for quick office setup.
+  - Configurable shift timings, grace periods (default 15 minutes), and weekly offs.
+- **Payroll CSV Exports**: One-click download of daily attendance summaries and monthly payroll matrices with total worked hours, late counts, and leave breakdowns.
+
+---
+
 ## Summary & Support Contacts
 
 For system questions, user credentials, or urgent technical assistance:

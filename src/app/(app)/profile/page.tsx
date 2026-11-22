@@ -1,7 +1,9 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { getMyProfileAction } from './actions'
+import { getMonthAttendanceAction } from '../attendance/actions'
 import { StaffProfileForm } from '@/components/profile/StaffProfileForm'
+import { ProfileAttendanceSection } from '@/components/profile/ProfileAttendanceSection'
 
 export const metadata: Metadata = {
   title: 'My Profile',
@@ -19,6 +21,8 @@ export default async function ProfilePage() {
     )
   }
 
+  const attendanceRes = await getMonthAttendanceAction(undefined, res.profile.id)
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -31,6 +35,13 @@ export default async function ProfilePage() {
       </div>
 
       <StaffProfileForm initialProfile={res.profile} />
+
+      {attendanceRes.success && (
+        <ProfileAttendanceSection
+          initialData={attendanceRes.data}
+          userId={res.profile.id}
+        />
+      )}
     </div>
   )
 }

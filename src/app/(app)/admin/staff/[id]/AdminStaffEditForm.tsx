@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -15,8 +16,17 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { updateStaffAction } from '../actions'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function AdminStaffEditForm({ staff, managers }: { staff: any; managers: any[] }) {
+export function AdminStaffEditForm({
+  staff,
+  managers,
+  attendanceSettings,
+  offices = [],
+}: {
+  staff: any
+  managers: any[]
+  attendanceSettings?: any
+  offices?: any[]
+}) {
   const router = useRouter()
   const [jobTitle, setJobTitle] = useState(staff.job_title || '')
   const [employeeId, setEmployeeId] = useState(staff.employee_id || '')
@@ -25,6 +35,14 @@ export function AdminStaffEditForm({ staff, managers }: { staff: any; managers: 
   const [reportsTo, setReportsTo] = useState(staff.reports_to || '')
   const [adminScope, setAdminScope] = useState(staff.admin_scope || 'team')
   const [isActive, setIsActive] = useState(Boolean(staff.is_active))
+
+  // Attendance Settings
+  const [officeId, setOfficeId] = useState(attendanceSettings?.office_id || (offices[0]?.id || ''))
+  const [shiftStart, setShiftStart] = useState(attendanceSettings?.shift_start?.substring(0, 5) || '09:00')
+  const [shiftEnd, setShiftEnd] = useState(attendanceSettings?.shift_end?.substring(0, 5) || '18:00')
+  const [graceMinutes, setGraceMinutes] = useState(attendanceSettings?.grace_minutes ?? 15)
+  const [attendanceRequired, setAttendanceRequired] = useState(attendanceSettings?.attendance_required ?? true)
+  const [allowFieldPunch, setAllowFieldPunch] = useState(attendanceSettings?.allow_field_punch ?? false)
 
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
@@ -49,6 +67,14 @@ export function AdminStaffEditForm({ staff, managers }: { staff: any; managers: 
     formData.append('reports_to', reportsTo)
     formData.append('admin_scope', adminScope)
     formData.append('is_active', String(isActive))
+
+    // Attendance Settings
+    formData.append('office_id', officeId)
+    formData.append('shift_start', `${shiftStart}:00`)
+    formData.append('shift_end', `${shiftEnd}:00`)
+    formData.append('grace_minutes', String(graceMinutes))
+    formData.append('attendance_required', String(attendanceRequired))
+    formData.append('allow_field_punch', String(allowFieldPunch))
 
     const res = await updateStaffAction(formData)
     setSaving(false)
@@ -193,6 +219,112 @@ export function AdminStaffEditForm({ staff, managers }: { staff: any; managers: 
             onCheckedChange={setIsActive}
             className="data-[state=checked]:bg-[#00A57E]"
           />
+        </div>
+      </div>
+
+      {/* Attendance & Geofencing Settings */}
+      <div className="bg-white rounded-2xl border border-[#E4E7E7] p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#E4E7E7] pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#00A57E]" />
+            <h2 className="text-sm font-bold text-[#0A0A0A]">
+              Attendance & Geofencing Parameters
+            </h2>
+          </div>
+          <span className="text-[10px] text-[#00805F] bg-[#E6F6F2] px-2 py-0.5 rounded-full border border-[#CCEDE5] font-semibold">
+            Attendance Settings
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="staff-office" className="text-xs font-semibold text-[#0A0A0A]">
+              Assigned Office
+            </Label>
+            <select
+              id="staff-office"
+              value={officeId}
+              onChange={(e) => setOfficeId(e.target.value)}
+              className="w-full text-xs rounded-xl border border-[#E4E7E7] bg-white px-3 py-2 text-[#0A0A0A] focus:outline-none focus:ring-2 focus:ring-[#00A57E]"
+            >
+              {offices.map((off) => (
+                <option key={off.id} value={off.id}>
+                  {off.name} ({off.radius_m}m radius)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="staff-shift-start" className="text-xs font-semibold text-[#0A0A0A]">
+              Shift Start Time
+            </Label>
+            <Input
+              id="staff-shift-start"
+              type="time"
+              value={shiftStart}
+              onChange={(e) => setShiftStart(e.target.value)}
+              className="text-xs rounded-xl border-[#E4E7E7]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="staff-shift-end" className="text-xs font-semibold text-[#0A0A0A]">
+              Shift End Time
+            </Label>
+            <Input
+              id="staff-shift-end"
+              type="time"
+              value={shiftEnd}
+              onChange={(e) => setShiftEnd(e.target.value)}
+              className="text-xs rounded-xl border-[#E4E7E7]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="staff-grace" className="text-xs font-semibold text-[#0A0A0A]">
+              Grace Period (Minutes)
+            </Label>
+            <Input
+              id="staff-grace"
+              type="number"
+              min="0"
+              max="120"
+              value={graceMinutes}
+              onChange={(e) => setGraceMinutes(parseInt(e.target.value, 10) || 0)}
+              className="text-xs rounded-xl border-[#E4E7E7]"
+            />
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-[#F5F6F6] grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-[#E4E7E7] bg-[#F5F6F6]/50">
+            <div>
+              <p className="text-xs font-semibold text-[#0A0A0A]">Attendance Tracking Required</p>
+              <p className="text-[11px] text-[#6B7272]">
+                Disable for executive/owner/support roles exempt from daily punching.
+              </p>
+            </div>
+            <Switch
+              checked={attendanceRequired}
+              onCheckedChange={setAttendanceRequired}
+              className="data-[state=checked]:bg-[#00A57E]"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-xl border border-[#E4E7E7] bg-[#F5F6F6]/50">
+            <div>
+              <p className="text-xs font-semibold text-[#0A0A0A]">Allow Field Punch (BDM)</p>
+              <p className="text-[11px] text-[#6B7272]">
+                Allows punching outside geofence with note (requires admin approval).
+              </p>
+            </div>
+            <Switch
+              checked={allowFieldPunch}
+              onCheckedChange={setAllowFieldPunch}
+              className="data-[state=checked]:bg-[#00A57E]"
+            />
+          </div>
         </div>
       </div>
 

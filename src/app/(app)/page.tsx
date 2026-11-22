@@ -10,6 +10,7 @@ import { getDubaiDateRange } from '@/lib/date'
 import { OwnerDashboard } from '@/components/dashboard/OwnerDashboard'
 import { StaffDashboard } from '@/components/dashboard/StaffDashboard'
 import { CelebrantHero } from '@/components/celebrations/CelebrantHero'
+import { HomePunchCard } from '@/components/attendance/HomePunchCard'
 import type { CelebrationPerson } from '@/components/celebrations/actions'
 
 interface OutstandingRecord {
@@ -67,6 +68,7 @@ export default async function HomePage() {
     return (
       <div className="space-y-6">
         {selfCelebration && <CelebrantHero celebration={selfCelebration} />}
+        <HomePunchCard />
         <OwnerDashboard
           initialKpis={kpis as Record<string, unknown>}
           initialRange={todayRange}
@@ -148,6 +150,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-6">
       {selfCelebration && <CelebrantHero celebration={selfCelebration} />}
+      <HomePunchCard />
       <StaffDashboard
         todayKpis={todayKpisRes.data as Record<string, unknown>}
         monthKpis={monthKpisRes.data as Record<string, unknown>}

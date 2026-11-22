@@ -14,6 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_days: {
+        Row: {
+          created_at: string
+          date: string
+          first_in: string | null
+          id: string
+          last_out: string | null
+          late_minutes: number
+          regularization_id: string | null
+          regularized: boolean
+          status: string
+          updated_at: string
+          user_id: string
+          worked_minutes: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          first_in?: string | null
+          id?: string
+          last_out?: string | null
+          late_minutes?: number
+          regularization_id?: string | null
+          regularized?: boolean
+          status: string
+          updated_at?: string
+          user_id: string
+          worked_minutes?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          first_in?: string | null
+          id?: string
+          last_out?: string | null
+          late_minutes?: number
+          regularization_id?: string | null
+          regularized?: boolean
+          status?: string
+          updated_at?: string
+          user_id?: string
+          worked_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_days_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_days_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_punches: {
+        Row: {
+          accuracy_m: number | null
+          at: string
+          created_at: string
+          device_hash: string | null
+          distance_m: number | null
+          flags: string[]
+          id: string
+          inside_geofence: boolean
+          ip: string | null
+          kind: string
+          lat: number | null
+          lng: number | null
+          network_match: boolean
+          note: string | null
+          office_id: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          at?: string
+          created_at?: string
+          device_hash?: string | null
+          distance_m?: number | null
+          flags?: string[]
+          id?: string
+          inside_geofence?: boolean
+          ip?: string | null
+          kind: string
+          lat?: number | null
+          lng?: number | null
+          network_match?: boolean
+          note?: string | null
+          office_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          at?: string
+          created_at?: string
+          device_hash?: string | null
+          distance_m?: number | null
+          flags?: string[]
+          id?: string
+          inside_geofence?: boolean
+          ip?: string | null
+          kind?: string
+          lat?: number | null
+          lng?: number | null
+          network_match?: boolean
+          note?: string | null
+          office_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_punches_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_punches_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_punches_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_punches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_punches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -318,6 +483,11 @@ export type Database = {
         Row: {
           address: string
           admins_can_void: boolean
+          attendance_auto_close_time: string
+          attendance_default_weekly_off: number[]
+          attendance_min_hours_full_day: number
+          attendance_min_hours_half_day: number
+          attendance_timezone: string
           celebration_emails_enabled: boolean
           created_at: string
           default_vat_treatment: string
@@ -351,6 +521,11 @@ export type Database = {
         Insert: {
           address: string
           admins_can_void?: boolean
+          attendance_auto_close_time?: string
+          attendance_default_weekly_off?: number[]
+          attendance_min_hours_full_day?: number
+          attendance_min_hours_half_day?: number
+          attendance_timezone?: string
           celebration_emails_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
@@ -384,6 +559,11 @@ export type Database = {
         Update: {
           address?: string
           admins_can_void?: boolean
+          attendance_auto_close_time?: string
+          attendance_default_weekly_off?: number[]
+          attendance_min_hours_full_day?: number
+          attendance_min_hours_half_day?: number
+          attendance_timezone?: string
           celebration_emails_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
@@ -763,6 +943,41 @@ export type Database = {
           },
         ]
       }
+      holidays: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          name: string
+          office_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          name: string
+          office_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          name?: string
+          office_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holidays_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_titles: {
         Row: {
           created_at: string
@@ -786,6 +1001,80 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      leave_requests: {
+        Row: {
+          action_reason: string | null
+          approver_id: string | null
+          created_at: string
+          from_date: string
+          half_day: boolean
+          id: string
+          reason: string
+          status: string
+          to_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_reason?: string | null
+          approver_id?: string | null
+          created_at?: string
+          from_date: string
+          half_day?: boolean
+          id?: string
+          reason: string
+          status?: string
+          to_date: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_reason?: string | null
+          approver_id?: string | null
+          created_at?: string
+          from_date?: string
+          half_day?: boolean
+          id?: string
+          reason?: string
+          status?: string
+          to_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -840,6 +1129,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      offices: {
+        Row: {
+          address: string
+          allowed_public_ips: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_m: number
+          require_network_match: boolean
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          allowed_public_ips?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_m?: number
+          require_network_match?: boolean
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          allowed_public_ips?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_m?: number
+          require_network_match?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -1129,6 +1460,77 @@ export type Database = {
         }
         Relationships: []
       }
+      regularization_requests: {
+        Row: {
+          action_reason: string | null
+          approver_id: string | null
+          created_at: string
+          date: string
+          id: string
+          reason: string
+          requested_in: string
+          requested_out: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_reason?: string | null
+          approver_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          reason: string
+          requested_in: string
+          requested_out: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_reason?: string | null
+          approver_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          reason?: string
+          requested_in?: string
+          requested_out?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regularization_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regularization_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regularization_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regularization_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_directory_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_logs: {
         Row: {
           channel: Database["public"]["Enums"]["share_channel"]
@@ -1232,6 +1634,70 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_attendance_settings: {
+        Row: {
+          allow_field_punch: boolean
+          attendance_required: boolean
+          created_at: string
+          grace_minutes: number
+          office_id: string | null
+          require_network_match: boolean | null
+          shift_end: string
+          shift_start: string
+          updated_at: string
+          user_id: string
+          weekly_off: number[]
+        }
+        Insert: {
+          allow_field_punch?: boolean
+          attendance_required?: boolean
+          created_at?: string
+          grace_minutes?: number
+          office_id?: string | null
+          require_network_match?: boolean | null
+          shift_end?: string
+          shift_start?: string
+          updated_at?: string
+          user_id: string
+          weekly_off?: number[]
+        }
+        Update: {
+          allow_field_punch?: boolean
+          attendance_required?: boolean
+          created_at?: string
+          grace_minutes?: number
+          office_id?: string | null
+          require_network_match?: boolean | null
+          shift_end?: string
+          shift_start?: string
+          updated_at?: string
+          user_id?: string
+          weekly_off?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attendance_settings_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "staff_directory_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1753,6 +2219,18 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_field_punch: {
+        Args: { p_action: string; p_punch_id: string; p_reason?: string }
+        Returns: Json
+      }
+      approve_leave_request: {
+        Args: { p_action: string; p_reason?: string; p_request_id: string }
+        Returns: Json
+      }
+      approve_regularization: {
+        Args: { p_action: string; p_reason?: string; p_request_id: string }
+        Returns: Json
+      }
       archive_candidate_document: {
         Args: { p_document_id: string }
         Returns: {
@@ -1950,6 +2428,10 @@ export type Database = {
           years: number
         }[]
       }
+      haversine_distance: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -1966,7 +2448,29 @@ export type Database = {
       lookup_candidate_for_payment: { Args: { p_query: string }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }
       mark_notification_read: { Args: { p_id: string }; Returns: boolean }
+      process_daily_attendance_absences: {
+        Args: { p_target_date?: string }
+        Returns: Json
+      }
+      process_daily_attendance_close: { Args: never; Returns: Json }
       process_daily_celebrations: { Args: { p_date?: string }; Returns: Json }
+      punch: {
+        Args: {
+          p_accuracy?: number
+          p_client_ip?: string
+          p_client_time?: string
+          p_device_hash?: string
+          p_kind: string
+          p_lat: number
+          p_lng: number
+          p_note?: string
+        }
+        Returns: Json
+      }
+      recalculate_attendance_day: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
       record_payment: {
         Args: {
           p_amount: number
@@ -2471,4 +2975,5 @@ export const Constants = {
   },
 } as const
 
-export type StudentDirectoryRow = Database['public']['Views']['student_directory_view']['Row']
+
+export type StudentDirectoryRow = Database['public']['Views']['student_directory_view']['Row'];

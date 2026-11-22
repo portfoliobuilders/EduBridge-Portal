@@ -133,12 +133,13 @@ This document maps every feature from the official client quotation against its 
 | **E.8** | **Staff Profile & Confidential Details Isolation** | `/profile`, `/admin/staff/[id]`, `staff_sensitive_details` table, RLS | Private photo upload (≤1 MB, square crop), personal fields self-managed, corporate fields locked for admin, DOB/address/emergency contact protected by strict RLS. |
 | **E.9** | **Milestone Celebrations Engine & Wishes Wall** | `CelebrantTopStrip.tsx`, `CelebrationBanner.tsx`, `CelebrantHero.tsx`, `/api/cron/celebrations` | Automated recognition of birthdays and work anniversaries in Asia/Dubai. 29 Feb -> 28 Feb non-leap year safe. Zero birth-year/age leakage. Colleague wish banner & dialog. Dashboard hero card with interactive wishes wall & confetti. |
 | **E.10** | **Candidate Ownership & Counter Lookup Exception** | `students.owner_id`, `candidate_transfers`, `lookup_candidate_for_payment` RPC, `transfer_candidate` RPC | Strict counselor candidate visibility with exact mobile/code counter lookup for peer payment collection. Permanent transfer audit trail. |
+| **E.11** | **Attendance & Geofencing Workforce System** | `HomePunchCard.tsx`, `/attendance`, `/admin/attendance`, `attendance_punches`, `attendance_days`, `offices`, `leave_requests`, `regularization_requests` | Mobile-first GPS punch in/out with server-verified Haversine geofence, accuracy padding cap (50m), field punch approvals, zero background tracking, leave & regularization workflows, admin live board, monthly sheet matrix, and payroll CSV exports. |
 
 ---
 
-## Complete SQL Test Suites in `supabase/tests/` (14 Active Suites)
+## Complete SQL Test Suites in `supabase/tests/` (15 Active Suites)
 
-All 14 SQL test suites executed against the live remote Supabase database (`bhbgkhyewxaacqnjltwr`) and verified with 100% PASS:
+All 15 SQL test suites executed against the live remote Supabase database (`bhbgkhyewxaacqnjltwr`) and verified with 100% PASS:
 
 | # | Suite File | Tests / Assertions | Scope & Verified Logic | Live Result |
 |---|---|---|---|:---:|
@@ -156,17 +157,18 @@ All 14 SQL test suites executed against the live remote Supabase database (`bhbg
 | 12 | `rpc_hardening_proof.sql` | 4 tests | Staff and anonymous callers blocked from executing privileged admin RPCs (`get_staff_list`, `import_programs`) | ✔ 4/4 PASS |
 | 13 | `token_rpc_proof.sql` | 10 tests | Receipt and statement share token rotation, owner and receiving staff permission, unauthorized staff rejection, anon access | ✔ 10/10 PASS |
 | 14 | `notifications_profiles_celebrations_proofs.sql` | 13 tests | Notification RLS (read/update own), sensitive details isolation, masked directory view, birthday privacy (no year leak), opt-out enforcement, leap day safe (29->28 Feb), single wish constraint, thank-everyone workflow, peer payment trigger | ✔ 13/13 PASS |
+| 15 | `attendance_proofs.sql` | 13 tests | Inside radius punch accepted, outside rejected with exact distance, IP mismatch rejected, field punch pending approval, server clock enforcement, double punch blocked, unclosed session missing checkout with 0 counted minutes, regularization recalculation, leave range marking, working-day absence processing, RLS tenant isolation | ✔ 13/13 PASS |
 
 ---
 
 ## Final Verification Summary
 - **Quotation Features Delivered**: **46 / 46 (100%)**
 - **Document Management Features Delivered**: **6 / 6 (100%)**
-- **Extra Features Delivered**: **10 / 10**
-- **Total Functional Checkpoints Verified**: **62 / 62**
-- **SQL Test Suites Passing**: **14 / 14 active suites passing on live remote DB** (0 failures).
+- **Extra Features Delivered**: **11 / 11**
+- **Total Functional Checkpoints Verified**: **63 / 63**
+- **SQL Test Suites Passing**: **15 / 15 active suites passing on live remote DB** (0 failures).
 - **Physical Phone Camera Test**: **PENDING — user to verify** (camera input shortcut `<input type="file" accept="image/*" capture="environment">` integrated on both `/u/[token]` and candidate Documents tab; requires testing on physical mobile device).
-- **Unit & E2E Tests**: 40/40 Vitest unit tests, Playwright browser E2E suites (`celebrations_notifications.spec.ts`, etc.) passing.
+- **Unit & E2E Tests**: 62/62 Vitest unit tests, Playwright browser E2E suites (`attendance.spec.ts`, `celebrations_notifications.spec.ts`, etc.) passing.
 - **Production Build**: 0 errors across all routes with production-hardened CSP, WebSocket support, and strict type checking.
 
 ### 11. Staff Performance Leaderboard (`/leaderboard`)

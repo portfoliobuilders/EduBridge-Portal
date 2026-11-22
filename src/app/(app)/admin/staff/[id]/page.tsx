@@ -38,6 +38,19 @@ export default async function AdminStaffDetailPage({ params }: AdminStaffDetailP
     .in('role', ['admin', 'super_admin', 'owner'])
     .eq('is_active', true)
 
+  // Get active offices and staff attendance settings
+  const { data: offices } = await supabase
+    .from('offices')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+
+  const { data: attendanceSettings } = await supabase
+    .from('staff_attendance_settings')
+    .select('*')
+    .eq('user_id', id)
+    .maybeSingle()
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back link */}
@@ -102,7 +115,12 @@ export default async function AdminStaffDetailPage({ params }: AdminStaffDetailP
       </div>
 
       {/* Admin Editable Fields */}
-      <AdminStaffEditForm staff={staff} managers={managers || []} />
+      <AdminStaffEditForm
+        staff={staff}
+        managers={managers || []}
+        attendanceSettings={attendanceSettings}
+        offices={offices || []}
+      />
     </div>
   )
 }
