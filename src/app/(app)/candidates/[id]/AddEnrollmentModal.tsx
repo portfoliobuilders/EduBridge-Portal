@@ -7,11 +7,13 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Combobox } from '@/components/ui/combobox'
 import { addStudentEnrollmentAction } from '../actions'
 import { formatAED } from '@/lib/money'
 import { Loader2 } from 'lucide-react'
@@ -64,11 +66,13 @@ export function AddEnrollmentModal({
     setCourseId('')
     setSpecializationId('')
     setTotalFee('')
+    setError(null)
   }
 
   const handleCourseChange = (cid: string) => {
     setCourseId(cid)
     setSpecializationId('')
+    setError(null)
     const c = courses.find((item) => item.id === cid)
     if (c && c.default_fee) {
       setTotalFee(c.default_fee.toString())
@@ -79,6 +83,7 @@ export function AddEnrollmentModal({
 
   const handleSpecChange = (sid: string) => {
     setSpecializationId(sid)
+    setError(null)
     const s = specializations.find((item) => item.id === sid)
     if (s && s.default_fee) {
       setTotalFee(s.default_fee.toString())
@@ -92,6 +97,7 @@ export function AddEnrollmentModal({
 
   const numFee = parseFloat(totalFee) || 0
   const numDiscount = parseFloat(discount) || 0
+  const isDiscountExcessive = numDiscount > numFee
   const netFee = Math.max(0, numFee - numDiscount)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,12 +110,12 @@ export function AddEnrollmentModal({
       setError('Please select a course')
       return
     }
-    if (isNaN(numFee) || numFee < 0) {
+    if (isNaN(numFee) || numFee <= 0) {
       setError('Total fee must be positive')
       return
     }
-    if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > numFee) {
-      setError('Discount must be between 0 and total fee')
+    if (isDiscountExcessive) {
+      setError('Discount cannot exceed total fee')
       return
     }
 
@@ -136,87 +142,91 @@ export function AddEnrollmentModal({
     })
   }
 
+  const uniItems = universities.map((u) => ({
+    value: u.id,
+    label: u.name,
+  }))
+
+  const courseItems = filteredCourses.map((c) => ({
+    value: c.id,
+    label: c.name,
+    sublabel: `${c.level} · AED ${c.default_fee || 0}`,
+  }))
+
+  const specItems = [
+    { value: '', label: 'General / None' },
+    ...filteredSpecs.map((s) => ({
+      value: s.id,
+      label: s.name,
+      sublabel: s.default_fee ? `AED ${s.default_fee}` : undefined,
+    })),
+  ]
+
+  const staffItems = staffList.map((st) => ({
+    value: st.id,
+    label: st.job_title ? `${st.full_name} · ${st.job_title}` : st.full_name,
+  }))
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[560px]">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-[#0A0A0A]">
-              Add New Enrollment
-            </DialogTitle>
-            <DialogDescription className="text-xs text-[#6B7272]">
-              Enroll this candidate into another degree or university program.
+            <DialogTitle>Add New Enrollment</DialogTitle>
+            <DialogDescription>
+              Enroll this candidate into an academic programme.
             </DialogDescription>
           </DialogHeader>
 
-          {error && (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-              {error}
-            </div>
-          )}
+          <DialogBody className="space-y-4">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="add-uni" className="text-xs font-semibold text-[#0A0A0A]">
+              <Label className="text-xs font-semibold text-[#0A0A0A]">
                 University <span className="text-red-500">*</span>
               </Label>
-              <select
-                id="add-uni"
+              <Combobox
+                items={uniItems}
                 value={universityId}
-                onChange={(e) => handleUniversityChange(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2 text-xs bg-white text-[#0A0A0A] focus:border-[#00A57E] min-h-[44px]"
-                required
-              >
-                <option value="">Select University...</option>
-                {universities.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+                onChange={handleUniversityChange}
+                placeholder="Select University..."
+                searchPlaceholder="Search university..."
+                className="mt-1"
+              />
             </div>
 
             <div>
-              <Label htmlFor="add-course" className="text-xs font-semibold text-[#0A0A0A]">
+              <Label className="text-xs font-semibold text-[#0A0A0A]">
                 Course <span className="text-red-500">*</span>
               </Label>
-              <select
-                id="add-course"
-                disabled={!universityId}
+              <Combobox
+                items={courseItems}
                 value={courseId}
-                onChange={(e) => handleCourseChange(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2 text-xs bg-white text-[#0A0A0A] focus:border-[#00A57E] disabled:opacity-50 min-h-[44px]"
-                required
-              >
-                <option value="">
-                  {!universityId ? 'Select university first' : 'Select Course...'}
-                </option>
-                {filteredCourses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.level}) {c.default_fee ? `· AED ${c.default_fee}` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={handleCourseChange}
+                placeholder={!universityId ? 'Select university first' : 'Select Course...'}
+                searchPlaceholder="Search course..."
+                disabled={!universityId}
+                className="mt-1"
+              />
             </div>
 
             {filteredSpecs.length > 0 && (
               <div>
-                <Label htmlFor="add-spec" className="text-xs font-semibold text-[#0A0A0A]">
+                <Label className="text-xs font-semibold text-[#0A0A0A]">
                   Specialization (optional)
                 </Label>
-                <select
-                  id="add-spec"
+                <Combobox
+                  items={specItems}
                   value={specializationId}
-                  onChange={(e) => handleSpecChange(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2 text-xs bg-white text-[#0A0A0A] focus:border-[#00A57E] min-h-[44px]"
-                >
-                  <option value="">None / General</option>
-                  {filteredSpecs.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} {s.default_fee ? `· AED ${s.default_fee}` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleSpecChange}
+                  placeholder="Select Specialization..."
+                  searchPlaceholder="Search specialization..."
+                  className="mt-1"
+                />
               </div>
             )}
 
@@ -230,96 +240,98 @@ export function AddEnrollmentModal({
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="12500"
+                  placeholder="0.00"
                   value={totalFee}
                   onChange={(e) => setTotalFee(e.target.value)}
-                  className="mt-1 tabular-nums font-mono min-h-[44px]"
+                  className="mt-1 tabular-nums font-mono"
                   required
                 />
               </div>
 
               <div>
                 <Label htmlFor="add-discount" className="text-xs font-semibold text-[#0A0A0A]">
-                  Discount (AED)
+                  Discount (AED) (optional)
                 </Label>
                 <Input
                   id="add-discount"
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0"
+                  placeholder="0.00"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
-                  className="mt-1 tabular-nums font-mono min-h-[44px]"
+                  className="mt-1 tabular-nums font-mono"
                 />
               </div>
             </div>
 
-            <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-2.5 flex items-center justify-between text-xs">
+            {isDiscountExcessive && (
+              <p className="text-xs text-[#C53030] font-medium">
+                Discount cannot exceed the total agreed fee.
+              </p>
+            )}
+
+            <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-3 flex items-center justify-between text-xs">
               <span className="text-[#6B7272]">Agreed Net Fee:</span>
-              <span className="font-semibold text-[#0A0A0A] font-mono">{formatAED(netFee)}</span>
+              <span className="font-semibold text-[#0A0A0A] font-mono text-sm">{formatAED(netFee)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="add-intake" className="text-xs font-semibold text-[#0A0A0A]">
-                  Intake
+                  Intake (optional)
                 </Label>
                 <Input
                   id="add-intake"
-                  placeholder="e.g. Spring 2026"
+                  placeholder="e.g. Fall 2026"
                   value={intake}
                   onChange={(e) => setIntake(e.target.value)}
-                  className="mt-1 min-h-[44px]"
+                  className="mt-1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="add-staff" className="text-xs font-semibold text-[#0A0A0A]">
+                <Label className="text-xs font-semibold text-[#0A0A0A]">
                   Admission Staff <span className="text-red-500">*</span>
                 </Label>
                 {isOwner ? (
-                  <select
-                    id="add-staff"
+                  <Combobox
+                    items={staffItems}
                     value={admissionStaffId}
-                    onChange={(e) => setAdmissionStaffId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2 text-xs bg-white text-[#0A0A0A] focus:border-[#00A57E] min-h-[44px]"
-                  >
-                    {staffList.map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.full_name} ({st.role})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setAdmissionStaffId}
+                    placeholder="Select staff member..."
+                    searchPlaceholder="Search staff..."
+                    className="mt-1"
+                  />
                 ) : (
                   <Input
                     disabled
-                    value="Assigned to me (Staff)"
-                    className="mt-1 bg-muted/40 min-h-[44px]"
+                    value="Assigned to me"
+                    className="mt-1 bg-[#F5F6F6] text-[#6B7272]"
                   />
                 )}
               </div>
             </div>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="min-h-[44px]"
+              className="border-[#E4E7E7]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isPending}
-              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-h-[44px]"
+              disabled={isPending || isDiscountExcessive}
+              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-w-[140px]"
             >
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  <span>Adding…</span>
+                  <span>Enrolling…</span>
                 </>
               ) : (
                 'Add Enrollment'

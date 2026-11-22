@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -78,24 +79,22 @@ export function EditStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[560px]">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-[#0A0A0A]">
-              Edit Candidate Details
-            </DialogTitle>
-            <DialogDescription className="text-xs text-[#6B7272]">
+            <DialogTitle>Edit Candidate Details</DialogTitle>
+            <DialogDescription>
               Update contact information and admission notes.
             </DialogDescription>
           </DialogHeader>
 
-          {error && (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-              {error}
-            </div>
-          )}
+          <DialogBody className="space-y-4">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="edit-name" className="text-xs font-semibold text-[#0A0A0A]">
                 Full Name <span className="text-red-500">*</span>
@@ -104,7 +103,7 @@ export function EditStudentModal({
                 id="edit-name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 min-h-[44px]"
+                className="mt-1"
                 required
               />
             </div>
@@ -124,7 +123,7 @@ export function EditStudentModal({
 
             <div>
               <Label htmlFor="edit-whatsapp" className="text-xs font-semibold text-[#0A0A0A]">
-                WhatsApp Number
+                WhatsApp Number (optional)
               </Label>
               <div className="mt-1">
                 <PhoneInput
@@ -137,7 +136,7 @@ export function EditStudentModal({
 
             <div>
               <Label htmlFor="edit-email" className="text-xs font-semibold text-[#0A0A0A]">
-                Email Address
+                Email Address (optional)
               </Label>
               <Input
                 id="edit-email"
@@ -145,37 +144,38 @@ export function EditStudentModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@example.com"
-                className="mt-1 min-h-[44px]"
+                className="mt-1"
               />
             </div>
 
             <div>
               <Label htmlFor="edit-notes" className="text-xs font-semibold text-[#0A0A0A]">
-                Notes
+                Notes (optional)
               </Label>
               <Textarea
                 id="edit-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-                className="mt-1 text-sm"
+                placeholder="Candidate notes or preferences..."
+                rows={3}
+                className="mt-1"
               />
             </div>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="min-h-[44px]"
+              className="border-[#E4E7E7]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-h-[44px]"
+              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-w-[140px]"
             >
               {isPending ? (
                 <>

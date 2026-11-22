@@ -94,6 +94,11 @@ export default async function ReceiptDetailPage({
     width: 120,
   })
 
+  const canVoid =
+    profile.role === 'super_admin' ||
+    profile.role === 'owner' ||
+    (profile.role === 'admin' && Boolean(settings?.admins_can_void))
+
   const student = payment.student
   const enrollment = payment.enrollment
 
@@ -153,7 +158,7 @@ export default async function ReceiptDetailPage({
           payment.received_by_profile?.full_name ?? 'EduBridge Staff'
         }
         voidedByName={payment.voided_by_profile?.full_name}
-        isOwner={profile.role === 'owner'}
+        isOwner={canVoid}
         qrCodeDataUrl={qrCodeDataUrl}
         appUrl={appUrl}
       />

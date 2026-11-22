@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -53,34 +54,37 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
             {description}
           </DialogDescription>
         </DialogHeader>
 
         {confirmName && (
-          <div className="space-y-2 py-2">
-            <Label className="text-xs font-medium text-foreground">
-              Type <strong className="text-destructive font-mono">{confirmName}</strong> to confirm:
-            </Label>
-            <Input
-              value={typedInput}
-              onChange={(e) => setTypedInput(e.target.value)}
-              placeholder={confirmName}
-              className="text-sm font-mono"
-            />
-          </div>
+          <DialogBody>
+            <div className="space-y-2 py-2">
+              <Label className="text-xs font-medium text-foreground">
+                Type <strong className="text-destructive font-mono">{confirmName}</strong> to confirm:
+              </Label>
+              <Input
+                value={typedInput}
+                onChange={(e) => setTypedInput(e.target.value)}
+                placeholder={confirmName}
+                className="text-sm font-mono"
+              />
+            </div>
+          </DialogBody>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
+            className="border-[#E4E7E7]"
           >
             Cancel
           </Button>
@@ -90,8 +94,8 @@ export function ConfirmDialog({
             disabled={!isMatched || loading}
             className={
               isDestructive
-                ? 'bg-[#C53030] hover:bg-[#9B2C2C] text-white'
-                : 'bg-primary hover:bg-[#00805F] text-white'
+                ? 'bg-[#C53030] hover:bg-[#9B2C2C] text-white min-w-[120px]'
+                : 'bg-[#00A57E] hover:bg-[#00805F] text-white min-w-[120px]'
             }
           >
             {loading ? 'Processing...' : confirmLabel}

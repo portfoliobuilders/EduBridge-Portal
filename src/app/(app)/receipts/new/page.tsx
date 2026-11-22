@@ -12,7 +12,7 @@ export default async function NewReceiptPage({
   searchParams: Promise<{ enrollment?: string }>
 }) {
   const { user, profile } = await requireUser()
-  const isOwner = profile.role === 'owner'
+  const isOwner = profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
   const resolvedParams = searchParams ? await searchParams : {}
   const enrollmentId = resolvedParams?.enrollment
 
@@ -42,10 +42,10 @@ export default async function NewReceiptPage({
       .order('name'),
     isOwner
       ? supabase
-          .from('profiles')
-          .select('id, full_name, role')
-          .eq('is_active', true)
-          .order('full_name')
+        .from('profiles')
+        .select('id, full_name, role, job_title')
+        .eq('is_active', true)
+        .order('full_name')
       : Promise.resolve({ data: [] }),
   ])
 
@@ -130,7 +130,7 @@ export default async function NewReceiptPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-[1200px] mx-auto w-full space-y-6 pb-20 lg:pb-10">
       <PageHeader
         title="Record Payment"
         subtitle="Issue an official gapless receipt voucher for candidate fee payment"

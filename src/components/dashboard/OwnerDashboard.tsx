@@ -105,7 +105,11 @@ export function OwnerDashboard({
     <div className="space-y-6">
       <PageHeader
         title={`Welcome, ${profile.full_name}`}
-        subtitle="Executive Dashboard — Organization-wide financial performance (Asia/Dubai)"
+        subtitle={
+          profile.role === 'admin'
+            ? 'Team Lead Dashboard — Team performance & collections (Asia/Dubai)'
+            : 'Super Admin Dashboard — Organization-wide financial performance (Asia/Dubai)'
+        }
       >
         <div className="flex items-center gap-2">
           <Link href="/reports">

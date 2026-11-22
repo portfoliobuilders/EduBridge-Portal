@@ -3,16 +3,19 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
   FileText,
   Ban,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDateTime } from '@/lib/date'
 import { amountInWords } from '@/lib/amount-in-words'
+import { cn } from '@/lib/utils'
 import { VoidReceiptDialog } from '@/components/receipts/VoidReceiptDialog'
 import { ReceiptShareActions } from '@/components/receipts/ReceiptShareActions'
 
@@ -93,6 +96,8 @@ export function ReceiptDetailView({
   qrCodeDataUrl,
   appUrl,
 }: ReceiptDetailViewProps) {
+  const searchParams = useSearchParams()
+  const isNew = searchParams?.get('new') === 'true'
   const [voidDialogOpen, setVoidDialogOpen] = useState(false)
   const isVoid = payment.status === 'void'
 
@@ -114,7 +119,24 @@ export function ReceiptDetailView({
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-[#E4E7E7] shadow-xs print:hidden">
+      {isNew && (
+        <div className="p-4 bg-[#E6F6F2] border border-[#00A57E] rounded-xl text-[#00805F] flex items-start gap-3 shadow-sm print:hidden">
+          <CheckCircle2 className="h-5 w-5 text-[#00A57E] shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <div className="font-semibold text-sm text-[#0A0A0A]">
+              Receipt Voucher Issued Successfully!
+            </div>
+            <div className="text-xs text-[#00805F] mt-0.5">
+              Voucher <span className="font-mono font-bold">{payment.receipt_no}</span> is finalized. Use the share actions below to deliver the official PDF voucher to the candidate or guardian.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={cn(
+        "flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-[#E4E7E7] shadow-xs print:hidden",
+        isNew && "ring-2 ring-[#00A57E] ring-offset-2"
+      )}>
         <div className="flex items-center gap-3">
           <Link
             href={`/candidates/${student.id}`}
@@ -370,7 +392,7 @@ export function ReceiptDetailView({
                     <td className="p-2.5 text-right">
                       {formatAED(
                         payment.fee_snapshot -
-                          (enrollment.total_fee - enrollment.discount)
+                        (enrollment.total_fee - enrollment.discount)
                       )}
                     </td>
                   </tr>

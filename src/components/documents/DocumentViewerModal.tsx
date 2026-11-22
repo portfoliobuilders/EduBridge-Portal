@@ -379,8 +379,8 @@ export function DocumentViewerModal({
 
       {/* Reject Reason Dialog */}
       {isRejectOpen && (
-        <div className="fixed inset-0 z-60 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-white text-[#0A0A0A] rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-60 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white text-[#0A0A0A] rounded-[14px] p-6 max-w-[560px] w-full space-y-4 shadow-xl border border-[#E4E7E7]">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-red-600 flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />

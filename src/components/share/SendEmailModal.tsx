@@ -92,11 +92,10 @@ function SendEmailForm({
                 <button
                   type="button"
                   onClick={() => setEmail(defaultEmail)}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition ${
-                    email === defaultEmail
-                      ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
-                      : 'border-[#E4E7E7] hover:bg-gray-50 text-gray-700'
-                  }`}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition ${email === defaultEmail
+                    ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
+                    : 'border-[#E4E7E7] hover:bg-gray-50 text-gray-700'
+                    }`}
                 >
                   Candidate ({candidateName}): {defaultEmail}
                 </button>
@@ -105,11 +104,10 @@ function SendEmailForm({
                 <button
                   type="button"
                   onClick={() => setEmail(guardianEmail)}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition ${
-                    email === guardianEmail
-                      ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
-                      : 'border-[#E4E7E7] hover:bg-gray-50 text-gray-700'
-                  }`}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition ${email === guardianEmail
+                    ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
+                    : 'border-[#E4E7E7] hover:bg-gray-50 text-gray-700'
+                    }`}
                 >
                   {guardianName ? `${guardianName} (Guardian)` : 'Guardian'}: {guardianEmail}
                 </button>
@@ -188,7 +186,7 @@ export function SendEmailModal({
 }: SendEmailModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#00A57E] flex items-center justify-center">

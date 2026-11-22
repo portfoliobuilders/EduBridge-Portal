@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { PhoneInput } from '@/components/PhoneInput'
+import { Combobox } from '@/components/ui/combobox'
 import {
   createStudentAction,
   checkDuplicateMobileAction,
@@ -59,6 +60,7 @@ export interface StaffOption {
   id: string
   full_name: string
   role: string
+  job_title?: string | null
 }
 
 export interface CreateCandidateSuccessData {
@@ -1016,64 +1018,60 @@ export function CreateStudentSheet({
                 {step === 2 && (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="university" className="text-xs font-semibold text-[#0A0A0A]">
+                      <Label className="text-xs font-semibold text-[#0A0A0A]">
                         University <span className="text-red-500">*</span>
                       </Label>
-                      <select
+                      <Combobox
                         id="university"
+                        items={universities.map((u) => ({ value: u.id, label: u.name }))}
                         value={universityId}
-                        onChange={(e) => handleUniversityChange(e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2.5 text-sm bg-white text-[#0A0A0A] focus:border-[#00A57E] focus:ring-1 focus:ring-[#00A57E] min-h-[44px]"
-                      >
-                        <option value="">Select University...</option>
-                        {universities.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={handleUniversityChange}
+                        placeholder="Select University..."
+                        searchPlaceholder="Search university..."
+                        className="mt-1"
+                      />
                     </div>
 
                     <div>
-                      <Label htmlFor="course" className="text-xs font-semibold text-[#0A0A0A]">
+                      <Label className="text-xs font-semibold text-[#0A0A0A]">
                         Course <span className="text-red-500">*</span>
                       </Label>
-                      <select
+                      <Combobox
                         id="course"
-                        disabled={!universityId}
+                        items={filteredCourses.map((c) => ({
+                          value: c.id,
+                          label: c.name,
+                          sublabel: `${c.level} · AED ${c.default_fee || 0}`,
+                        }))}
                         value={courseId}
-                        onChange={(e) => handleCourseChange(e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2.5 text-sm bg-white text-[#0A0A0A] focus:border-[#00A57E] focus:ring-1 focus:ring-[#00A57E] disabled:opacity-50 min-h-[44px]"
-                      >
-                        <option value="">
-                          {!universityId ? 'Select university first' : 'Select Course...'}
-                        </option>
-                        {filteredCourses.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} ({c.level}) {c.default_fee ? `· AED ${c.default_fee}` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={handleCourseChange}
+                        placeholder={!universityId ? 'Select university first' : 'Select Course...'}
+                        searchPlaceholder="Search course..."
+                        disabled={!universityId}
+                        className="mt-1"
+                      />
                     </div>
 
                     {filteredSpecs.length > 0 && (
                       <div>
-                        <Label htmlFor="specialization" className="text-xs font-semibold text-[#0A0A0A]">
+                        <Label className="text-xs font-semibold text-[#0A0A0A]">
                           Specialization (optional)
                         </Label>
-                        <select
-                          id="specialization"
+                        <Combobox
+                          items={[
+                            { value: '', label: 'None / General' },
+                            ...filteredSpecs.map((s) => ({
+                              value: s.id,
+                              label: s.name,
+                              sublabel: s.default_fee ? `AED ${s.default_fee}` : undefined,
+                            })),
+                          ]}
                           value={specializationId}
-                          onChange={(e) => handleSpecChange(e.target.value)}
-                          className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2.5 text-sm bg-white text-[#0A0A0A] focus:border-[#00A57E] focus:ring-1 focus:ring-[#00A57E] min-h-[44px]"
-                        >
-                          <option value="">None / General</option>
-                          {filteredSpecs.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} {s.default_fee ? `· AED ${s.default_fee}` : ''}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={handleSpecChange}
+                          placeholder="Select Specialization..."
+                          searchPlaceholder="Search specialization..."
+                          className="mt-1"
+                        />
                       </div>
                     )}
 
@@ -1087,29 +1085,35 @@ export function CreateStudentSheet({
                           type="number"
                           step="0.01"
                           min="0"
-                          placeholder="12500"
+                          placeholder="0.00"
                           value={totalFee}
                           onChange={(e) => setTotalFee(e.target.value)}
-                          className="mt-1 tabular-nums font-mono min-h-[44px]"
+                          className="mt-1 tabular-nums font-mono"
                         />
                       </div>
 
                       <div>
                         <Label htmlFor="discount" className="text-xs font-semibold text-[#0A0A0A]">
-                          Discount (AED)
+                          Discount (AED) (optional)
                         </Label>
                         <Input
                           id="discount"
                           type="number"
                           step="0.01"
                           min="0"
-                          placeholder="0"
+                          placeholder="0.00"
                           value={discount}
                           onChange={(e) => setDiscount(e.target.value)}
-                          className="mt-1 tabular-nums font-mono min-h-[44px]"
+                          className="mt-1 tabular-nums font-mono"
                         />
                       </div>
                     </div>
+
+                    {numDiscount > numFee && (
+                      <p className="text-xs text-[#C53030] font-medium">
+                        Discount cannot exceed total fee.
+                      </p>
+                    )}
 
                     {/* Net Fee Display Card */}
                     <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-3.5 flex items-center justify-between text-xs">
@@ -1138,7 +1142,7 @@ export function CreateStudentSheet({
                             placeholder="0.00"
                             value={openingPaid}
                             onChange={(e) => setOpeningPaid(e.target.value)}
-                            className="mt-1 tabular-nums font-mono min-h-[44px] bg-white"
+                            className="mt-1 tabular-nums font-mono bg-white"
                           />
                         </div>
                         <div>
@@ -1150,7 +1154,7 @@ export function CreateStudentSheet({
                             placeholder="e.g. Receipt #123 from old paper ledger"
                             value={openingPaidNote}
                             onChange={(e) => setOpeningPaidNote(e.target.value)}
-                            className="mt-1 min-h-[44px] bg-white"
+                            className="mt-1 bg-white"
                           />
                         </div>
                       </div>
@@ -1167,39 +1171,38 @@ export function CreateStudentSheet({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="intake" className="text-xs font-semibold text-[#0A0A0A]">
-                          Intake
+                          Intake (optional)
                         </Label>
                         <Input
                           id="intake"
                           placeholder="e.g. Fall 2026"
                           value={intake}
                           onChange={(e) => setIntake(e.target.value)}
-                          className="mt-1 min-h-[44px]"
+                          className="mt-1"
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="admissionStaff" className="text-xs font-semibold text-[#0A0A0A]">
+                        <Label className="text-xs font-semibold text-[#0A0A0A]">
                           Admission Staff <span className="text-red-500">*</span>
                         </Label>
                         {isOwner ? (
-                          <select
-                            id="admissionStaff"
+                          <Combobox
+                            items={staffList.map((st) => ({
+                              value: st.id,
+                              label: st.job_title ? `${st.full_name} · ${st.job_title}` : st.full_name,
+                            }))}
                             value={admissionStaffId}
-                            onChange={(e) => setAdmissionStaffId(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-[#E4E7E7] px-3 py-2.5 text-sm bg-white text-[#0A0A0A] focus:border-[#00A57E] min-h-[44px]"
-                          >
-                            {staffList.map((st) => (
-                              <option key={st.id} value={st.id}>
-                                {st.full_name} ({st.role})
-                              </option>
-                            ))}
-                          </select>
+                            onChange={setAdmissionStaffId}
+                            placeholder="Select staff member..."
+                            searchPlaceholder="Search staff..."
+                            className="mt-1"
+                          />
                         ) : (
                           <Input
                             disabled
-                            value="Assigned to me (Staff)"
-                            className="mt-1 bg-muted/40 min-h-[44px]"
+                            value="Assigned to me"
+                            className="mt-1 bg-[#F5F6F6] text-[#6B7272]"
                           />
                         )}
                       </div>
@@ -1247,7 +1250,7 @@ export function CreateStudentSheet({
                   <Button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isPending}
+                    disabled={isPending || numDiscount > numFee}
                     className="bg-[#00A57E] hover:bg-[#00805F] text-white min-h-[44px] gap-2 px-6 font-medium"
                   >
                     {isPending ? (

@@ -242,7 +242,7 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     isOwner
       ? supabase
           .from('profiles')
-          .select('id, full_name, role')
+          .select('id, full_name, role, job_title')
           .eq('is_active', true)
           .order('full_name')
       : Promise.resolve({ data: [] }),

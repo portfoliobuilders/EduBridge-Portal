@@ -75,3 +75,38 @@ A comprehensive, automated and manual functional audit was conducted across ever
 - [x] **Wording Standards:** Strictly "Candidate" across all user-facing copy, labels, placeholders, and tooltips.
 - [x] **Empty States:** Clear icons, descriptive copy, and primary CTA actions on all zero-data states.
 - [x] **Destructive Confirmations:** Modal confirmations on Sign Out, Voiding Receipts, Deactivating Staff, and Deleting Programs.
+
+---
+
+## 4. UI Redesign & Surfaces Audit (2026-11-22)
+
+### Opaque Surfaces & Solid Backgrounds
+- **Dialogs & Sheets Computed Background:** Playwright verification (`tests/e2e/surfaces.spec.ts`) strictly asserts computed background color is solid `rgb(255, 255, 255)` across:
+  - Create Candidate Sheet
+  - University Combobox Popover
+  - Edit Candidate Dialog
+  - Add Enrollment Dialog
+  - Add Staff Sheet
+  - Void Receipt Dialog
+- **Mobile Responsive Modals:** Dialogs on mobile (`<640px`) automatically adopt bottom sheet presentation with rounded top corners (`rounded-t-[20px]`), drag handle, full width, and safe area insets (`env(safe-area-inset-bottom)`).
+
+### Record Payment Flow Redesign (`/receipts/new`)
+1. **Desktop 2-Column Architecture (>=1024px):**
+   - Left column (8 cols): Step 1 (Candidate & Enrollment picker), Step 2 (Payment Amount & Quick Chips), Step 3 (Payment Mode tiles with Cash first), Step 4 (Transaction Details & Quick Payee Picker).
+   - Right column (4 cols): Sticky "Receipt Summary" card featuring real-time financial breakdown (Total Payable, Previously Paid, Current Balance, Receipt Amount, Balance After Receipt) and primary CTA.
+2. **Mobile Sticky Action Bar (<1024px):**
+   - Fixed bottom action bar displaying real-time payment amount and prominent "Issue Receipt" button positioned above the mobile safe area.
+3. **Quick Amount Chips:**
+   - 1-click presets for Full Balance, 50%, and 25% of current outstanding balance.
+4. **Counter Cash Prioritized:**
+   - Cash set as initial default payment mode with dedicated counter receipt handling.
+
+### Automated Screenshot Matrix Verification
+Full Playwright screenshot suite executed across 4 target viewports:
+- Mobile Phone: 375×812
+- Tablet Portrait: 768×1024
+- Desktop Laptop: 1280×850
+- Desktop Monitor: 1536×960
+
+All 28 UI states captured cleanly under `docs/screenshots/`.
+

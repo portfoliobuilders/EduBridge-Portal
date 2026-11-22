@@ -296,9 +296,9 @@ export function AppShell({
             Candidates
           </Link>
 
-          {/* 3. Center FAB (56px circle, #00A57E, white +, hidden if modal/sheet open) */}
+          {/* 3. Center FAB (56px circle, #00A57E, white +, hidden if modal/sheet open or on /receipts/new) */}
           <div className="relative min-w-[56px] flex items-center justify-center">
-            {!isAnyModalOpen && !accountOpen && (
+            {!isAnyModalOpen && !accountOpen && pathname !== '/receipts/new' && (
               <Link
                 href="/receipts/new"
                 aria-label="New receipt"

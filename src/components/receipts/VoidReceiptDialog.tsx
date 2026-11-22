@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -62,70 +63,78 @@ export function VoidReceiptDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-2">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <DialogTitle className="text-center text-lg font-semibold text-destructive">
-            Void Receipt Voucher
-          </DialogTitle>
-          <DialogDescription className="text-center text-sm text-muted-foreground">
-            Are you sure you want to void receipt{' '}
-            <span className="font-semibold text-foreground">{receiptNo}</span> for{' '}
-            <span className="font-semibold text-foreground">AED {amount.toFixed(2)}</span>?
-            This action is permanent and cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[560px]">
+        <div className="flex flex-col h-full">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-destructive">
+                  Void Receipt Voucher
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to void receipt{' '}
+                  <span className="font-semibold text-foreground font-mono">{receiptNo}</span> for{' '}
+                  <span className="font-semibold text-foreground font-mono">AED {amount.toFixed(2)}</span>?
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
 
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="voidReason" className="text-sm font-medium">
-              Void Reason * (minimum 5 characters)
-            </Label>
-            <Textarea
-              id="voidReason"
-              placeholder="e.g. Card transaction reversed, Entered wrong candidate..."
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value)
-                if (error) setError(null)
-              }}
-              rows={3}
-            />
-            {error && <p className="text-xs text-destructive">{error}</p>}
-          </div>
+          <DialogBody className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="voidReason" className="text-xs font-semibold text-[#0A0A0A]">
+                Void Reason <span className="text-red-500">*</span> (minimum 5 characters)
+              </Label>
+              <Textarea
+                id="voidReason"
+                placeholder="e.g. Card transaction reversed by terminal, Issued to incorrect candidate..."
+                value={reason}
+                onChange={(e) => {
+                  setReason(e.target.value)
+                  if (error) setError(null)
+                }}
+                rows={3}
+                className="mt-1"
+              />
+              {error && <p className="text-xs text-destructive font-medium mt-1">{error}</p>}
+            </div>
 
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
-            <strong>Permanent audit record:</strong> The receipt will remain in the database watermarked &quot;VOID&quot;. The candidate&apos;s ledger balance will be automatically adjusted back.
-          </div>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 leading-relaxed">
+              <strong>Permanent audit record:</strong> The receipt will remain visible in the ledger watermarked &quot;VOID&quot;. The candidate&apos;s balance will be automatically adjusted back.
+            </div>
+          </DialogBody>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+              className="border-[#E4E7E7]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleVoid}
+              disabled={isPending || reason.trim().length < 5}
+              className="min-w-[150px]"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Voiding...
+                </>
+              ) : (
+                'Confirm Void Receipt'
+              )}
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleVoid}
-            disabled={isPending || reason.trim().length < 5}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Voiding...
-              </>
-            ) : (
-              'Confirm Void Receipt'
-            )}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

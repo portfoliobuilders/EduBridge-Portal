@@ -145,10 +145,10 @@ export function RequestDocumentsModal({
 
   const expiryFormatted = generatedLink
     ? new Date(generatedLink.expiresAt).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
     : `${expiryDays} days`
 
   const defaultMsg =
@@ -175,8 +175,8 @@ export function RequestDocumentsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-6 shadow-2xl my-8">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4 overflow-y-auto">
+      <div className="bg-white max-sm:rounded-t-[20px] max-sm:rounded-b-none sm:rounded-[14px] max-w-[560px] w-full p-6 space-y-6 shadow-xl border border-[#E4E7E7] my-auto max-h-[92vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#E4E7E7]">
           <div>
@@ -222,11 +222,10 @@ export function RequestDocumentsModal({
                   return (
                     <label
                       key={type.id}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition ${
-                        isChecked
-                          ? 'border-[#00A57E] bg-[#E6F6F2]/50 text-[#0A0A0A]'
-                          : 'border-transparent hover:bg-[#F5F6F6] text-[#6B7272]'
-                      }`}
+                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition ${isChecked
+                        ? 'border-[#00A57E] bg-[#E6F6F2]/50 text-[#0A0A0A]'
+                        : 'border-transparent hover:bg-[#F5F6F6] text-[#6B7272]'
+                        }`}
                     >
                       <input
                         type="checkbox"
@@ -256,11 +255,10 @@ export function RequestDocumentsModal({
                     key={item.days}
                     type="button"
                     onClick={() => setExpiryDays(item.days)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-medium transition text-center ${
-                      expiryDays === item.days
-                        ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
-                        : 'border-[#E4E7E7] bg-white text-[#6B7272] hover:bg-[#F5F6F6]'
-                    }`}
+                    className={`py-2 px-3 rounded-xl border text-xs font-medium transition text-center ${expiryDays === item.days
+                      ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F] font-semibold'
+                      : 'border-[#E4E7E7] bg-white text-[#6B7272] hover:bg-[#F5F6F6]'
+                      }`}
                   >
                     {item.label}
                   </button>
@@ -278,11 +276,10 @@ export function RequestDocumentsModal({
                   <button
                     type="button"
                     onClick={() => setRecipientChoice('candidate')}
-                    className={`p-2 rounded-xl border text-xs font-medium text-left ${
-                      recipientChoice === 'candidate'
-                        ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F]'
-                        : 'border-[#E4E7E7] text-[#6B7272]'
-                    }`}
+                    className={`p-2 rounded-xl border text-xs font-medium text-left ${recipientChoice === 'candidate'
+                      ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F]'
+                      : 'border-[#E4E7E7] text-[#6B7272]'
+                      }`}
                   >
                     <div>Candidate: {studentName}</div>
                     <div className="text-[11px] opacity-75">{studentPhone}</div>
@@ -290,11 +287,10 @@ export function RequestDocumentsModal({
                   <button
                     type="button"
                     onClick={() => setRecipientChoice('guardian')}
-                    className={`p-2 rounded-xl border text-xs font-medium text-left ${
-                      recipientChoice === 'guardian'
-                        ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F]'
-                        : 'border-[#E4E7E7] text-[#6B7272]'
-                    }`}
+                    className={`p-2 rounded-xl border text-xs font-medium text-left ${recipientChoice === 'guardian'
+                      ? 'border-[#00A57E] bg-[#E6F6F2] text-[#00805F]'
+                      : 'border-[#E4E7E7] text-[#6B7272]'
+                      }`}
                   >
                     <div>Guardian</div>
                     <div className="text-[11px] opacity-75">{guardianPhone}</div>

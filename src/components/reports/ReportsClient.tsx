@@ -136,7 +136,7 @@ export function ReportsClient({
   userId,
   initialTab = 'collections',
 }: ReportsClientProps) {
-  const isOwner = userRole === 'owner'
+  const isOwner = userRole === 'super_admin' || userRole === 'admin' || userRole === 'owner'
   const [activeTab, setActiveTab] = useState<
     'collections' | 'outstanding' | 'dayend' | 'voids' | 'vat'
   >(initialTab)

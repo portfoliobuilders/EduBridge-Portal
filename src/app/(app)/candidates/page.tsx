@@ -22,7 +22,7 @@ const PAGE_SIZE = 25
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   const { user, profile } = await requireUser()
-  const isOwner = profile.role === 'owner'
+  const isOwner = profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
   const params = await searchParams
 
   const q = (params.q || '').trim()
@@ -60,7 +60,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     isOwner
       ? supabase
           .from('profiles')
-          .select('id, full_name, role')
+          .select('id, full_name, role, job_title')
           .eq('is_active', true)
           .order('full_name')
       : Promise.resolve({ data: [] }),

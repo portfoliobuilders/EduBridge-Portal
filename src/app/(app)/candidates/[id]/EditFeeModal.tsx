@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -48,15 +49,16 @@ export function EditFeeModal({
   const numFee = parseFloat(totalFee) || 0
   const numDiscount = parseFloat(discount) || 0
   const netFee = Math.max(0, numFee - numDiscount)
+  const isDiscountExcessive = numDiscount > numFee
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (isNaN(numFee) || numFee < 0) {
+    if (isNaN(numFee) || numFee <= 0) {
       setError('Total fee must be positive')
       return
     }
-    if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > numFee) {
-      setError('Discount must be between 0 and total fee')
+    if (isDiscountExcessive) {
+      setError('Discount cannot exceed total fee')
       return
     }
 
@@ -76,7 +78,6 @@ export function EditFeeModal({
       })
 
       if (!res.success) {
-        // Show SQL error verbatim (e.g. Net fee cannot be reduced below total already paid)
         setError(res.error || 'Failed to update fee package')
         return
       }
@@ -87,25 +88,23 @@ export function EditFeeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[560px]">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-[#0A0A0A]">
-              Adjust Fee Package (Owner Only)
-            </DialogTitle>
-            <DialogDescription className="text-xs text-[#6B7272]">
+            <DialogTitle>Adjust Fee Package</DialogTitle>
+            <DialogDescription>
               Modify total tuition fee or scholarship discount. Net fee cannot be reduced below AED {formatAED(totalPaid)}.
             </DialogDescription>
           </DialogHeader>
 
-          {error && (
-            <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
-              <div className="font-mono text-xs">{error}</div>
-            </div>
-          )}
+          <DialogBody className="space-y-4">
+            {error && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+                <div className="font-mono text-xs">{error}</div>
+              </div>
+            )}
 
-          <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="fee-total" className="text-xs font-semibold text-[#0A0A0A]">
@@ -118,7 +117,7 @@ export function EditFeeModal({
                   min="0"
                   value={totalFee}
                   onChange={(e) => setTotalFee(e.target.value)}
-                  className="mt-1 font-mono tabular-nums min-h-[44px]"
+                  className="mt-1 font-mono tabular-nums"
                   required
                 />
               </div>
@@ -134,10 +133,16 @@ export function EditFeeModal({
                   min="0"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
-                  className="mt-1 font-mono tabular-nums min-h-[44px]"
+                  className="mt-1 font-mono tabular-nums"
                 />
               </div>
             </div>
+
+            {isDiscountExcessive && (
+              <p className="text-xs text-[#C53030] font-medium">
+                Discount cannot exceed total fee.
+              </p>
+            )}
 
             {/* Calculations preview */}
             <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-3 text-xs space-y-1.5">
@@ -159,51 +164,51 @@ export function EditFeeModal({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label htmlFor="fee-reason" className="text-xs font-semibold text-[#0A0A0A]">
-                  Reason for Fee Adjustment {hasPayments && <span className="text-red-500">*</span>}
+                  Reason for Fee Change {hasPayments && <span className="text-red-500">*</span>}
                 </Label>
                 {hasPayments && (
-                  <span className="text-[10px] text-amber-600 font-semibold uppercase">
-                    Mandatory ({paymentCount} payments recorded)
+                  <span className="text-[10px] text-amber-700 font-medium">
+                    Mandatory for audited ledger
                   </span>
                 )}
               </div>
               <Textarea
                 id="fee-reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
                 placeholder={
                   hasPayments
-                    ? 'State official reason for adjusting fee after payments (logged to audit trail)...'
-                    : 'Optional reason for adjustment...'
+                    ? 'e.g. Scholarship approved by Academic Board, Waiver agreed on email...'
+                    : 'Optional reason for this fee change...'
                 }
-                rows={2}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                className="mt-1"
                 required={hasPayments}
-                className="mt-1 text-xs"
               />
             </div>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="min-h-[44px]"
+              className="border-[#E4E7E7]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isPending}
-              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-h-[44px]"
+              disabled={isPending || isDiscountExcessive}
+              className="bg-[#00A57E] hover:bg-[#00805F] text-white min-w-[150px]"
             >
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  <span>Saving…</span>
+                  <span>Updating…</span>
                 </>
               ) : (
-                'Update Fee Package'
+                'Save Fee Structure'
               )}
             </Button>
           </DialogFooter>
