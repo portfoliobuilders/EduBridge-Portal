@@ -1,5 +1,5 @@
 import React from 'react'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove } from '@/lib/auth'
 import { PageHeader } from '@/components/PageHeader'
 import { Breadcrumbs } from '@/components/admin/Breadcrumbs'
 import { BulkImportClient } from './BulkImportClient'
@@ -7,7 +7,7 @@ import { BulkImportClient } from './BulkImportClient'
 export const dynamic = 'force-dynamic'
 
 export default async function BulkImportPage() {
-  await requireOwner()
+  await requireAdminOrAbove()
 
   return (
     <div className="space-y-6">

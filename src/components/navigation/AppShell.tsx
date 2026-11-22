@@ -23,6 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { RoleBadge } from '@/components/RoleBadge'
 import {
   Dialog,
   DialogContent,
@@ -49,7 +50,8 @@ export function AppShell({
   const [accountOpen, setAccountOpen] = useState(false)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [isAnyModalOpen, setIsAnyModalOpen] = useState(false)
-  const isOwner = profile.role === 'owner'
+  const isAdminOrAbove =
+    profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
 
   // Cmd+K / Ctrl+K keyboard shortcut for Search
   useEffect(() => {
@@ -110,7 +112,7 @@ export function AppShell({
     { href: '/', label: 'Home', icon: Home },
     { href: '/candidates', label: 'Candidates', icon: Users },
     { href: '/reports', label: 'Reports', icon: FileBarChart },
-    ...(isOwner ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
+    ...(isAdminOrAbove ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
   ]
 
   return (
@@ -200,13 +202,18 @@ export function AppShell({
 
           <div className="border-t border-[#E4E7E7] pt-3">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 pr-1">
                 <span className="text-xs font-semibold text-[#0A0A0A] truncate">
                   {profile.full_name}
                 </span>
-                <span className="text-[10px] uppercase font-bold text-[#6B7272] tracking-wider">
-                  {profile.role}
-                </span>
+                {profile.job_title && (
+                  <span className="text-[11px] text-[#6B7272] truncate font-medium">
+                    {profile.job_title}
+                  </span>
+                )}
+                <div className="mt-1">
+                  <RoleBadge role={profile.role} />
+                </div>
               </div>
               <button
                 type="button"
@@ -345,14 +352,15 @@ export function AppShell({
               <div className="w-12 h-12 rounded-full bg-[#E6F6F2] text-[#00A57E] flex items-center justify-center font-bold text-lg">
                 {profile.full_name?.charAt(0) || 'U'}
               </div>
-              <div>
+              <div className="flex flex-col min-w-0">
                 <SheetTitle className="text-base font-bold text-[#0A0A0A]">
                   {profile.full_name}
                 </SheetTitle>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#E6F6F2] text-[#00A57E]">
-                    {profile.role}
-                  </span>
+                {profile.job_title && (
+                  <p className="text-xs text-[#6B7272] font-medium mt-0.5">{profile.job_title}</p>
+                )}
+                <div className="flex items-center gap-2 mt-1.5">
+                  <RoleBadge role={profile.role} />
                   <span className="text-xs text-[#6B7272]">EduBridge Dubai</span>
                 </div>
               </div>
@@ -360,7 +368,7 @@ export function AppShell({
           </SheetHeader>
 
           <div className="space-y-2 pt-4">
-            {isOwner && (
+            {isAdminOrAbove && (
               <Link
                 href="/admin"
                 onClick={() => setAccountOpen(false)}

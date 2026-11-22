@@ -1,5 +1,5 @@
 import React from 'react'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove } from '@/lib/auth'
 import { PageHeader } from '@/components/PageHeader'
 import { AdminNav } from '@/components/admin/AdminNav'
 import { BookOpen, UserCog, Settings as SettingsIcon, FileSpreadsheet } from 'lucide-react'
@@ -8,8 +8,8 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  // Only owners may view this page; staff get an immediate 404
-  await requireOwner()
+  // Only super_admins and admins may view this page; staff get an immediate 404
+  await requireAdminOrAbove()
 
   return (
     <div className="space-y-6">

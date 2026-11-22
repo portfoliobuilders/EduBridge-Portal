@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove, requireSuperAdmin } from '@/lib/auth'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { z } from 'zod'
 
@@ -11,7 +11,23 @@ const addStaffSchema = z.object({
   name: z.string().trim().min(1, 'Full name is required'),
   email: z.string().trim().email('Invalid email address'),
   phone: z.string().trim().optional().nullable(),
-  role: z.enum(['staff', 'owner']),
+  role: z.enum(['super_admin', 'admin', 'staff', 'owner']),
+  job_title: z.string().trim().optional().nullable(),
+  reports_to: z.string().uuid().optional().nullable(),
+  admin_scope: z.enum(['team', 'company']).default('team'),
+  is_support: z.boolean().default(false),
+})
+
+const updateStaffSchema = z.object({
+  userId: z.string().uuid('Invalid user ID'),
+  name: z.string().trim().min(1, 'Full name is required'),
+  phone: z.string().trim().optional().nullable(),
+  role: z.enum(['super_admin', 'admin', 'staff', 'owner']),
+  job_title: z.string().trim().optional().nullable(),
+  reports_to: z.string().uuid().optional().nullable(),
+  admin_scope: z.enum(['team', 'company']).default('team'),
+  is_support: z.boolean().default(false),
+  is_active: z.boolean().default(true),
 })
 
 export interface ActionResult<T = unknown> {
@@ -21,13 +37,17 @@ export interface ActionResult<T = unknown> {
 }
 
 export async function inviteStaffAction(formData: FormData): Promise<ActionResult> {
-  await requireOwner()
+  const { user: callerUser, profile: callerProfile } = await requireAdminOrAbove()
 
   const raw = {
     name: String(formData.get('name') ?? ''),
     email: String(formData.get('email') ?? ''),
     phone: formData.get('phone') ? String(formData.get('phone')) : null,
-    role: (formData.get('role') as 'staff' | 'owner') ?? 'staff',
+    role: (formData.get('role') as 'super_admin' | 'admin' | 'staff') ?? 'staff',
+    job_title: formData.get('job_title') ? String(formData.get('job_title')) : null,
+    reports_to: formData.get('reports_to') ? String(formData.get('reports_to')) : null,
+    admin_scope: (formData.get('admin_scope') as 'team' | 'company') ?? 'team',
+    is_support: formData.get('is_support') === 'true',
   }
 
   const parsed = addStaffSchema.safeParse(raw)
@@ -35,7 +55,17 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
   }
 
-  const { name, email, phone, role } = parsed.data
+  const { name, email, phone, role, job_title, reports_to, admin_scope, is_support } = parsed.data
+
+  // Permission check: Admins cannot create Super Admins or Admins
+  if (callerProfile.role === 'admin') {
+    if (role !== 'staff') {
+      return { success: false, error: 'Admins can only invite staff members.' }
+    }
+    if (is_support) {
+      return { success: false, error: 'Only Super Admins can create support accounts.' }
+    }
+  }
 
   // Normalize phone if provided
   let formattedPhone: string | null = null
@@ -96,14 +126,18 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
     return { success: false, error: 'Failed to create user invitation' }
   }
 
-  // Update profile with name, phone, and role
+  // Update profile with name, phone, role, job_title, reports_to, admin_scope, is_support
   const { error: profileError } = await adminClient
     .from('profiles')
     .upsert({
       id: inviteData.user.id,
       full_name: name,
       phone: formattedPhone,
-      role,
+      role: role === 'owner' ? 'super_admin' : role,
+      job_title: job_title || null,
+      reports_to: reports_to || (callerProfile.role === 'admin' ? callerUser.id : null),
+      admin_scope: role === 'admin' ? admin_scope : 'team',
+      is_support: Boolean(is_support),
       is_active: true,
       updated_at: new Date().toISOString(),
     })
@@ -119,11 +153,78 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
   return { success: true }
 }
 
+export async function updateStaffAction(formData: FormData): Promise<ActionResult> {
+  const { user: callerUser, profile: callerProfile } = await requireAdminOrAbove()
+  const supabase = await createClient()
+
+  const raw = {
+    userId: String(formData.get('userId') ?? ''),
+    name: String(formData.get('name') ?? ''),
+    phone: formData.get('phone') ? String(formData.get('phone')) : null,
+    role: (formData.get('role') as 'super_admin' | 'admin' | 'staff') ?? 'staff',
+    job_title: formData.get('job_title') ? String(formData.get('job_title')) : null,
+    reports_to: formData.get('reports_to') ? String(formData.get('reports_to')) : null,
+    admin_scope: (formData.get('admin_scope') as 'team' | 'company') ?? 'team',
+    is_support: formData.get('is_support') === 'true',
+    is_active: formData.get('is_active') !== 'false',
+  }
+
+  const parsed = updateStaffSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
+  }
+
+  const data = parsed.data
+
+  // Admin restrictions
+  if (callerProfile.role === 'admin') {
+    if (data.role !== 'staff') {
+      return { success: false, error: 'Admins cannot promote users to Admin or Super Admin.' }
+    }
+    if (data.is_support) {
+      return { success: false, error: 'Admins cannot configure support status.' }
+    }
+  }
+
+  let formattedPhone: string | null = null
+  if (data.phone) {
+    const parsedPhone = parsePhoneNumberFromString(data.phone, 'AE')
+    if (parsedPhone && parsedPhone.isValid()) {
+      formattedPhone = parsedPhone.format('E.164')
+    } else {
+      formattedPhone = data.phone
+    }
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: data.name,
+      phone: formattedPhone,
+      role: data.role === 'owner' ? 'super_admin' : data.role,
+      job_title: data.job_title || null,
+      reports_to: data.reports_to || null,
+      admin_scope: data.role === 'admin' ? data.admin_scope : 'team',
+      is_support: callerProfile.role === 'super_admin' ? data.is_support : undefined,
+      is_active: data.is_active,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', data.userId)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/staff')
+  return { success: true }
+}
+
 export async function toggleStaffRoleAction(
   userId: string,
-  newRole: 'staff' | 'owner'
+  newRole: 'super_admin' | 'admin' | 'staff'
 ): Promise<ActionResult> {
-  await requireOwner()
+  // Only Super Admins can directly switch roles
+  await requireSuperAdmin()
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -144,7 +245,7 @@ export async function toggleStaffActiveAction(
   userId: string,
   isActive: boolean
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const { error } = await supabase

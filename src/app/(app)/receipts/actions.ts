@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { renderToBuffer } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
-import { requireUser, requireOwner } from '@/lib/auth'
+import { requireUser, requireAdminOrAbove } from '@/lib/auth'
 import { ReceiptDocument } from '@/lib/pdf/receipt-document'
 import { sendReceiptEmail, type EmailSendResult } from '@/lib/email/send-email'
 import { z } from 'zod'
@@ -132,7 +132,7 @@ export async function voidPaymentAction(
   values: z.infer<typeof voidPaymentSchema>
 ): Promise<ActionResult<{ paymentId: string }>> {
   try {
-    await requireOwner()
+    await requireAdminOrAbove()
 
     const parsed = voidPaymentSchema.safeParse(values)
     if (!parsed.success) {

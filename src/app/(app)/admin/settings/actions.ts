@@ -30,6 +30,8 @@ const companySettingsSchema = z.object({
   email_body_template: z.string().trim().min(1, 'Email body template is required'),
   whatsapp_doc_request_template: z.string().trim().optional().nullable(),
   email_doc_request_template: z.string().trim().optional().nullable(),
+  admins_can_void: z.boolean().default(false),
+  support_access_enabled: z.boolean().default(false),
 })
 
 export interface ActionResult<T = unknown> {
@@ -65,6 +67,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
     email_doc_request_template: formData.get('email_doc_request_template')
       ? String(formData.get('email_doc_request_template'))
       : null,
+    admins_can_void: formData.get('admins_can_void') === 'true',
+    support_access_enabled: formData.get('support_access_enabled') === 'true',
   }
 
   const parsed = companySettingsSchema.safeParse(raw)
@@ -95,6 +99,8 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       email_body_template: data.email_body_template,
       whatsapp_doc_request_template: data.whatsapp_doc_request_template || null,
       email_doc_request_template: data.email_doc_request_template || null,
+      admins_can_void: data.admins_can_void,
+      support_access_enabled: data.support_access_enabled,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })
@@ -168,4 +174,46 @@ export async function uploadLogoAction(formData: FormData): Promise<ActionResult
 
   revalidatePath('/admin/settings')
   return { success: true, data: { logoPath: filePath } }
+}
+
+export async function toggleSupportAccessAction(enabled: boolean): Promise<ActionResult> {
+  const { user } = await requireOwner()
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('company_settings')
+    .update({
+      support_access_enabled: enabled,
+      updated_at: new Date().toISOString(),
+      updated_by: user.id,
+    })
+    .eq('singleton', true)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/settings')
+  return { success: true }
+}
+
+export async function toggleAdminsCanVoidAction(enabled: boolean): Promise<ActionResult> {
+  const { user } = await requireOwner()
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('company_settings')
+    .update({
+      admins_can_void: enabled,
+      updated_at: new Date().toISOString(),
+      updated_by: user.id,
+    })
+    .eq('singleton', true)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/settings')
+  return { success: true }
 }

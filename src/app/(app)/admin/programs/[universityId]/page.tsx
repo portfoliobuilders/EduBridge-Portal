@@ -1,6 +1,6 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/admin/Breadcrumbs'
 import { CoursesClient, type CourseItem } from './CoursesClient'
@@ -24,7 +24,7 @@ export default async function UniversityDetailPage({
 }: {
   params: Promise<{ universityId: string }>
 }) {
-  await requireOwner()
+  await requireAdminOrAbove()
   const { universityId } = await params
   const supabase = await createClient()
 

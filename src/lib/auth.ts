@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
+export type AppRole = Database['public']['Enums']['app_role']
 
 export async function getUserProfile(): Promise<{
   user: { id: string; email?: string } | null
@@ -48,16 +49,43 @@ export async function requireUser(): Promise<{
   return { user, profile }
 }
 
-export async function requireOwner(): Promise<{
+export async function requireRole(
+  allowedRoles: AppRole | AppRole[]
+): Promise<{
   user: { id: string; email?: string }
   profile: Profile
 }> {
   const { user, profile } = await requireUser()
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
 
-  if (profile.role !== 'owner') {
-    // 404 for non-owners so the existence of admin routes is not disclosed
+  if (!roles.includes(profile.role)) {
+    // 404 for unauthorized roles so the existence of restricted routes is not disclosed
     notFound()
   }
 
   return { user, profile }
+}
+
+export async function requireSuperAdmin(): Promise<{
+  user: { id: string; email?: string }
+  profile: Profile
+}> {
+  return requireRole(['super_admin', 'owner'])
+}
+
+export async function requireAdminOrAbove(): Promise<{
+  user: { id: string; email?: string }
+  profile: Profile
+}> {
+  return requireRole(['super_admin', 'admin', 'owner'])
+}
+
+/**
+ * Backward-compatible alias for requireSuperAdmin
+ */
+export async function requireOwner(): Promise<{
+  user: { id: string; email?: string }
+  profile: Profile
+}> {
+  return requireSuperAdmin()
 }

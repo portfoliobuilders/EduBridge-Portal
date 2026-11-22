@@ -1,5 +1,5 @@
 import React from 'react'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/PageHeader'
 import { AdminNav } from '@/components/admin/AdminNav'
@@ -20,7 +20,7 @@ interface UniversityRow {
 }
 
 export default async function ProgramsPage() {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   // Fetch universities and count of courses

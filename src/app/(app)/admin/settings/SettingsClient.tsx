@@ -11,6 +11,8 @@ import {
   Eye,
   Sparkles,
   Info,
+  ShieldCheck,
+  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,6 +42,8 @@ export interface CompanySettingsData {
   email_body_template: string
   whatsapp_doc_request_template?: string | null
   email_doc_request_template?: string | null
+  admins_can_void?: boolean
+  support_access_enabled?: boolean
 }
 
 const TEMPLATE_VARIABLES = [
@@ -59,7 +63,7 @@ export function SettingsClient({
   initialSettings: CompanySettingsData
 }) {
   const [settings, setSettings] = useState<CompanySettingsData>(initialSettings)
-  const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'billing' | 'templates'>('general')
+  const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'billing' | 'templates' | 'security'>('general')
 
   // Logo upload state
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -137,6 +141,8 @@ export function SettingsClient({
       if (settings.email_doc_request_template) {
         formData.append('email_doc_request_template', settings.email_doc_request_template)
       }
+      formData.append('admins_can_void', String(Boolean(settings.admins_can_void)))
+      formData.append('support_access_enabled', String(Boolean(settings.support_access_enabled)))
 
       const res = await updateCompanySettingsAction(formData)
       if (res.success) {
@@ -208,6 +214,17 @@ export function SettingsClient({
         >
           <MessageSquare className="w-4 h-4" />
           Message Templates
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('security')}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'security'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          Security & Access
         </button>
       </div>
 
@@ -792,6 +809,87 @@ export function SettingsClient({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Security & Access */}
+      {activeTab === 'security' && (
+        <div className="bg-white p-6 rounded-2xl border border-border shadow-xs space-y-6">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Role Permissions & Emergency Access</h3>
+            <p className="text-xs text-muted-foreground">
+              Configure fine-grained privileges for Admins and manage emergency developer support access.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Admins can void receipts switch */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Allow Admins to Void Receipts
+                </span>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  When enabled, staff with the Admin role can void receipt vouchers with a mandatory reason.
+                  When disabled, only Super Admins can void receipts. Staff counsellors can never void receipts.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(settings.admins_can_void)}
+                onClick={() => handleInputChange('admins_can_void', !settings.admins_can_void)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  settings.admins_can_void ? 'bg-primary' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    settings.admins_can_void ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Emergency Support Access switch */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" />
+                  Emergency Support Access
+                </span>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  Allow temporary technical support accounts (<code className="text-[11px] font-mono bg-white px-1 py-0.5 rounded border">is_support = true</code>) to log in and assist with system troubleshooting.
+                  When disabled, all support accounts are immediately locked out at the database policy level.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(settings.support_access_enabled)}
+                onClick={() => handleInputChange('support_access_enabled', !settings.support_access_enabled)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  settings.support_access_enabled ? 'bg-primary' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    settings.support_access_enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {settings.support_access_enabled && (
+              <div className="p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  <strong>Support access is currently active.</strong> Remember to toggle this off once support or maintenance is completed.
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}

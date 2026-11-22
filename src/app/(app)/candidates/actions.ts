@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
-import { requireUser, requireOwner } from '@/lib/auth'
+import { requireUser, requireAdminOrAbove } from '@/lib/auth'
 import { StatementDocument } from '@/lib/pdf/statement-document'
 import { sendStatementEmail, type EmailSendResult } from '@/lib/email/send-email'
 import { z } from 'zod'
@@ -467,7 +467,7 @@ export async function saveStudentAddressAction(
 export async function updateEnrollmentOpeningPaidAction(
   rawInput: unknown
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
 
   const parsed = updateOpeningPaidSchema.safeParse(rawInput)
   if (!parsed.success) {
@@ -493,13 +493,13 @@ export async function updateEnrollmentOpeningPaidAction(
 }
 
 // -----------------------------------------------------------------------------
-// Update Enrollment Fee Action (Owner Only)
+// Update Enrollment Fee Action (Owner / Admin within scope)
 // -----------------------------------------------------------------------------
 
 export async function updateEnrollmentFeeAction(
   rawInput: unknown
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
 
   const parsed = updateFeeSchema.safeParse(rawInput)
   if (!parsed.success) {

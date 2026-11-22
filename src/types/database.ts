@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -145,6 +145,7 @@ export type Database = {
       company_settings: {
         Row: {
           address: string
+          admins_can_void: boolean
           created_at: string
           email: string
           email_body_template: string
@@ -158,6 +159,7 @@ export type Database = {
           receipt_prefix: string
           singleton: boolean
           statement_prefix: string
+          support_access_enabled: boolean
           terms: string | null
           trn: string
           updated_at: string
@@ -171,6 +173,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          admins_can_void?: boolean
           created_at?: string
           email: string
           email_body_template?: string
@@ -184,6 +187,7 @@ export type Database = {
           receipt_prefix?: string
           singleton?: boolean
           statement_prefix?: string
+          support_access_enabled?: boolean
           terms?: string | null
           trn: string
           updated_at?: string
@@ -197,6 +201,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          admins_can_void?: boolean
           created_at?: string
           email?: string
           email_body_template?: string
@@ -210,6 +215,7 @@ export type Database = {
           receipt_prefix?: string
           singleton?: boolean
           statement_prefix?: string
+          support_access_enabled?: boolean
           terms?: string | null
           trn?: string
           updated_at?: string
@@ -543,6 +549,30 @@ export type Database = {
           },
         ]
       }
+      job_titles: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -684,33 +714,53 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_scope: string
           created_at: string
           full_name: string
           id: string
           is_active: boolean
+          is_support: boolean
+          job_title: string | null
           phone: string | null
+          reports_to: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
+          admin_scope?: string
           created_at?: string
           full_name: string
           id: string
           is_active?: boolean
+          is_support?: boolean
+          job_title?: string | null
           phone?: string | null
+          reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
+          admin_scope?: string
           created_at?: string
           full_name?: string
           id?: string
           is_active?: boolean
+          is_support?: boolean
+          job_title?: string | null
           phone?: string | null
+          reports_to?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_rate_limits: {
         Row: {
@@ -1132,6 +1182,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_manage_user: { Args: { p_target: string }; Returns: boolean }
       check_and_log_email_rate_limit: {
         Args: {
           p_email_type: string
@@ -1168,6 +1219,8 @@ export type Database = {
         }
         Returns: Json
       }
+      current_app_role: { Args: never; Returns: string }
+      current_role: { Args: never; Returns: string }
       dashboard_kpis: {
         Args: { p_from: string; p_staff_id?: string; p_to: string }
         Returns: Json
@@ -1182,14 +1235,19 @@ export type Database = {
       get_staff_list: {
         Args: never
         Returns: {
+          admin_scope: string
           collections_this_month: number
           created_at: string
           email: string
           full_name: string
           id: string
           is_active: boolean
+          is_support: boolean
+          job_title: string
           last_sign_in_at: string
           phone: string
+          reports_to: string
+          reports_to_name: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
@@ -1197,9 +1255,11 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
-      import_programs: { Args: { p_rows: Json }; Returns: Json }
+      import_programs: { Args: { p_data: Json }; Returns: Json }
       is_active_user: { Args: never; Returns: boolean }
+      is_admin_or_above: { Args: never; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       record_payment: {
         Args: {
           p_amount: number
@@ -1319,6 +1379,7 @@ export type Database = {
         Args: { p_enabled: boolean; p_payment_id: string }
         Returns: boolean
       }
+      team_member_ids: { Args: { p_manager: string }; Returns: string[] }
       toggle_receipt_share_enabled: {
         Args: { p_enabled?: boolean; p_payment_id: string }
         Returns: boolean
@@ -1371,6 +1432,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      visible_user_ids: { Args: never; Returns: string[] }
       void_payment: {
         Args: { p_payment_id: string; p_reason: string }
         Returns: {
@@ -1413,7 +1475,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "staff"
+      app_role: "owner" | "staff" | "super_admin" | "admin"
       enrollment_status: "active" | "completed" | "cancelled"
       payment_mode: "card" | "cash" | "link" | "bank_transfer"
       payment_purpose: "admission" | "repayment" | "other"
@@ -1553,7 +1615,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "staff"],
+      app_role: ["owner", "staff", "super_admin", "admin"],
       enrollment_status: ["active", "completed", "cancelled"],
       payment_mode: ["card", "cash", "link", "bank_transfer"],
       payment_purpose: ["admission", "repayment", "other"],

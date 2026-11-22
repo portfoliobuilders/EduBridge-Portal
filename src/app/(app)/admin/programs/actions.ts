@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { requireOwner } from '@/lib/auth'
+import { requireAdminOrAbove } from '@/lib/auth'
 import { z } from 'zod'
 
 const universitySchema = z.object({
@@ -59,7 +59,7 @@ export interface ActionResult<T = unknown> {
 export async function saveUniversityAction(
   formData: FormData
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const raw = {
@@ -128,7 +128,7 @@ export async function toggleUniversityActiveAction(
   id: string,
   isActive: boolean
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -151,7 +151,7 @@ export async function toggleUniversityActiveAction(
 export async function saveCourseAction(
   formData: FormData
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const raw = {
@@ -237,7 +237,7 @@ export async function toggleCourseActiveAction(
   universityId: string,
   isActive: boolean
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -261,7 +261,7 @@ export async function toggleCourseActiveAction(
 export async function saveSpecializationAction(
   formData: FormData
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const raw = {
@@ -339,7 +339,7 @@ export async function toggleSpecializationActiveAction(
   specId: string,
   isActive: boolean
 ): Promise<ActionResult> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -384,7 +384,7 @@ export interface ImportPreviewResult {
 export async function previewProgramsImportAction(
   rows: Array<Record<string, string>>
 ): Promise<ActionResult<ImportPreviewResult>> {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   if (!rows || rows.length === 0) {
@@ -543,7 +543,7 @@ export async function executeProgramsImportAction(
     skipped: number
   }>
 > {
-  await requireOwner()
+  await requireAdminOrAbove()
   const supabase = await createClient()
 
   if (!rows || rows.length === 0) {
@@ -556,7 +556,7 @@ export async function executeProgramsImportAction(
 
   // Call the atomic import_programs Postgres function
   const { data, error } = await supabase.rpc('import_programs', {
-    p_rows: rows as unknown as import('@/types/database').Json,
+    p_data: rows as unknown as import('@/types/database').Json,
   })
 
   if (error) {
