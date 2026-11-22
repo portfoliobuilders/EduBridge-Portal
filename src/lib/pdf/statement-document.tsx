@@ -488,7 +488,6 @@ export function StatementDocument({
                     {p.purpose === 'other'
                       ? `Other: ${p.purpose_note || ''}`
                       : p.purpose}
-                    {p.reference_no ? ` · Ref: ${p.reference_no}` : ''}
                   </Text>
                   <Text
                     style={

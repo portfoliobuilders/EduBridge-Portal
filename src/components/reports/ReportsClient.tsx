@@ -686,9 +686,6 @@ export function ReportsClient({
                         </td>
                         <td className="py-3 px-4 font-sans text-[#0A0A0A] capitalize">
                           <div>{r.mode}</div>
-                          {r.reference_no && (
-                            <div className="text-[11px] text-[#6B7272] font-mono">Ref: {r.reference_no}</div>
-                          )}
                         </td>
                         <td className="py-3 px-4 font-sans text-[#6B7272] capitalize">
                           {r.purpose}

@@ -22,24 +22,11 @@ const recordPaymentSchema = z
     mode: z.enum(['card', 'cash', 'link', 'bank_transfer']),
     purpose: z.enum(['admission', 'repayment', 'other']),
     purposeNote: z.string().trim().optional().nullable(),
-    referenceNo: z.string().trim().optional().nullable(),
     paidAt: z.string().min(1, 'Payment date and time is required'),
     payeeName: z.string().trim().optional().nullable(),
     comments: z.string().trim().optional().nullable(),
     idempotencyKey: z.string().uuid('Valid idempotency key is required'),
   })
-  .refine(
-    (data) => {
-      if (data.mode === 'link' || data.mode === 'bank_transfer') {
-        return !!data.referenceNo && data.referenceNo.trim().length >= 2
-      }
-      return true
-    },
-    {
-      message: 'Reference number is required for Payment Link and Bank Transfer payments',
-      path: ['referenceNo'],
-    }
-  )
   .refine(
     (data) => {
       if (data.purpose === 'other') {
@@ -89,7 +76,6 @@ export async function recordPaymentAction(
       mode,
       purpose,
       purposeNote,
-      referenceNo,
       paidAt,
       payeeName,
       comments,
@@ -104,10 +90,7 @@ export async function recordPaymentAction(
       p_mode: mode,
       p_purpose: purpose,
       p_purpose_note: purposeNote ? purposeNote.trim() : '',
-      p_reference_no:
-        (mode === 'link' || mode === 'bank_transfer') && referenceNo
-          ? referenceNo.trim()
-          : '',
+      p_reference_no: '',
       p_paid_at: new Date(paidAt).toISOString(),
       p_payee_name: payeeName ? payeeName.trim() : '',
       p_comments: comments ? comments.trim() : '',

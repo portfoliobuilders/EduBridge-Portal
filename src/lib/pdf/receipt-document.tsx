@@ -476,7 +476,6 @@ export function ReceiptDocument({
             <Text style={styles.label}>Payment Mode:</Text>
             <Text style={styles.value}>
               {modeLabels[payment.mode] || payment.mode}
-              {payment.reference_no ? ` (Ref: ${payment.reference_no})` : ''}
             </Text>
           </View>
           <View style={styles.row}>

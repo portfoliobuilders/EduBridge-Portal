@@ -216,7 +216,6 @@ export default async function PublicReceiptPage({
               </span>
               <span className="font-semibold text-[#0A0A0A] sm:col-span-3">
                 {v.mode}
-                {v.reference_no && ` (Ref: ${v.reference_no})`}
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-1">

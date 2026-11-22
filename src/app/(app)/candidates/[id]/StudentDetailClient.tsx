@@ -516,7 +516,6 @@ export function StudentDetailClient({
                           <th className="py-3 px-4">Receipt No</th>
                           <th className="py-3 px-4">Purpose</th>
                           <th className="py-3 px-4">Mode</th>
-                          <th className="py-3 px-4">Reference</th>
                           <th className="py-3 px-4">Received By</th>
                           <th className="py-3 px-4 text-right">Amount</th>
                           <th className="py-3 px-4 text-right">Balance After</th>
@@ -561,10 +560,6 @@ export function StudentDetailClient({
 
                               <td className="py-3.5 px-4 capitalize whitespace-nowrap font-medium">
                                 {p.mode.replace(/_/g, ' ')}
-                              </td>
-
-                              <td className="py-3.5 px-4 font-mono whitespace-nowrap text-[#6B7272]">
-                                {p.reference_no || '—'}
                               </td>
 
                               <td className="py-3.5 px-4 whitespace-nowrap">

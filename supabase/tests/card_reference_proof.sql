@@ -3,10 +3,10 @@
 -- Verifies that:
 -- 1. Card payment with no reference succeeds (stored as NULL)
 -- 2. Card payment with reference passed succeeds and stores reference_no as NULL
--- 3. Link payment with no reference is rejected
--- 4. Link payment with reference succeeds and stores reference_no
--- 5. Bank transfer with no reference is rejected
--- 6. Bank transfer with reference succeeds and stores reference_no
+-- 3. Link payment with no reference succeeds and stores reference_no as NULL
+-- 4. Link payment with reference passed succeeds and stores reference_no as NULL
+-- 5. Bank transfer with no reference succeeds and stores reference_no as NULL
+-- 6. Bank transfer with reference passed succeeds and stores reference_no as NULL
 --
 -- Transaction is ALWAYS rolled back — no data persisted.
 -- =============================================================================
@@ -126,7 +126,7 @@ begin
   end;
 
   -- ---------------------------------------------------------------------------
-  -- TEST 3: Payment link with NO reference is REJECTED
+  -- TEST 3: Payment link with NO reference succeeds and stores reference_no as NULL
   -- ---------------------------------------------------------------------------
   begin
     v_pay_link := public.record_payment(
@@ -138,21 +138,21 @@ begin
       p_reference_no := null,
       p_paid_at := now(),
       p_payee_name := 'Link Payee',
-      p_comments := 'Link missing ref',
+      p_comments := 'Link with no ref',
       p_idempotency_key := gen_random_uuid()
     );
-    insert into test_results values (3, 'Payment link without reference is rejected', 'FAIL', 'Expected rejection, but payment succeeded');
-  exception when others then
-    v_err_msg := sqlerrm;
-    if v_err_msg like '%Reference number is required for link payments%' then
-      insert into test_results values (3, 'Payment link without reference is rejected', 'PASS', 'Correctly rejected: ' || v_err_msg);
+
+    if v_pay_link.reference_no is null then
+      insert into test_results values (3, 'Payment link without reference succeeds and stores NULL', 'PASS', 'Succeeded with receipt_no=' || v_pay_link.receipt_no || ', reference_no is NULL');
     else
-      insert into test_results values (3, 'Payment link without reference is rejected', 'FAIL', 'Unexpected error: ' || v_err_msg);
+      insert into test_results values (3, 'Payment link without reference succeeds and stores NULL', 'FAIL', 'Expected NULL reference_no, got: ' || v_pay_link.reference_no);
     end if;
+  exception when others then
+    insert into test_results values (3, 'Payment link without reference succeeds and stores NULL', 'FAIL', 'Unexpected error: ' || sqlerrm);
   end;
 
   -- ---------------------------------------------------------------------------
-  -- TEST 4: Payment link WITH reference succeeds and stores reference_no
+  -- TEST 4: Payment link WITH reference passed still stores reference_no as NULL
   -- ---------------------------------------------------------------------------
   begin
     v_pay_link := public.record_payment(
@@ -164,21 +164,21 @@ begin
       p_reference_no := 'PLINK-987654',
       p_paid_at := now(),
       p_payee_name := 'Link Payee',
-      p_comments := 'Link with valid ref',
+      p_comments := 'Link with ignored ref',
       p_idempotency_key := gen_random_uuid()
     );
 
-    if v_pay_link.reference_no = 'PLINK-987654' then
-      insert into test_results values (4, 'Payment link with reference succeeds', 'PASS', 'Stored reference_no=' || v_pay_link.reference_no);
+    if v_pay_link.reference_no is null then
+      insert into test_results values (4, 'Payment link ignores reference and stores NULL', 'PASS', 'Succeeded with receipt_no=' || v_pay_link.receipt_no || ', reference_no is NULL');
     else
-      insert into test_results values (4, 'Payment link with reference succeeds', 'FAIL', 'Expected PLINK-987654, got: ' || coalesce(v_pay_link.reference_no, 'NULL'));
+      insert into test_results values (4, 'Payment link ignores reference and stores NULL', 'FAIL', 'Expected NULL reference_no, got: ' || coalesce(v_pay_link.reference_no, 'NULL'));
     end if;
   exception when others then
-    insert into test_results values (4, 'Payment link with reference succeeds', 'FAIL', 'Unexpected error: ' || sqlerrm);
+    insert into test_results values (4, 'Payment link ignores reference and stores NULL', 'FAIL', 'Unexpected error: ' || sqlerrm);
   end;
 
   -- ---------------------------------------------------------------------------
-  -- TEST 5: Bank transfer with NO reference is REJECTED
+  -- TEST 5: Bank transfer with NO reference succeeds and stores reference_no as NULL
   -- ---------------------------------------------------------------------------
   begin
     v_pay_bank := public.record_payment(
@@ -190,21 +190,21 @@ begin
       p_reference_no := '',
       p_paid_at := now(),
       p_payee_name := 'Bank Payee',
-      p_comments := 'Bank transfer missing ref',
+      p_comments := 'Bank transfer with no ref',
       p_idempotency_key := gen_random_uuid()
     );
-    insert into test_results values (5, 'Bank transfer without reference is rejected', 'FAIL', 'Expected rejection, but payment succeeded');
-  exception when others then
-    v_err_msg := sqlerrm;
-    if v_err_msg like '%Reference number is required for bank_transfer payments%' then
-      insert into test_results values (5, 'Bank transfer without reference is rejected', 'PASS', 'Correctly rejected: ' || v_err_msg);
+
+    if v_pay_bank.reference_no is null then
+      insert into test_results values (5, 'Bank transfer without reference succeeds and stores NULL', 'PASS', 'Succeeded with receipt_no=' || v_pay_bank.receipt_no || ', reference_no is NULL');
     else
-      insert into test_results values (5, 'Bank transfer without reference is rejected', 'FAIL', 'Unexpected error: ' || v_err_msg);
+      insert into test_results values (5, 'Bank transfer without reference succeeds and stores NULL', 'FAIL', 'Expected NULL reference_no, got: ' || v_pay_bank.reference_no);
     end if;
+  exception when others then
+    insert into test_results values (5, 'Bank transfer without reference succeeds and stores NULL', 'FAIL', 'Unexpected error: ' || sqlerrm);
   end;
 
   -- ---------------------------------------------------------------------------
-  -- TEST 6: Bank transfer WITH reference succeeds and stores reference_no
+  -- TEST 6: Bank transfer WITH reference passed still stores reference_no as NULL
   -- ---------------------------------------------------------------------------
   begin
     v_pay_bank := public.record_payment(
@@ -216,17 +216,17 @@ begin
       p_reference_no := 'WIRE-AE-112233',
       p_paid_at := now(),
       p_payee_name := 'Bank Payee',
-      p_comments := 'Bank transfer with valid ref',
+      p_comments := 'Bank transfer with ignored ref',
       p_idempotency_key := gen_random_uuid()
     );
 
-    if v_pay_bank.reference_no = 'WIRE-AE-112233' then
-      insert into test_results values (6, 'Bank transfer with reference succeeds', 'PASS', 'Stored reference_no=' || v_pay_bank.reference_no);
+    if v_pay_bank.reference_no is null then
+      insert into test_results values (6, 'Bank transfer ignores reference and stores NULL', 'PASS', 'Succeeded with receipt_no=' || v_pay_bank.receipt_no || ', reference_no is NULL');
     else
-      insert into test_results values (6, 'Bank transfer with reference succeeds', 'FAIL', 'Expected WIRE-AE-112233, got: ' || coalesce(v_pay_bank.reference_no, 'NULL'));
+      insert into test_results values (6, 'Bank transfer ignores reference and stores NULL', 'FAIL', 'Expected NULL reference_no, got: ' || coalesce(v_pay_bank.reference_no, 'NULL'));
     end if;
   exception when others then
-    insert into test_results values (6, 'Bank transfer with reference succeeds', 'FAIL', 'Unexpected error: ' || sqlerrm);
+    insert into test_results values (6, 'Bank transfer ignores reference and stores NULL', 'FAIL', 'Unexpected error: ' || sqlerrm);
   end;
 
 end $$;

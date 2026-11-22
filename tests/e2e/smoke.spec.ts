@@ -120,8 +120,8 @@ test.describe('EduBridge End-to-End Smoke Test Flow', () => {
     // 4. Verify candidate sheet closes and enrollment is preselected in PaymentForm
     await expect(page.locator(`text=${candName}`).first()).toBeVisible({ timeout: 15000 });
 
-    // Verify Card approval code / Auth no field does NOT exist for card
-    const referenceField = page.locator('input[placeholder*="approval"], input[placeholder*="Auth No"], label:has-text("Approval Code")');
+    // Verify reference field does NOT exist for any payment mode
+    const referenceField = page.locator('#referenceNo, input[placeholder*="approval"], input[placeholder*="Auth No"], label:has-text("Approval Code"), label:has-text("Reference")');
     await expect(referenceField).toHaveCount(0);
 
     // Enter payment amount
