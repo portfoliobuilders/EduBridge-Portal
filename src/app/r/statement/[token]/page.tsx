@@ -46,6 +46,10 @@ export default async function PublicStatementPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = statement as any
+  const isVatRegistered = s.company?.vat_enabled !== false
+  const treatment = s.vat_treatment || s.vat_type || 'exclusive'
+  const isTaxInvoice = isVatRegistered && treatment !== 'none'
+  const treatmentLabel = treatment === 'exclusive' ? 'Prices exclusive of VAT' : 'Prices inclusive of VAT'
 
   return (
     <div className="min-h-screen bg-[#F5F6F6] py-8 px-4 sm:px-6">
@@ -102,13 +106,20 @@ export default async function PublicStatementPage({
           </div>
 
           {/* Title Bar */}
-          <div className="bg-[#0A0A0A] text-white rounded-md px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span className="font-bold text-sm tracking-wider uppercase">
-              CANDIDATE FEE STATEMENT / TAX INVOICE
-            </span>
+          <div className="bg-[#0A0A0A] text-white rounded-md px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="font-bold text-sm tracking-wider uppercase">
+                {isTaxInvoice ? 'TAX INVOICE' : 'CANDIDATE FEE STATEMENT'}
+              </span>
+              {isTaxInvoice && (
+                <div className="text-[11px] text-gray-400 font-normal mt-0.5">
+                  {treatmentLabel}
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-4 text-xs">
               <div>
-                Statement Ref:{' '}
+                {isTaxInvoice ? 'Invoice Ref: ' : 'Statement Ref: '}
                 <span className="font-mono font-semibold text-white">
                   {s.statement_no}
                 </span>
@@ -185,7 +196,7 @@ export default async function PublicStatementPage({
               </div>
               <div>
                 <div className="text-muted-foreground text-[11px] uppercase tracking-wider">
-                  Net Payable
+                  {isTaxInvoice ? 'Total (incl. VAT)' : 'Net Payable'}
                 </div>
                 <div className="font-mono font-semibold text-sm text-[#0A0A0A] mt-1">
                   {formatAED(Number(s.total_payable))}

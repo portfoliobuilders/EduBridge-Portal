@@ -266,8 +266,11 @@ export interface ReceiptDocumentProps {
     paid_before_snapshot: number
     balance_after_snapshot: number
     vat_amount: number
-    vat_type: string
+    taxable_amount?: number | null
+    vat_treatment?: string | null
+    vat_type?: string | null
     vat_rate: number
+    no_vat_reason?: string | null
     share_token: string
     void_reason?: string | null
     voided_at?: string | null
@@ -294,6 +297,7 @@ export interface ReceiptDocumentProps {
     website: string
     trn: string
     footer_note: string
+    vat_enabled?: boolean | null
   }
   billingAddress?: {
     contact_name?: string | null
@@ -324,6 +328,16 @@ export function ReceiptDocument({
   logoPath,
 }: ReceiptDocumentProps) {
   const isVoid = payment.status === 'void'
+  const isVatRegistered = settings.vat_enabled !== false
+  const treatment = payment.vat_treatment || payment.vat_type || 'exclusive'
+  const vatRate = Number(payment.vat_rate ?? 5)
+  const vatAmount = Number(payment.vat_amount ?? 0)
+  const taxableAmount = payment.taxable_amount != null
+    ? Number(payment.taxable_amount)
+    : Number(payment.amount) - vatAmount
+  const noVatReason = payment.no_vat_reason || 'zero_rated'
+  const noVatLabel = noVatReason === 'exempt' ? 'exempt' : noVatReason === 'out_of_scope' ? 'out of scope' : 'zero-rated'
+
   const fallbackLogo = path.join(
     process.cwd(),
     'public',
@@ -461,13 +475,50 @@ export function ReceiptDocument({
                 textTransform: 'uppercase',
               }}
             >
-              Amount Received
+              {isVatRegistered && treatment !== 'none'
+                ? `Amount received (incl. VAT ${vatRate}%)`
+                : 'Amount Received'}
             </Text>
             <Text style={styles.amountBig}>{formatAED(payment.amount)}</Text>
           </View>
           <Text style={styles.amountInWords}>
             {amountInWords(payment.amount)}
           </Text>
+
+          {isVatRegistered && treatment !== 'none' && (
+            <View
+              style={{
+                marginTop: 4,
+                paddingTop: 4,
+                borderTopWidth: 1,
+                borderTopColor: '#CCEDE5',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Text style={{ fontSize: 7.5, color: '#00805F', fontWeight: 500 }}>
+                of which VAT: AED {formatAED(vatAmount)}
+              </Text>
+              <Text style={{ fontSize: 7.5, color: '#4A5568' }}>
+                Taxable: AED {formatAED(taxableAmount)}
+              </Text>
+            </View>
+          )}
+
+          {isVatRegistered && treatment === 'none' && (
+            <View
+              style={{
+                marginTop: 4,
+                paddingTop: 4,
+                borderTopWidth: 1,
+                borderTopColor: '#CCEDE5',
+              }}
+            >
+              <Text style={{ fontSize: 7.5, color: '#6B7272' }}>
+                VAT: Not applicable ({noVatLabel})
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Payment Details */}
@@ -513,7 +564,7 @@ export function ReceiptDocument({
             </View>
           )}
 
-          {payment.vat_type === 'exclusive' && (
+          {isVatRegistered && treatment === 'exclusive' && (
             <>
               <View style={styles.gridRow}>
                 <Text style={styles.colLabel}>Net Tuition (excl. VAT)</Text>
@@ -523,7 +574,7 @@ export function ReceiptDocument({
               </View>
               <View style={styles.gridRow}>
                 <Text style={styles.colLabel}>
-                  VAT ({payment.vat_rate}%) on Course Fee
+                  VAT ({vatRate}%) on Course Fee
                 </Text>
                 <Text style={styles.colVal}>
                   {formatAED(
@@ -535,12 +586,12 @@ export function ReceiptDocument({
             </>
           )}
 
-          {payment.vat_type === 'inclusive' && (
+          {isVatRegistered && treatment === 'inclusive' && (
             <View style={styles.gridRow}>
               <Text style={styles.colLabel}>
-                VAT ({payment.vat_rate}% included in payment)
+                VAT ({vatRate}% included in payment)
               </Text>
-              <Text style={styles.colVal}>{formatAED(payment.vat_amount)}</Text>
+              <Text style={styles.colVal}>{formatAED(vatAmount)}</Text>
             </View>
           )}
 

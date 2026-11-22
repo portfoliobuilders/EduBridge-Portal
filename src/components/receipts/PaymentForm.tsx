@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { formatAED } from '@/lib/money'
+import { calculatePaymentVat, type VatTreatment } from '@/lib/vat'
 import { cn } from '@/lib/utils'
 import {
   recordPaymentAction,
@@ -49,8 +50,10 @@ export interface PreselectedEnrollment {
   courseName: string
   specializationName?: string | null
   intake?: string | null
-  vatType: string
+  vatType?: string
+  vatTreatment?: string
   vatRate: number
+  noVatReason?: string | null
   totalPayable: number
   totalPaid: number
   balance: number
@@ -223,6 +226,16 @@ export function PaymentForm({
   const balance = selectedEnrollment?.balance ?? 0
   const numAmount = parseFloat(amount) || 0
   const balanceAfter = Math.max(0, balance - numAmount)
+
+  const treatment = (selectedEnrollment?.vatTreatment || selectedEnrollment?.vatType || 'exclusive') as VatTreatment
+  const vatRate = Number(selectedEnrollment?.vatRate ?? 5.0)
+  const paymentVatBreakdown = selectedEnrollment
+    ? calculatePaymentVat({
+        amount: numAmount,
+        treatment,
+        rate: vatRate,
+      })
+    : { vatAmount: 0, taxableAmount: 0 }
 
   const handleFullBalance = () => {
     if (balance > 0) {
@@ -840,6 +853,14 @@ export function PaymentForm({
                       <span>Receipt Amount</span>
                       <span className="font-mono tabular-nums">{formatAED(numAmount)}</span>
                     </div>
+                    {treatment !== 'none' && numAmount > 0 && (
+                      <div className="flex justify-between text-xs text-[#6B7272]">
+                        <span>of which VAT ({vatRate}%):</span>
+                        <span className="font-mono tabular-nums text-[#0A0A0A] font-medium">
+                          {formatAED(paymentVatBreakdown.vatAmount)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-xs font-semibold text-[#0A0A0A] pt-1 border-t border-[#E4E7E7]">
                       <span>Balance After Receipt</span>
                       <span className={cn("font-mono tabular-nums", balanceAfter === 0 ? "text-[#00A57E]" : "text-[#B7791F]")}>
@@ -886,6 +907,11 @@ export function PaymentForm({
             <div className="text-base font-bold text-[#00A57E] font-mono tabular-nums">
               {formatAED(numAmount)}
             </div>
+            {treatment !== 'none' && numAmount > 0 && (
+              <div className="text-[10px] text-[#6B7272] font-mono">
+                incl. VAT {formatAED(paymentVatBreakdown.vatAmount)}
+              </div>
+            )}
           </div>
           <Button
             id="btn-issue-receipt-mobile"

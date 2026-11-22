@@ -55,6 +55,7 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
     { data: specializationsData },
     { data: staffData },
     { data: kpiData },
+    compSettingsRes,
   ] = await Promise.all([
     supabase
       .from('universities')
@@ -79,12 +80,18 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
           .order('full_name')
       : Promise.resolve({ data: [] }),
     supabase.rpc('get_candidate_directory_kpis'),
+    supabase
+      .from('company_settings')
+      .select('vat_enabled, vat_rate, default_vat_treatment, no_vat_reason')
+      .limit(1)
+      .single(),
   ])
 
   const universities = universitiesData || []
   const courses = coursesData || []
   const specializations = specializationsData || []
   const staffList = staffData || []
+  const compSettings = compSettingsRes?.data || null
 
   const rawKpi = kpiData?.[0]
   const kpis: CandidateDirectoryKpis = {
@@ -189,6 +196,7 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
           staffList={staffList}
           currentUserId={user.id}
           isOwner={isOwner}
+          companySettings={compSettings}
         />
       </CandidatesHeader>
 

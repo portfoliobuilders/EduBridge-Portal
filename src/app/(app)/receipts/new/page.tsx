@@ -60,7 +60,9 @@ export default async function NewReceiptPage({
         total_fee,
         discount,
         vat_type,
+        vat_treatment,
         vat_rate,
+        no_vat_reason,
         status,
         intake,
         student:students!inner(
@@ -115,7 +117,9 @@ export default async function NewReceiptPage({
         specializationName: specObj?.name ?? null,
         intake: item.intake,
         vatType: item.vat_type,
-        vatRate: item.vat_rate,
+        vatTreatment: item.vat_treatment || item.vat_type || 'exclusive',
+        vatRate: Number(item.vat_rate ?? 5),
+        noVatReason: item.no_vat_reason,
         totalPayable: Number(
           ledger?.total_payable ?? item.total_fee - item.discount
         ),

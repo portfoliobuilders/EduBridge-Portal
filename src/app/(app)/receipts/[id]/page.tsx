@@ -39,6 +39,7 @@ export default async function ReceiptDetailPage({
         intake,
         total_fee,
         discount,
+        no_vat_reason,
         university:universities!inner(name),
         course:courses!inner(name),
         specialization:specializations(name)
@@ -83,6 +84,7 @@ export default async function ReceiptDetailPage({
       settings?.footer_note ??
       'Keep your receipt vouchers for future references.',
     whatsapp_receipt_template: settings?.whatsapp_receipt_template,
+    vat_enabled: settings?.vat_enabled !== false,
   }
 
   const appUrl =
@@ -124,8 +126,11 @@ export default async function ReceiptDetailPage({
           paid_before_snapshot: Number(payment.paid_before_snapshot),
           balance_after_snapshot: Number(payment.balance_after_snapshot),
           vat_amount: Number(payment.vat_amount),
+          taxable_amount: payment.taxable_amount != null ? Number(payment.taxable_amount) : Number(payment.amount) - Number(payment.vat_amount),
+          vat_treatment: payment.vat_treatment || payment.vat_type || 'exclusive',
           vat_type: payment.vat_type,
           vat_rate: Number(payment.vat_rate),
+          no_vat_reason: payment.enrollment?.no_vat_reason || null,
           share_token: payment.share_token,
           share_enabled: payment.share_enabled,
           void_reason: payment.void_reason,

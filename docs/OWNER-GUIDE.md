@@ -80,6 +80,43 @@ When a candidate is standing at your desk or paying online:
 
 ---
 
+## 4.1 VAT Treatment & Fee Calculation ("With Tax / Without Tax")
+
+EduBridge provides Swipe-style, clear tax treatment for all candidate enrollments and payment vouchers under UAE Federal Tax Authority (FTA) regulations.
+
+### Which VAT Option to Choose
+*(Important: Confirm with your certified UAE accountant/tax advisor before choosing)*
+
+When setting up or adjusting a candidate's tuition package, staff select one of three treatments using the segmented tax control:
+
+1. **+ VAT on top (Exclusive)**:
+   - **How it works**: The fee entered is the base tuition before tax. VAT (standard UAE 5.00%) is added on top.
+   - **Financial Formula**: Total Payable = Net Tuition + 5% VAT.
+   - **Example**: Agreement for AED 10,000 → Net: AED 10,000.00 | Taxable: AED 10,000.00 | VAT 5%: AED 500.00 | **Total Payable: AED 10,500.00**.
+   - **When to choose**: When your consultancy quotation or university agreement states that UAE VAT will be billed additionally.
+
+2. **Includes VAT (Inclusive)**:
+   - **How it works**: The agreed total fee already includes 5% VAT.
+   - **Financial Formula**: Total Payable = Agreed Fee; Taxable = Total Payable / 1.05; VAT = Total Payable − Taxable.
+   - **Example**: Agreement for AED 10,000 → Taxable: AED 9,523.81 | VAT 5%: AED 476.19 | **Total Payable: AED 10,000.00**.
+   - **When to choose**: When an all-inclusive package price was promised to the candidate.
+
+3. **No VAT (Zero-Rated / Exempt / Out of Scope)**:
+   - **How it works**: 0% VAT is charged. A statutory FTA reason must be selected:
+     - **Zero-rated (0%)**: Qualifying educational services or exported international services.
+     - **Exempt**: Specific financial or residential services exempt under UAE law.
+     - **Out of scope**: Activities outside the territorial scope of UAE VAT law.
+   - **Example**: Agreement for AED 10,000 → Taxable: AED 10,000.00 | VAT: AED 0.00 | **Total Payable: AED 10,000.00**.
+   - **When to choose**: When the service qualifies for zero-rating or exemption as confirmed by your accountant.
+
+### Key VAT Operating Rules:
+- **Locked After First Payment**: To maintain complete accounting integrity, once any valid receipt is recorded on an enrollment, its VAT treatment and tax rate are permanently locked and cannot be edited.
+- **Tax Invoices**: When VAT is active and treatment is not "No VAT", fee statements automatically generate as formal **TAX INVOICES** featuring EduBridge's TRN (`105215478600003`), itemized taxable breakdown, tax rates, and sequential invoice numbers.
+- **Cent-Perfect Rounding Reconciliation**: Each payment computes proportional VAT (`amount × 5 / 105`). When a candidate makes their final payment to settle their balance to zero, the system automatically adjusts the final voucher's VAT so the sum of all receipt VAT lines equals the total tax liability to the exact cent.
+- **Company Settings Note**: Changing default VAT treatment in Settings only applies to new candidates created afterwards; existing enrollments always keep their agreed snapshot.
+
+---
+
 ## 5. Recording Payments & Issuing Receipts
 
 Every payment recorded in the application generates a **permanent, gapless sequential receipt number** (e.g., `EB-RV-2026-00001`, `EB-RV-2026-00002`).

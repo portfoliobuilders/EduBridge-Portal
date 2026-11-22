@@ -556,33 +556,30 @@ export function SettingsClient({
                       <button
                         type="button"
                         onClick={() => handleInputChange('default_vat_treatment', 'exclusive')}
-                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
-                          settings.default_vat_treatment === 'exclusive'
-                            ? 'bg-white text-foreground shadow-xs'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${settings.default_vat_treatment === 'exclusive'
+                          ? 'bg-white text-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                          }`}
                       >
                         + VAT on top
                       </button>
                       <button
                         type="button"
                         onClick={() => handleInputChange('default_vat_treatment', 'inclusive')}
-                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
-                          settings.default_vat_treatment === 'inclusive'
-                            ? 'bg-white text-foreground shadow-xs'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${settings.default_vat_treatment === 'inclusive'
+                          ? 'bg-white text-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                          }`}
                       >
                         Includes VAT
                       </button>
                       <button
                         type="button"
                         onClick={() => handleInputChange('default_vat_treatment', 'none')}
-                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${
-                          settings.default_vat_treatment === 'none'
-                            ? 'bg-white text-foreground shadow-xs'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all ${settings.default_vat_treatment === 'none'
+                          ? 'bg-white text-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground'
+                          }`}
                       >
                         No VAT
                       </button>
@@ -916,14 +913,12 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.admins_can_void)}
                 onClick={() => handleInputChange('admins_can_void', !settings.admins_can_void)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  settings.admins_can_void ? 'bg-primary' : 'bg-neutral-300'
-                }`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${settings.admins_can_void ? 'bg-primary' : 'bg-neutral-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    settings.admins_can_void ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${settings.admins_can_void ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
@@ -945,14 +940,12 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.support_access_enabled)}
                 onClick={() => handleInputChange('support_access_enabled', !settings.support_access_enabled)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  settings.support_access_enabled ? 'bg-primary' : 'bg-neutral-300'
-                }`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${settings.support_access_enabled ? 'bg-primary' : 'bg-neutral-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    settings.support_access_enabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${settings.support_access_enabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>

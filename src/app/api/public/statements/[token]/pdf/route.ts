@@ -51,7 +51,9 @@ export async function GET(
           total_fee: Number(s.total_fee),
           discount: Number(s.discount),
           vat_type: s.vat_type ?? 'standard',
+          vat_treatment: s.vat_treatment || s.vat_type || 'exclusive',
           vat_rate: Number(s.vat_rate ?? 0),
+          no_vat_reason: s.no_vat_reason,
           university_name: s.university_name,
           course_name: s.course_name,
           specialization_name: s.specialization_name,
@@ -64,7 +66,9 @@ export async function GET(
         },
         ledger: {
           net_fee: Number(s.net_fee),
+          taxable: Number(s.taxable ?? s.net_fee),
           vat_amount: Number(s.vat_amount),
+          vat_total: Number(s.vat_total ?? s.vat_amount),
           total_payable: Number(s.total_payable),
           total_paid: Number(s.total_paid),
           balance: Number(s.balance),
@@ -95,6 +99,7 @@ export async function GET(
             s.company?.footer_note ??
             'Keep your receipt vouchers for future references.',
           statement_prefix: 'EB-FS',
+          vat_enabled: s.company?.vat_enabled !== false,
         },
         billingAddress: s.billing_address ?? null,
         statementNo: s.statement_no,

@@ -16,7 +16,9 @@ import { Label } from '@/components/ui/label'
 import { Combobox } from '@/components/ui/combobox'
 import { addStudentEnrollmentAction } from '../actions'
 import { formatAED } from '@/lib/money'
-import { Loader2 } from 'lucide-react'
+import { calculateVatBreakdown, type VatTreatment, type NoVatReason } from '@/lib/vat'
+import { cn } from '@/lib/utils'
+import { Loader2, Receipt } from 'lucide-react'
 import type {
   UniversityOption,
   CourseOption,
@@ -34,6 +36,12 @@ interface AddEnrollmentModalProps {
   staffList: StaffOption[]
   currentUserId: string
   isOwner: boolean
+  companySettings?: {
+    vat_enabled?: boolean | null
+    vat_rate?: number | null
+    default_vat_treatment?: string | null
+    no_vat_reason?: string | null
+  } | null
 }
 
 export function AddEnrollmentModal({
@@ -46,6 +54,7 @@ export function AddEnrollmentModal({
   staffList,
   currentUserId,
   isOwner,
+  companySettings,
 }: AddEnrollmentModalProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -57,6 +66,19 @@ export function AddEnrollmentModal({
   const [discount, setDiscount] = useState('0')
   const [intake, setIntake] = useState('')
   const [admissionStaffId, setAdmissionStaffId] = useState(currentUserId)
+
+  const vatEnabled = companySettings?.vat_enabled !== false
+  const defaultTreatment = (companySettings?.default_vat_treatment || 'exclusive') as VatTreatment
+  const defaultRate = Number(companySettings?.vat_rate ?? 5.0)
+  const defaultNoVatReason = (companySettings?.no_vat_reason || 'zero_rated') as NoVatReason
+
+  const [vatTreatment, setVatTreatment] = useState<VatTreatment>(
+    vatEnabled ? defaultTreatment : 'none'
+  )
+  const [vatRate] = useState<number>(defaultRate)
+  const [noVatReason, setNoVatReason] = useState<NoVatReason>(defaultNoVatReason)
+  const [openingPaid, setOpeningPaid] = useState('0')
+  const [openingPaidNote, setOpeningPaidNote] = useState('')
 
   const filteredCourses = courses.filter((c) => c.university_id === universityId)
   const filteredSpecs = specializations.filter((s) => s.course_id === courseId)
@@ -97,8 +119,12 @@ export function AddEnrollmentModal({
 
   const numFee = parseFloat(totalFee) || 0
   const numDiscount = parseFloat(discount) || 0
+  const effectiveTreatment = vatEnabled ? vatTreatment : 'none'
+  const breakdown = calculateVatBreakdown(numFee, numDiscount, effectiveTreatment, vatRate)
+  const netFee = breakdown.netFee
+  const totalPayable = breakdown.totalPayable
+  const numOpeningPaid = parseFloat(openingPaid) || 0
   const isDiscountExcessive = numDiscount > numFee
-  const netFee = Math.max(0, numFee - numDiscount)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -118,6 +144,10 @@ export function AddEnrollmentModal({
       setError('Discount cannot exceed total fee')
       return
     }
+    if (numOpeningPaid > totalPayable) {
+      setError('Opening paid cannot exceed total payable (AED ' + totalPayable.toFixed(2) + ')')
+      return
+    }
 
     setError(null)
 
@@ -131,6 +161,11 @@ export function AddEnrollmentModal({
         discount: numDiscount,
         intake: intake.trim() || null,
         admissionStaffId: isOwner ? admissionStaffId : currentUserId,
+        vatTreatment: effectiveTreatment,
+        vatRate: vatRate,
+        noVatReason: effectiveTreatment === 'none' ? noVatReason : null,
+        openingPaid: numOpeningPaid,
+        openingPaidNote: openingPaidNote.trim() || null,
       })
 
       if (!res.success) {
@@ -230,50 +265,180 @@ export function AddEnrollmentModal({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* Fee & VAT Treatment */}
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="add-fee" className="text-xs font-semibold text-[#0A0A0A]">
-                  Total Fee (AED) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="add-fee"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={totalFee}
-                  onChange={(e) => setTotalFee(e.target.value)}
-                  className="mt-1 tabular-nums font-mono"
-                  required
-                />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1">
+                  <Label htmlFor="add-fee" className="text-xs font-semibold text-[#0A0A0A]">
+                    Tuition Fee (AED) <span className="text-red-500">*</span>
+                  </Label>
+
+                  {vatEnabled && (
+                    <div className="inline-flex items-center p-0.5 bg-[#F5F6F6] border border-[#E4E7E7] rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setVatTreatment('exclusive')}
+                        className={cn(
+                          'px-2 py-1 text-[11px] font-medium rounded-md transition-all',
+                          vatTreatment === 'exclusive'
+                            ? 'bg-[#00A57E] text-white shadow-xs font-semibold'
+                            : 'text-[#6B7272] hover:text-[#0A0A0A]'
+                        )}
+                      >
+                        + VAT on top
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVatTreatment('inclusive')}
+                        className={cn(
+                          'px-2 py-1 text-[11px] font-medium rounded-md transition-all',
+                          vatTreatment === 'inclusive'
+                            ? 'bg-[#00A57E] text-white shadow-xs font-semibold'
+                            : 'text-[#6B7272] hover:text-[#0A0A0A]'
+                        )}
+                      >
+                        Includes VAT
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVatTreatment('none')}
+                        className={cn(
+                          'px-2 py-1 text-[11px] font-medium rounded-md transition-all',
+                          vatTreatment === 'none'
+                            ? 'bg-[#00A57E] text-white shadow-xs font-semibold'
+                            : 'text-[#6B7272] hover:text-[#0A0A0A]'
+                        )}
+                      >
+                        No VAT
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Input
+                      id="add-fee"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={totalFee}
+                      onChange={(e) => setTotalFee(e.target.value)}
+                      className="mt-1 tabular-nums font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      id="add-discount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Scholarship / Discount (AED)"
+                      value={discount}
+                      onChange={(e) => setDiscount(e.target.value)}
+                      className="mt-1 tabular-nums font-mono"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="add-discount" className="text-xs font-semibold text-[#0A0A0A]">
-                  Discount (AED) (optional)
-                </Label>
-                <Input
-                  id="add-discount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                  className="mt-1 tabular-nums font-mono"
-                />
+              {vatEnabled && vatTreatment === 'none' && (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <Label htmlFor="add-noVatReason" className="text-xs font-medium text-[#6B7272] shrink-0">
+                    No-VAT Reason:
+                  </Label>
+                  <select
+                    id="add-noVatReason"
+                    value={noVatReason}
+                    onChange={(e) => setNoVatReason(e.target.value as NoVatReason)}
+                    className="w-full text-xs h-8 px-2.5 bg-white border border-[#E4E7E7] rounded-lg"
+                  >
+                    <option value="zero_rated">Zero-rated (0%)</option>
+                    <option value="exempt">Exempt</option>
+                    <option value="out_of_scope">Out of scope</option>
+                  </select>
+                </div>
+              )}
+
+              {isDiscountExcessive && (
+                <p className="text-xs text-[#C53030] font-medium">
+                  Discount cannot exceed the total agreed fee.
+                </p>
+              )}
+
+              {/* Live Breakdown Card */}
+              <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-3.5 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between text-[#6B7272]">
+                  <span>Net Tuition Fee:</span>
+                  <span className="font-mono tabular-nums text-[#0A0A0A] font-medium">{formatAED(netFee)}</span>
+                </div>
+                {vatEnabled && vatTreatment !== 'none' && (
+                  <>
+                    <div className="flex items-center justify-between text-[#6B7272]">
+                      <span>Taxable Amount:</span>
+                      <span className="font-mono tabular-nums text-[#0A0A0A]">{formatAED(breakdown.taxable)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[#6B7272]">
+                      <span>VAT ({vatRate}%):</span>
+                      <span className="font-mono tabular-nums text-[#0A0A0A]">{formatAED(breakdown.vatTotal)}</span>
+                    </div>
+                  </>
+                )}
+                {vatEnabled && vatTreatment === 'none' && (
+                  <div className="flex items-center justify-between text-[#6B7272]">
+                    <span>VAT:</span>
+                    <span className="font-mono tabular-nums text-[#0A0A0A]">
+                      AED 0.00 ({noVatReason === 'zero_rated' ? 'Zero-rated' : noVatReason === 'exempt' ? 'Exempt' : 'Out of scope'})
+                    </span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-[#E4E7E7] flex items-center justify-between">
+                  <span className="font-semibold text-[#0A0A0A]">Total Payable:</span>
+                  <span className="text-base font-bold text-[#00A57E] font-mono tabular-nums">
+                    {formatAED(totalPayable)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {isDiscountExcessive && (
-              <p className="text-xs text-[#C53030] font-medium">
-                Discount cannot exceed the total agreed fee.
-              </p>
-            )}
-
-            <div className="rounded-xl bg-[#F5F6F6] border border-[#E4E7E7] p-3 flex items-center justify-between text-xs">
-              <span className="text-[#6B7272]">Agreed Net Fee:</span>
-              <span className="font-semibold text-[#0A0A0A] font-mono text-sm">{formatAED(netFee)}</span>
+            {/* Opening Balance / Already Paid Before System */}
+            <div className="rounded-xl border border-[#CCEDE5] bg-[#E6F6F2]/60 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#00805F]">
+                <Receipt className="h-4 w-4" />
+                <span>Already paid before this system (opening amount)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="add-openingPaid" className="text-xs font-medium text-[#0A0A0A]">
+                    Opening Amount (AED)
+                  </Label>
+                  <Input
+                    id="add-openingPaid"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={openingPaid}
+                    onChange={(e) => setOpeningPaid(e.target.value)}
+                    className="mt-1 tabular-nums font-mono bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-openingPaidNote" className="text-xs font-medium text-[#0A0A0A]">
+                    Opening Paid Note
+                  </Label>
+                  <Input
+                    id="add-openingPaidNote"
+                    placeholder="e.g. Receipt #123 from old paper ledger"
+                    value={openingPaidNote}
+                    onChange={(e) => setOpeningPaidNote(e.target.value)}
+                    className="mt-1 bg-white text-xs"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

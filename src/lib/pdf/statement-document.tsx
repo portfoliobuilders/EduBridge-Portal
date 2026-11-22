@@ -11,6 +11,7 @@ import {
 } from '@react-pdf/renderer'
 import path from 'path'
 import { formatAED } from '@/lib/money'
+import { amountInWords } from '@/lib/amount-in-words'
 import { formatDubaiDate, formatDubaiDateTime } from '@/lib/date'
 
 const fontsDir = path.join(process.cwd(), 'public', 'fonts')
@@ -237,8 +238,10 @@ export interface StatementDocumentProps {
     intake?: string | null
     total_fee: number
     discount: number
-    vat_type: string
+    vat_type?: string
+    vat_treatment?: string
     vat_rate: number
+    no_vat_reason?: string | null
     university_name: string
     course_name: string
     specialization_name?: string | null
@@ -251,7 +254,9 @@ export interface StatementDocumentProps {
   }
   ledger: {
     net_fee: number
+    taxable?: number
     vat_amount: number
+    vat_total?: number
     total_payable: number
     total_paid: number
     balance: number
@@ -277,6 +282,7 @@ export interface StatementDocumentProps {
     trn: string
     footer_note: string
     statement_prefix?: string
+    vat_enabled?: boolean | null
   }
   billingAddress?: {
     contact_name?: string | null
@@ -301,7 +307,14 @@ export function StatementDocument({
   statementNo,
   logoPath,
 }: StatementDocumentProps) {
-  const isTaxInvoice = enrollment.vat_type !== 'none'
+  const isVatRegistered = settings.vat_enabled !== false
+  const treatment = enrollment.vat_treatment || enrollment.vat_type || 'exclusive'
+  const isTaxInvoice = isVatRegistered && treatment !== 'none'
+  const vatRate = Number(enrollment.vat_rate ?? 5)
+  const vatTotal = Number(ledger.vat_total ?? ledger.vat_amount ?? 0)
+  const taxableAmount = Number(ledger.taxable ?? (treatment === 'inclusive' ? ledger.total_payable - vatTotal : ledger.net_fee))
+  const treatmentLabel = treatment === 'exclusive' ? 'Prices exclusive of VAT' : 'Prices inclusive of VAT'
+
   const fallbackLogo = path.join(
     process.cwd(),
     'public',
@@ -338,12 +351,20 @@ export function StatementDocument({
 
         {/* Title Bar */}
         <View style={styles.titleBar}>
-          <Text style={styles.titleText}>
-            {isTaxInvoice ? 'TAX INVOICE / STATEMENT' : 'FEE STATEMENT'}
-          </Text>
+          <View>
+            <Text style={styles.titleText}>
+              {isTaxInvoice ? 'TAX INVOICE' : 'FEE STATEMENT'}
+            </Text>
+            {isTaxInvoice && (
+              <Text style={{ fontSize: 7, color: '#A0AEC0', marginTop: 1 }}>
+                {treatmentLabel}
+              </Text>
+            )}
+          </View>
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Text style={styles.metaText}>
-              Statement No: <Text style={styles.metaBold}>{statementNo}</Text>
+              {isTaxInvoice ? 'Invoice Ref:' : 'Statement No:'}{' '}
+              <Text style={styles.metaBold}>{statementNo}</Text>
             </Text>
             <Text style={styles.metaText}>
               Date:{' '}
@@ -536,26 +557,21 @@ export function StatementDocument({
               <Text style={styles.summaryVal}>{formatAED(ledger.net_fee)}</Text>
             </View>
 
-            {enrollment.vat_type === 'exclusive' && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>
-                  VAT ({enrollment.vat_rate}%):
-                </Text>
-                <Text style={styles.summaryVal}>
-                  + {formatAED(ledger.vat_amount)}
-                </Text>
-              </View>
-            )}
-
-            {enrollment.vat_type === 'inclusive' && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>
-                  VAT ({enrollment.vat_rate}% included):
-                </Text>
-                <Text style={styles.summaryVal}>
-                  {formatAED(ledger.vat_amount)}
-                </Text>
-              </View>
+            {isTaxInvoice && (
+              <>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Taxable Amount:</Text>
+                  <Text style={styles.summaryVal}>{formatAED(taxableAmount)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>
+                    VAT ({vatRate}%{treatment === 'inclusive' ? ' included' : ''}):
+                  </Text>
+                  <Text style={styles.summaryVal}>
+                    {treatment === 'exclusive' ? '+ ' : ''}{formatAED(vatTotal)}
+                  </Text>
+                </View>
+              </>
             )}
 
             <View
@@ -570,10 +586,16 @@ export function StatementDocument({
               ]}
             >
               <Text style={[styles.summaryLabel, { fontWeight: 600 }]}>
-                Total Payable:
+                {isTaxInvoice ? 'Total (incl. VAT):' : 'Total Payable:'}
               </Text>
               <Text style={[styles.summaryVal, { fontWeight: 600 }]}>
                 {formatAED(ledger.total_payable)}
+              </Text>
+            </View>
+
+            <View style={{ marginBottom: 4 }}>
+              <Text style={{ fontSize: 7, fontStyle: 'italic', color: '#00805F', textAlign: 'right' }}>
+                {amountInWords(ledger.total_payable)}
               </Text>
             </View>
 

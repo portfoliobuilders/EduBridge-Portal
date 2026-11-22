@@ -26,7 +26,9 @@ export async function GET(
         total_fee,
         discount,
         vat_type,
+        vat_treatment,
         vat_rate,
+        no_vat_reason,
         status,
         opening_paid,
         student:students!inner(
@@ -87,6 +89,7 @@ export async function GET(
         settings?.footer_note ??
         'Keep your receipt vouchers for future references.',
       statement_prefix: settings?.statement_prefix ?? 'EB-FS',
+      vat_enabled: settings?.vat_enabled !== false,
     }
 
     const year = new Date().getFullYear()
@@ -108,7 +111,9 @@ export async function GET(
         total_fee: Number(enrollment.total_fee),
         discount: Number(enrollment.discount),
         vat_type: enrollment.vat_type,
+        vat_treatment: enrollment.vat_treatment || enrollment.vat_type || 'exclusive',
         vat_rate: Number(enrollment.vat_rate),
+        no_vat_reason: enrollment.no_vat_reason,
         university_name: enrollment.university.name,
         course_name: enrollment.course.name,
         specialization_name: enrollment.specialization?.name,
@@ -123,7 +128,9 @@ export async function GET(
         net_fee: Number(
           ledger?.net_fee ?? enrollment.total_fee - enrollment.discount
         ),
+        taxable: Number(ledger?.taxable ?? ledger?.net_fee ?? enrollment.total_fee - enrollment.discount),
         vat_amount: Number(ledger?.vat_amount ?? 0),
+        vat_total: Number(ledger?.vat_total ?? ledger?.vat_amount ?? 0),
         total_payable: Number(
           ledger?.total_payable ?? enrollment.total_fee - enrollment.discount
         ),

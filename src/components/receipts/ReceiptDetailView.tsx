@@ -39,8 +39,11 @@ export interface ReceiptDetailViewProps {
     paid_before_snapshot: number
     balance_after_snapshot: number
     vat_amount: number
+    taxable_amount?: number | null
+    vat_treatment?: string | null
     vat_type: string
     vat_rate: number
+    no_vat_reason?: string | null
     share_token: string
     share_enabled?: boolean
     void_reason?: string | null
@@ -76,6 +79,7 @@ export interface ReceiptDetailViewProps {
     website: string
     trn: string
     footer_note: string
+    vat_enabled?: boolean | null
     whatsapp_receipt_template?: string | null
   }
   receivedByName: string
@@ -100,6 +104,15 @@ export function ReceiptDetailView({
   const isNew = searchParams?.get('new') === 'true'
   const [voidDialogOpen, setVoidDialogOpen] = useState(false)
   const isVoid = payment.status === 'void'
+  const isVatRegistered = settings.vat_enabled !== false
+  const treatment = payment.vat_treatment || payment.vat_type || 'exclusive'
+  const vatRate = Number(payment.vat_rate ?? 5)
+  const vatAmount = Number(payment.vat_amount ?? 0)
+  const taxableAmount = payment.taxable_amount != null
+    ? Number(payment.taxable_amount)
+    : Number(payment.amount) - vatAmount
+  const noVatReason = payment.no_vat_reason || 'zero_rated'
+  const noVatLabel = noVatReason === 'exempt' ? 'exempt' : noVatReason === 'out_of_scope' ? 'out of scope' : 'zero-rated'
 
   const modeLabels: Record<string, string> = {
     card: 'Credit / Debit Card',
@@ -311,18 +324,39 @@ export function ReceiptDetailView({
         </div>
 
         {/* 4. Highlighted Amount Box */}
-        <div className="mt-4 p-4 rounded-lg bg-[#E6F6F2] border border-[#CCEDE5] flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-          <div>
-            <div className="text-xs uppercase tracking-wider font-semibold text-[#00805F]">
-              Amount Received
+        <div className="mt-4 p-4 rounded-lg bg-[#E6F6F2] border border-[#CCEDE5] space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+            <div>
+              <div className="text-xs uppercase tracking-wider font-semibold text-[#00805F]">
+                {isVatRegistered && treatment !== 'none'
+                  ? `Amount received (incl. VAT ${vatRate}%)`
+                  : 'Amount Received'}
+              </div>
+              <div className="text-xs italic text-gray-700 mt-1">
+                {amountInWords(payment.amount)}
+              </div>
             </div>
-            <div className="text-xs italic text-gray-700 mt-1">
-              {amountInWords(payment.amount)}
+            <div className="text-2xl font-bold text-[#00A57E] font-mono tabular-nums">
+              {formatAED(payment.amount)}
             </div>
           </div>
-          <div className="text-2xl font-bold text-[#00A57E] font-mono tabular-nums">
-            {formatAED(payment.amount)}
-          </div>
+
+          {isVatRegistered && treatment !== 'none' && (
+            <div className="pt-2 border-t border-[#CCEDE5] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-[#00805F] font-semibold font-mono">
+                of which VAT: {formatAED(vatAmount)}
+              </span>
+              <span className="text-gray-600 font-mono">
+                Taxable: {formatAED(taxableAmount)}
+              </span>
+            </div>
+          )}
+
+          {isVatRegistered && treatment === 'none' && (
+            <div className="pt-2 border-t border-[#CCEDE5] text-xs text-gray-600">
+              VAT: Not applicable ({noVatLabel})
+            </div>
+          )}
         </div>
 
         {/* 5. Payment Transaction Details */}
@@ -377,7 +411,7 @@ export function ReceiptDetailView({
                   </td>
                 </tr>
               )}
-              {payment.vat_type === 'exclusive' && (
+              {isVatRegistered && treatment === 'exclusive' && (
                 <>
                   <tr>
                     <td className="p-2.5 font-sans">Net Tuition (excl. VAT)</td>
@@ -387,7 +421,7 @@ export function ReceiptDetailView({
                   </tr>
                   <tr>
                     <td className="p-2.5 font-sans">
-                      VAT ({payment.vat_rate}%) on Tuition
+                      VAT ({vatRate}%) on Tuition
                     </td>
                     <td className="p-2.5 text-right">
                       {formatAED(
@@ -398,12 +432,12 @@ export function ReceiptDetailView({
                   </tr>
                 </>
               )}
-              {payment.vat_type === 'inclusive' && (
+              {isVatRegistered && treatment === 'inclusive' && (
                 <tr>
                   <td className="p-2.5 font-sans">
-                    VAT ({payment.vat_rate}% included in payment)
+                    VAT ({vatRate}% included in payment)
                   </td>
-                  <td className="p-2.5 text-right">{formatAED(payment.vat_amount)}</td>
+                  <td className="p-2.5 text-right">{formatAED(vatAmount)}</td>
                 </tr>
               )}
               <tr className="bg-gray-50/70 font-semibold">

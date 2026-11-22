@@ -194,18 +194,39 @@ export default async function PublicReceiptPage({
           </div>
 
           {/* Amount Box */}
-          <div className="mt-4 p-4 rounded-lg bg-[#E6F6F2] border border-[#CCEDE5] flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-            <div>
-              <div className="text-xs uppercase tracking-wider font-semibold text-[#00805F]">
-                Amount Received
+          <div className="mt-4 p-4 rounded-lg bg-[#E6F6F2] border border-[#CCEDE5] space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+              <div>
+                <div className="text-xs uppercase tracking-wider font-semibold text-[#00805F]">
+                  {v.company?.vat_enabled !== false && (v.vat_treatment || 'exclusive') !== 'none'
+                    ? `Amount received (incl. VAT ${v.vat_rate ?? 5}%)`
+                    : 'Amount Received'}
+                </div>
+                <div className="text-xs italic text-gray-700 mt-1">
+                  {amountInWords(Number(v.amount))}
+                </div>
               </div>
-              <div className="text-xs italic text-gray-700 mt-1">
-                {amountInWords(Number(v.amount))}
+              <div className="text-2xl font-bold text-[#00A57E] font-mono tabular-nums">
+                {formatAED(Number(v.amount))}
               </div>
             </div>
-            <div className="text-2xl font-bold text-[#00A57E] font-mono tabular-nums">
-              {formatAED(Number(v.amount))}
-            </div>
+
+            {v.company?.vat_enabled !== false && (v.vat_treatment || 'exclusive') !== 'none' && (
+              <div className="pt-2 border-t border-[#CCEDE5] flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="text-[#00805F] font-semibold font-mono">
+                  of which VAT: {formatAED(Number(v.vat_amount ?? 0))}
+                </span>
+                <span className="text-gray-600 font-mono">
+                  Taxable: {formatAED(Number(v.taxable_amount ?? (Number(v.amount) - Number(v.vat_amount ?? 0))))}
+                </span>
+              </div>
+            )}
+
+            {v.company?.vat_enabled !== false && (v.vat_treatment || 'exclusive') === 'none' && (
+              <div className="pt-2 border-t border-[#CCEDE5] text-xs text-gray-600">
+                VAT: Not applicable ({v.no_vat_reason === 'exempt' ? 'exempt' : v.no_vat_reason === 'out_of_scope' ? 'out of scope' : 'zero-rated'})
+              </div>
+            )}
           </div>
 
           {/* Payment Details */}

@@ -68,6 +68,11 @@ interface VatExportRow {
   vat_collected: number | string
   total_collected: number | string
   receipt_count: number
+  by_treatment?: {
+    exclusive?: { taxable?: number; vat?: number }
+    inclusive?: { taxable?: number; vat?: number }
+    none?: { total?: number }
+  }
 }
 
 function escapeCsvCell(val: unknown): string {
@@ -287,7 +292,7 @@ export async function GET(request: NextRequest) {
         'Inclusive VAT (AED)',
         'No VAT Total (AED)',
       ]
-      const rows = rowsData.map((r: any) => [
+      const rows = (rowsData as VatExportRow[]).map((r) => [
         r.month_name.trim(),
         Number(r.taxable_amount).toFixed(2),
         Number(r.vat_collected).toFixed(2),

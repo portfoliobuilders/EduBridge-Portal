@@ -42,6 +42,7 @@ interface CollectionsRow {
   student_name: string
   student_code: string
   amount: number
+  taxable_amount?: number
   vat_amount: number
   mode: string
   reference_no: string | null
@@ -121,6 +122,11 @@ interface VatMonthRow {
   vat_collected: number
   total_collected: number
   receipt_count: number
+  by_treatment?: {
+    exclusive?: { taxable: number; vat: number; total: number; count: number }
+    inclusive?: { taxable: number; vat: number; total: number; count: number }
+    none?: { taxable: number; total: number; count: number }
+  }
 }
 
 interface ReportsClientProps {
@@ -363,11 +369,10 @@ export function ReportsClient({
         <div className="flex items-center gap-1 overflow-x-auto text-xs font-medium">
           <button
             onClick={() => setActiveTab('collections')}
-            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'collections'
+            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'collections'
                 ? 'bg-[#00A57E] text-white font-semibold shadow-xs'
                 : 'text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6]'
-            }`}
+              }`}
           >
             <Receipt className="w-3.5 h-3.5" />
             <span>Collections</span>
@@ -375,11 +380,10 @@ export function ReportsClient({
 
           <button
             onClick={() => setActiveTab('outstanding')}
-            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'outstanding'
+            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'outstanding'
                 ? 'bg-[#00A57E] text-white font-semibold shadow-xs'
                 : 'text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6]'
-            }`}
+              }`}
           >
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Outstanding Balances</span>
@@ -387,11 +391,10 @@ export function ReportsClient({
 
           <button
             onClick={() => setActiveTab('dayend')}
-            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'dayend'
+            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'dayend'
                 ? 'bg-[#00A57E] text-white font-semibold shadow-xs'
                 : 'text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6]'
-            }`}
+              }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
             <span>Day-End Cash</span>
@@ -399,11 +402,10 @@ export function ReportsClient({
 
           <button
             onClick={() => setActiveTab('voids')}
-            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'voids'
+            className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'voids'
                 ? 'bg-[#00A57E] text-white font-semibold shadow-xs'
                 : 'text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6]'
-            }`}
+              }`}
           >
             <XCircle className="w-3.5 h-3.5" />
             <span>Void Logs</span>
@@ -412,11 +414,10 @@ export function ReportsClient({
           {filterOptions.vatEnabled && (
             <button
               onClick={() => setActiveTab('vat')}
-              className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'vat'
+              className={`px-3 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'vat'
                   ? 'bg-[#00A57E] text-white font-semibold shadow-xs'
                   : 'text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6]'
-              }`}
+                }`}
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>VAT Summary</span>
@@ -740,25 +741,22 @@ export function ReportsClient({
               <div className="flex items-center bg-[#F5F6F6] p-1 rounded-xl text-xs">
                 <button
                   onClick={() => setOutstandingSort('balance')}
-                  className={`px-2.5 py-1 rounded-lg ${
-                    outstandingSort === 'balance' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg ${outstandingSort === 'balance' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
+                    }`}
                 >
                   Highest Balance
                 </button>
                 <button
                   onClick={() => setOutstandingSort('days')}
-                  className={`px-2.5 py-1 rounded-lg ${
-                    outstandingSort === 'days' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg ${outstandingSort === 'days' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
+                    }`}
                 >
                   Days Inactive
                 </button>
                 <button
                   onClick={() => setOutstandingSort('name')}
-                  className={`px-2.5 py-1 rounded-lg ${
-                    outstandingSort === 'name' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg ${outstandingSort === 'name' ? 'bg-white font-semibold text-[#0A0A0A]' : 'text-[#6B7272]'
+                    }`}
                 >
                   Name
                 </button>
@@ -1061,6 +1059,7 @@ export function ReportsClient({
                     <th className="py-3 px-4 text-right">Taxable Amount</th>
                     <th className="py-3 px-4 text-right">VAT Collected (5%)</th>
                     <th className="py-3 px-4 text-right">Total Revenue</th>
+                    <th className="py-3 px-4 text-center">Treatment Breakdown (Excl / Incl / None)</th>
                     <th className="py-3 px-4 text-center">Receipts Count</th>
                   </tr>
                 </thead>
@@ -1080,6 +1079,13 @@ export function ReportsClient({
                         <td className="py-3 px-4 text-right text-[#0A0A0A]">
                           {formatAED(Number(m.total_collected))}
                         </td>
+                        <td className="py-3 px-4 text-center font-sans text-[11px] text-[#6B7272]">
+                          {m.by_treatment ? (
+                            <span title={`Exclusive: ${m.by_treatment.exclusive?.count || 0} (${formatAED(m.by_treatment.exclusive?.vat || 0)} VAT), Inclusive: ${m.by_treatment.inclusive?.count || 0} (${formatAED(m.by_treatment.inclusive?.vat || 0)} VAT), None: ${m.by_treatment.none?.count || 0}`}>
+                              Excl: {m.by_treatment.exclusive?.count || 0} · Incl: {m.by_treatment.inclusive?.count || 0} · None: {m.by_treatment.none?.count || 0}
+                            </span>
+                          ) : '—'}
+                        </td>
                         <td className="py-3 px-4 text-center text-[#6B7272] font-sans">
                           {m.receipt_count}
                         </td>
@@ -1087,7 +1093,7 @@ export function ReportsClient({
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-muted-foreground font-sans">
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground font-sans">
                         No VAT data available for {vatYear}.
                       </td>
                     </tr>

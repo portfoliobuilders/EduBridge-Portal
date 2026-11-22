@@ -103,8 +103,8 @@ export function calculatePaymentVat({
   rate = 5.0,
 }: {
   amount: number;
-  balanceBefore: number;
-  enrollmentVatTotal: number;
+  balanceBefore?: number;
+  enrollmentVatTotal?: number;
   priorValidVatSum?: number;
   openingPaid?: number;
   treatment?: VatTreatment;
@@ -121,10 +121,13 @@ export function calculatePaymentVat({
     };
   }
 
-  const balanceAfter = roundToTwoDecimals(balanceBefore - safeAmount);
-
-  // If this payment brings balance to exactly 0 (or over), reconcile rounding against total VAT
-  if (balanceAfter <= 0.0001 && balanceBefore > 0) {
+  // If balanceBefore and enrollmentVatTotal are provided and this payment brings balance to 0, reconcile
+  if (
+    balanceBefore !== undefined &&
+    enrollmentVatTotal !== undefined &&
+    roundToTwoDecimals(balanceBefore - safeAmount) <= 0.0001 &&
+    balanceBefore > 0
+  ) {
     const openingVat =
       openingPaid > 0
         ? roundToTwoDecimals((openingPaid * safeRate) / (100 + safeRate))

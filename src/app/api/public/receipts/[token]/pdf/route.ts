@@ -70,8 +70,11 @@ export async function GET(
           paid_before_snapshot: Number(v.paid_before_snapshot),
           balance_after_snapshot: Number(v.balance_after_snapshot),
           vat_amount: Number(v.vat_amount ?? 0),
-          vat_type: 'standard',
-          vat_rate: 0,
+          taxable_amount: v.taxable_amount != null ? Number(v.taxable_amount) : Number(v.amount) - Number(v.vat_amount ?? 0),
+          vat_treatment: v.vat_treatment || 'exclusive',
+          vat_type: v.vat_treatment || 'exclusive',
+          vat_rate: Number(v.vat_rate ?? 5),
+          no_vat_reason: v.no_vat_reason,
           share_token: token,
           void_reason: v.void_reason,
           voided_at: v.voided_at,
@@ -102,6 +105,7 @@ export async function GET(
           footer_note:
             v.company?.footer_note ??
             'Keep your receipt vouchers for future references.',
+          vat_enabled: v.company?.vat_enabled !== false,
         },
         billingAddress: null,
         opening_paid: 0,
