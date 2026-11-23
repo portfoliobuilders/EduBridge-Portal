@@ -106,11 +106,7 @@ test.describe('Attendance Geofencing, Punch Flow & Admin Console E2E', () => {
 
   test.afterAll(async () => {
     if (staffId) {
-      await adminClient.from('attendance_punches').delete().eq('user_id', staffId);
-      await adminClient.from('attendance_days').delete().eq('user_id', staffId);
-      await adminClient.from('leave_requests').delete().eq('user_id', staffId);
-      await adminClient.from('regularization_requests').delete().eq('user_id', staffId);
-      await adminClient.from('staff_attendance_settings').delete().eq('user_id', staffId);
+      await adminClient.rpc('cleanup_test_attendance_user', { p_user_id: staffId });
       await adminClient.auth.admin.deleteUser(staffId);
     }
     if (adminId) {

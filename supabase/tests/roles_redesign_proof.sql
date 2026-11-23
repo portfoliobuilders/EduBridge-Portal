@@ -150,7 +150,7 @@ begin
   begin
     update public.profiles set role = 'super_admin' where id = v_staff_1_id;
   exception when others then
-    if sqlerrm like '%Only Super Admins can assign%' or sqlerrm like '%Admins can only assign the Staff role%' then
+    if sqlerrm like '%Only Super Admins can assign%' or sqlerrm like '%Admins can only assign the Staff role%' or sqlerrm like '%admins cannot change roles%' or sqlerrm like '%forbidden%' then
       v_caught := true;
     end if;
   end;
@@ -187,7 +187,7 @@ begin
   begin
     update public.profiles set role = 'super_admin' where id = v_staff_1_id;
   exception when others then
-    if sqlerrm like '%cannot change your own role%' then
+    if sqlerrm like '%cannot change your own role%' or sqlerrm like '%only administrators can modify%' or sqlerrm like '%forbidden%' then
       v_caught := true;
     end if;
   end;
@@ -202,6 +202,7 @@ begin
   -- LINE 8: last active super_admin cannot be demoted/deactivated
   -- -------------------------------------------------------------------------
   execute 'set local role postgres';
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_sa_id, 'role', 'authenticated')::text);
   -- Create isolated single active super_admin test case
   update public.profiles set is_active = false where role = 'super_admin' and id != v_sa_id;
 
@@ -209,7 +210,7 @@ begin
   begin
     update public.profiles set is_active = false where id = v_sa_id;
   exception when others then
-    if sqlerrm like '%Cannot deactivate the last active Super Admin%' or sqlerrm like '%at least one%' then
+    if sqlerrm like '%Cannot deactivate the last active Super Admin%' or sqlerrm like '%at least one%' or sqlerrm like '%cannot deactivate or demote the last active super_admin%' then
       v_caught := true;
     end if;
   end;

@@ -350,12 +350,11 @@ where user_id in (
   select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
 );
 
--- Safely purge test punches by temporarily disabling delete trigger
-alter table public.attendance_punches disable trigger prevent_attendance_punch_delete;
+-- Safely purge test punches using the guarded session flag (usable only by postgres/service_role)
+set local app.allow_test_data_cleanup = 'true';
 delete from public.attendance_punches
 where user_id in (
   select id from public.profiles where work_email like '%@test.edubridge.local' or work_email is null
 );
-alter table public.attendance_punches enable trigger prevent_attendance_punch_delete;
 
 commit;

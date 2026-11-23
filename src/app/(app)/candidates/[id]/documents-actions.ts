@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireUser } from '@/lib/auth'
@@ -247,31 +246,23 @@ export async function createDocumentUploadLinkAction(params: {
   expiryDays: number
 }): Promise<ActionResult<{ linkId: string; token: string; url: string; expiresAt: string }>> {
   try {
-    const { user } = await requireUser()
-    const admin = createAdminClient()
+    await requireUser()
+    const supabase = await createClient()
 
     if (!params.studentId || !params.requestedTypes?.length) {
       return { success: false, error: 'Student and requested document types are required.' }
     }
 
-    const token = crypto.randomBytes(32).toString('hex') // 64-character unique token
     const days = [3, 7, 14].includes(params.expiryDays) ? params.expiryDays : 7
-    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
 
-    const { data: link, error: insertErr } = await admin
-      .from('document_upload_links')
-      .insert({
-        student_id: params.studentId,
-        token,
-        requested_types: params.requestedTypes,
-        expires_at: expiresAt,
-        created_by: user.id,
-      })
-      .select('id, token, expires_at')
-      .single()
+    const { data: link, error: rpcErr } = await supabase.rpc('create_document_upload_link', {
+      p_student_id: params.studentId,
+      p_requested_types: params.requestedTypes,
+      p_expiry_days: days,
+    })
 
-    if (insertErr || !link) {
-      return { success: false, error: 'Failed to create document upload link.' }
+    if (rpcErr || !link) {
+      return { success: false, error: rpcErr?.message || 'Failed to create document upload link.' }
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'

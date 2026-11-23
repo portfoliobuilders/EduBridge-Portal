@@ -96,7 +96,7 @@ async function main() {
       continue
     }
 
-    // 7b. Handle attendance punches: punches are immutable - we can't delete them.
+    // 7b. Handle attendance punches: purge via guarded test cleanup RPC
     const { data: punches } = await admin
       .from('attendance_punches')
       .select('id')
@@ -104,10 +104,8 @@ async function main() {
       .limit(1)
 
     if (punches && punches.length > 0) {
-      console.log(`  ⚠ User has attendance punches — deactivating profile and banning auth user instead.`)
-      await admin.from('profiles').update({ is_active: false }).eq('id', uid)
-      await admin.auth.admin.updateUserById(uid, { ban_duration: '876000h' })
-      continue
+      console.log(`  Purging attendance records via cleanup_test_attendance_user...`)
+      await admin.rpc('cleanup_test_attendance_user', { p_user_id: uid })
     }
 
     // 8. Handle enrollments created by this user

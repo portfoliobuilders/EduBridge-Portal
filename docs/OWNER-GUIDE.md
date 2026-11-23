@@ -245,6 +245,7 @@ EduBridge Portal provides a paperless document repository for student admission 
 ### Verification Workflow
 1. When documents are uploaded, the counsellor and administrator receive an in-app notification.
 2. Tap any document card to open the previewer:
+   - **Access & Permissions**: Only Super Admins, scoped team Administrators, or the candidate's assigned counsellor (current candidate owner or admitting counsellor) can verify, reject, archive, or generate upload links. When a candidate is transferred to a new counsellor, document management rights immediately transfer to the new owner, and the former owner is strictly restricted.
    - **Rotate & Zoom**: Inspect stamps, marks, and signatures clearly.
    - **Verify**: Marks document as verified with the staff member's name and Dubai timestamp.
    - **Reject**: Requires a mandatory explanation reason (e.g. *"Document image is blurry — please re-upload clear scan"*).
@@ -394,7 +395,7 @@ Staff members can manage their everyday profile:
 - Highly sensitive employee data (Date of Birth, home residential address, and emergency contact details) are stored in an isolated, encrypted database table protected by PostgreSQL Row-Level Security.
 - **Peers cannot view these fields under any circumstances**.
 - Only authorized administrators within the employee's supervisory scope can access emergency contacts and personal details.
-- Corporate fields (Job title, Employee ID, Joining Date, Work Email, Role, Reporting Manager) are **admin-locked** and can only be altered by an Administrator.
+- Corporate fields (Job title, Employee ID, Joining Date, Work Email, Role, Reporting Manager) are **admin-locked**. System roles (`super_admin`, `admin`, `staff`), admin scopes, and developer flags can only be altered by a Super Admin. Administrators cannot alter their own permissions, and can only manage job details and reporting relationships for staff within their assigned supervisory team.
 
 ---
 

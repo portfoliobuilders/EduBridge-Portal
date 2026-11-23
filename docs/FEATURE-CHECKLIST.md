@@ -10,10 +10,10 @@ This document maps every feature from the official client quotation against its 
 
 | # | Feature | Where in the App (Route / Component) | How Verified (Test Name / SQL Proof) | Status |
 |---|---|---|---|:---:|
-| **1.1** | Owner & Staff roles | `src/lib/auth.ts` (`requireOwner`, `requireUser`), `profiles.role` enum, `AppSidebar.tsx` / `MobileNav.tsx` | `tests/e2e/smoke.spec.ts` (Test 3: Staff access to `/admin` blocked with 404), `supabase/tests/guard_bypass_proof.sql` (`test_1_staff_self_promote` PASS) | ✔ done |
-| **1.2** | Login + password reset | `src/app/(auth)/login/page.tsx`, `src/app/(auth)/reset-password/page.tsx`, `actions.ts` | `tests/e2e/smoke.spec.ts` (Real browser login for staff and owner), `curl.exe -I http://127.0.0.1:3000/login` (HTTP 200 OK) | ✔ done |
-| **1.3** | Owner invites / deactivates staff | `src/app/(app)/admin/staff/page.tsx`, `StaffClient.tsx`, `actions.ts` (`inviteStaffAction`, `updateStaffStatusAction`), `invite_staff` RPC | `supabase/tests/rpc_hardening_proof.sql` (Test 1: Staff blocked from `get_staff_list`, Owner permitted), `StaffClient.tsx` toggle verification | ✔ done |
-| **1.4** | DB-level permissions | PostgreSQL Row-Level Security on all 15 public tables, `is_owner()`, `is_active_user()`, `0005_revoke_anon_table_grants.sql` | `supabase/tests/rls_and_payments.sql` (Test 1: Direct UPDATE on payments rejected; Test 5: Anon table SELECT rejected), `supabase db advisors --remote` | ✔ done |
+| **1.1** | Role-based access control (Super Admin, Admin, Staff) | `src/lib/auth.ts` (`requireRole`, `requireUser`), `profiles.role` enum, `AppSidebar.tsx` / `MobileNav.tsx` | `tests/e2e/smoke.spec.ts` (Staff access to `/admin` restricted), `supabase/tests/profile_guard_proofs.sql` (privilege escalation blocked) | ✔ done |
+| **1.2** | Login + password reset | `src/app/(auth)/login/page.tsx`, `src/app/(auth)/reset-password/page.tsx`, `actions.ts` | `tests/e2e/smoke.spec.ts` (Real browser login for staff and admins), `curl.exe -I http://127.0.0.1:3000/login` (HTTP 200 OK) | ✔ done |
+| **1.3** | Administrators invite / deactivate staff | `src/app/(app)/admin/staff/page.tsx`, `StaffClient.tsx`, `actions.ts` (`inviteStaffAction`, `updateStaffStatusAction`), `invite_staff` RPC | `supabase/tests/rpc_hardening_proof.sql` (Staff blocked from `get_staff_list`, Admins permitted), `StaffClient.tsx` toggle verification | ✔ done |
+| **1.4** | DB-level permissions | PostgreSQL Row-Level Security on all public tables, `is_super_admin()`, `is_active_user()`, `0005_revoke_anon_table_grants.sql` | `supabase/tests/rls_and_payments.sql` (Direct UPDATE on payments rejected; Anon table SELECT rejected), `supabase db advisors --remote` | ✔ done |
 
 ---
 
@@ -52,7 +52,7 @@ This document maps every feature from the official client quotation against its 
 | **4.3** | Auto Dubai timestamp + receiver capture | `paid_at` in UTC `timestamptz` displayed in `Asia/Dubai`, `received_by` from `auth.uid()` | `supabase/tests/part7_dashboards_proof.sql` (Test 3: Midnight-crossing window at 20:00 UTC matches Dubai calendar day PASS) | ✔ done |
 | **4.4** | Overpayment & double-submit blocked | `record_payment` RPC balance constraint, `payments.idempotency_key` unique index | `supabase/tests/idempotency_proof.sql` (Duplicate key returns existing payment, count remains 1 PASS), `supabase/tests/rls_and_payments.sql` (Test 3 PASS) | ✔ done |
 | **4.5** | Gapless yearly receipt numbering | `counters` sequence table row-lock (`EB-RV-YYYY-XXXXX`) in `record_payment` RPC | `supabase/tests/rls_and_payments.sql` (Test 4: `EB-RV-2026-00005 -> EB-RV-2026-00006` PASS), `tests/e2e/smoke.spec.ts` | ✔ done |
-| **4.6** | Immutable payments; Owner void with mandatory reason | `payments` RLS (no UPDATE/DELETE), `void_payment` RPC with mandatory `p_reason` | `tests/e2e/smoke.spec.ts` (Test 2: Owner voids payment, verifies VOIDED badge), `supabase/tests/rls_and_payments.sql` (Test 2 PASS) | ✔ done |
+| **4.6** | Immutable payments; Super Admin / Admin void with mandatory reason | `payments` RLS (no UPDATE/DELETE), `void_payment` RPC with mandatory `p_reason` | `tests/e2e/smoke.spec.ts` (Super Admin voids payment, verifies VOIDED badge), `supabase/tests/rls_and_payments.sql` | ✔ done |
 
 ---
 
@@ -85,9 +85,9 @@ This document maps every feature from the official client quotation against its 
 | # | Feature | Where in the App (Route / Component) | How Verified (Test Name / SQL Proof) | Status |
 |---|---|---|---|:---:|
 | **7.1** | Staff home dashboard | `src/app/(app)/page.tsx`, `StaffDashboard.tsx`, `get_staff_dashboard_kpis` RPC (today collections by mode, month collections, top 10 pending balances) | `supabase/tests/joe_dashboard_numbers.sql`, `supabase/tests/part7_dashboards_proof.sql` (Test 6: Staff calling KPI forced to own data) | ✔ done |
-| **7.2** | Owner company dashboard | `src/app/(app)/page.tsx`, `OwnerDashboard.tsx`, `get_owner_dashboard_kpis` RPC (Today/Week/Month/Custom period switcher in Asia/Dubai) | `supabase/tests/part7_dashboards_proof.sql` (Test 2: Dashboard KPI total strictly matches direct SQL SUM) | ✔ done |
+| **7.2** | Company overview dashboard | `src/app/(app)/page.tsx`, `OwnerDashboard.tsx`, `get_owner_dashboard_kpis` RPC (Today/Week/Month/Custom period switcher in Asia/Dubai) | `supabase/tests/part7_dashboards_proof.sql` (Dashboard KPI total strictly matches direct SQL SUM) | ✔ done |
 | **7.3** | Recharts visualization | `OwnerDashboard.tsx` (Daily collections bar chart, payment mode distribution, top universities) | `OwnerDashboard.tsx`, `npm run build` client component bundle compilation | ✔ done |
-| **7.4** | Staff performance leaderboard | `StaffLeaderboard.tsx` in `OwnerDashboard.tsx` (admissions count, collected sum, avg receipt, outstanding balances) | `supabase/tests/part7_dashboards_proof.sql` (Test 7: Staff collections forced to own rows; Owner views all) | ✔ done |
+| **7.4** | Staff performance leaderboard | `StaffLeaderboard.tsx` in `OwnerDashboard.tsx` (admissions count, collected sum, avg receipt, outstanding balances) | `supabase/tests/part7_dashboards_proof.sql` (Staff collections forced to own rows; Admins view all) | ✔ done |
 | **7.5** | Reports (Collections, Outstanding, Day-End, Voided) | `src/app/(app)/reports/page.tsx`, `CollectionsReportTab.tsx`, `OutstandingReportTab.tsx`, `DayEndReportTab.tsx`, `VoidedReportTab.tsx` | `supabase/tests/part7_dashboards_proof.sql` (Test 5: Voided payments excluded from collections and tallied in void count PASS) | ✔ done |
 | **7.6** | CSV data export | `src/app/api/reports/export/route.ts` (streams RFC 4180 compliant CSVs with formatted currency and headers) | `src/app/api/reports/export/route.ts` route handler execution | ✔ done |
 

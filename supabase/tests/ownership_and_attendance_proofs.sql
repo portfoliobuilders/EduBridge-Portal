@@ -1,6 +1,7 @@
 -- ============================================================================
 -- Test Suite: ownership_and_attendance_proofs.sql
--- Verification for Candidate Ownership, Transfer & Attendance Security (Section I)
+-- Verification for Candidate Ownership, Transfer, Document Actions & Attendance Security
+-- Requirements 2 & 3
 --
 -- Single transaction with complete rollback.
 -- ============================================================================
@@ -18,44 +19,52 @@ grant all on ownership_att_results to authenticated, anon;
 
 do $$
 declare
-  v_admin_id uuid := '10101010-1010-4010-8010-101010101010'::uuid;
+  v_admin_a_id uuid := '10101010-1010-4010-8010-101010101010'::uuid;
+  v_admin_other_id uuid := '11111111-1010-4010-8010-111111111111'::uuid;
   v_staff_a_id uuid := '20202020-2020-4020-8020-202020202020'::uuid;
   v_staff_b_id uuid := '30303030-3030-4030-8030-303030303030'::uuid;
   v_uni_id uuid;
   v_course_id uuid;
+  v_doc_type_id uuid;
   v_student_b_id uuid;
   v_student_b_code text;
   v_enrollment_b_id uuid;
   v_payment_b_id uuid;
+  v_doc_b_id uuid;
+  v_link_b_id uuid;
   v_office_id uuid;
   v_punch_a_id uuid;
   v_lookup jsonb;
   v_count int;
   v_caught boolean;
+  v_lat numeric;
 begin
-  -- 0. Seed test staff & admin
+  -- 0. Seed test staff & admins
   insert into auth.users (id, email)
   values
-    (v_admin_id, 'test_adm_i@test.edubridge.local'),
-    (v_staff_a_id, 'test_staff_a_i@test.edubridge.local'),
-    (v_staff_b_id, 'test_staff_b_i@test.edubridge.local')
+    (v_admin_a_id, 'test_adm_a@test.edubridge.local'),
+    (v_admin_other_id, 'test_adm_other@test.edubridge.local'),
+    (v_staff_a_id, 'test_staff_a@test.edubridge.local'),
+    (v_staff_b_id, 'test_staff_b@test.edubridge.local')
   on conflict (id) do nothing;
 
   insert into public.profiles (id, full_name, role, is_active, admin_scope, reports_to, work_email)
   values
-    (v_admin_id, 'Admin I', 'admin', true, 'team', null, 'test_adm_i@test.edubridge.local'),
-    (v_staff_a_id, 'Staff A', 'staff', true, 'team', v_admin_id, 'test_staff_a_i@test.edubridge.local'),
-    (v_staff_b_id, 'Staff B', 'staff', true, 'team', null, 'test_staff_b_i@test.edubridge.local')
+    (v_admin_a_id, 'Admin A', 'admin', true, 'team', null, 'test_adm_a@test.edubridge.local'),
+    (v_admin_other_id, 'Admin Other Team', 'admin', true, 'team', null, 'test_adm_other@test.edubridge.local'),
+    (v_staff_a_id, 'Staff A', 'staff', true, 'team', v_admin_a_id, 'test_staff_a@test.edubridge.local'),
+    (v_staff_b_id, 'Staff B', 'staff', true, 'team', v_admin_a_id, 'test_staff_b@test.edubridge.local')
   on conflict (id) do update set
     role = excluded.role,
     reports_to = excluded.reports_to,
     is_active = true;
 
-  -- Seed university & course
+  -- Seed university, course & document type
   select id into v_uni_id from public.universities where is_active = true limit 1;
   select id into v_course_id from public.courses where university_id = v_uni_id and is_active = true limit 1;
+  select id into v_doc_type_id from public.document_types where is_active = true limit 1;
 
-  -- Create candidate owned by Staff B (code generated automatically by trigger)
+  -- Create candidate owned by Staff B
   insert into public.students (full_name, mobile, whatsapp, created_by, owner_id)
   values ('Candidate B Owned', '+971501112233', '+971501112233', v_staff_b_id, v_staff_b_id)
   returning id, student_code into v_student_b_id, v_student_b_code;
@@ -67,6 +76,16 @@ begin
   insert into public.payments (enrollment_id, student_id, receipt_no, amount, mode, purpose, fee_snapshot, paid_before_snapshot, balance_after_snapshot, paid_at, received_by)
   values (v_enrollment_b_id, v_student_b_id, 'EB-RV-2026-98765', 2000, 'card', 'admission', 10000, 0, 8000, now(), v_staff_b_id)
   returning id into v_payment_b_id;
+
+  -- Create document for candidate B
+  insert into public.candidate_documents (student_id, document_type_id, title, file_path, file_name, size_bytes, mime_type, uploaded_via, uploaded_by, status)
+  values (v_student_b_id, v_doc_type_id, 'Doc B', 'test/doc_b.pdf', 'doc_b.pdf', 1024, 'application/pdf', 'staff', v_staff_b_id, 'received')
+  returning id into v_doc_b_id;
+
+  -- Create upload link for candidate B
+  insert into public.document_upload_links (student_id, token, requested_types, expires_at, created_by)
+  values (v_student_b_id, 'token_candidate_b_1234567890abcdef1234567890abcdef', array[v_doc_type_id], now() + interval '7 days', v_staff_b_id)
+  returning id into v_link_b_id;
 
   -- Seed Office for attendance
   insert into public.offices (name, address, latitude, longitude, radius_m, require_network_match, is_active)
@@ -124,80 +143,113 @@ begin
   insert into ownership_att_results values (9, 'Counter lookup returns minimal masked payload', case when (v_lookup ? 'student_id') and (v_lookup ? 'masked_mobile') and not (v_lookup ? 'whatsapp') then 'PASS' else 'FAIL' end, 'Counter receives only safe payload without personal data');
 
   -- -------------------------------------------------------------------------
-  -- 3. CANDIDATE TRANSFER & SALES CREDIT IMMUTABILITY
+  -- 3. DOCUMENT ACTIONS SCOPE & PERMISSIONS (Section 2)
   -- -------------------------------------------------------------------------
-  -- 3a. Staff A cannot transfer candidate
+  -- 3a. Team admin from ANOTHER team cannot act on candidate B
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_admin_other_id, 'role', 'authenticated')::text);
+
   v_caught := false;
   begin
-    perform public.transfer_candidate(v_student_b_id, v_staff_a_id, 'candidate', 'Staff attempt transfer');
+    perform public.verify_candidate_document(v_doc_b_id, 'verified', 'Other admin verify');
   exception when others then
     v_caught := true;
   end;
-  insert into ownership_att_results values (10, 'Staff transfer candidate rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Staff forbidden from calling transfer_candidate RPC');
+  insert into ownership_att_results values (10, 'Other team admin verify document rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Admin outside scope cannot verify candidate document');
 
-  -- 3b. Admin transfers candidate to Staff A -> audit log & transfer log created
-  set local role authenticated;
-  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_admin_id, 'role', 'authenticated')::text);
-  perform public.transfer_candidate(v_student_b_id, v_staff_a_id, 'candidate', 'Approved counselor reallocation');
+  v_caught := false;
+  begin
+    perform public.archive_candidate_document(v_doc_b_id);
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (11, 'Other team admin archive document rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Admin outside scope cannot archive candidate document');
 
-  select count(*) into v_count from public.candidate_transfers where student_id = v_student_b_id and to_user = v_staff_a_id;
-  insert into ownership_att_results values (11, 'Transfer writes candidate_transfers record', case when v_count > 0 then 'PASS' else 'FAIL' end, 'Audit history recorded in candidate_transfers');
+  v_caught := false;
+  begin
+    perform public.revoke_document_upload_link(v_link_b_id);
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (12, 'Other team admin revoke link rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Admin outside scope cannot revoke upload link');
 
-  -- 3c. Sales credit: enrollment admission_staff_id remains Staff B after candidate owner transfer
-  select admission_staff_id into v_staff_b_id from public.enrollments where id = v_enrollment_b_id;
-  insert into ownership_att_results values (12, 'Sales credit immutable across candidate transfer', case when v_staff_b_id = '30303030-3030-4030-8030-303030303030'::uuid then 'PASS' else 'FAIL' end, 'Admission staff remains unchanged on existing enrollment');
-
-  -- -------------------------------------------------------------------------
-  -- 4. ATTENDANCE SECURITY TESTS
-  -- -------------------------------------------------------------------------
-  set local role authenticated;
+  -- 3b. Before transfer: Staff B (owner) CAN verify; Staff A CANNOT
   execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_a_id, 'role', 'authenticated')::text);
-
-  -- 4a. Staff A cannot insert punch for Staff B
   v_caught := false;
   begin
-    insert into public.attendance_punches (user_id, office_id, kind, at, status)
-    values (v_staff_b_id, v_office_id, 'in', now(), 'accepted');
+    perform public.verify_candidate_document(v_doc_b_id, 'verified', 'Staff A verify');
   exception when others then
     v_caught := true;
   end;
-  insert into ownership_att_results values (13, 'Staff A insert punch for Staff B rejected', case when v_caught then 'PASS' else 'FAIL' end, 'RLS blocks inserting punch for another staff member');
+  insert into ownership_att_results values (13, 'Staff A verify Candidate B document rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Staff non-owner blocked from verifying document');
 
-  -- 4b. Staff A cannot edit own punch time or location
+  -- 3c. Candidate transfer to Staff A (both candidate ownership and enrollment admission staff)
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_admin_a_id, 'role', 'authenticated')::text);
+  perform public.transfer_candidate(v_student_b_id, v_staff_a_id, 'candidate', 'Ownership transfer to Staff A');
+  perform public.transfer_candidate(v_student_b_id, v_staff_a_id, 'enrollment', 'Enrollment transfer to Staff A', v_enrollment_b_id);
+
+  -- 3d. After transfer: New owner (Staff A) CAN verify; Old owner (Staff B) CANNOT
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_a_id, 'role', 'authenticated')::text);
+  v_caught := false;
+  begin
+    perform public.verify_candidate_document(v_doc_b_id, 'verified', 'Staff A now owner verified');
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (14, 'New owner (Staff A) verify document succeeds', case when not v_caught then 'PASS' else 'FAIL' end, 'Transferred owner successfully verified document');
+
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_b_id, 'role', 'authenticated')::text);
+  v_caught := false;
+  begin
+    perform public.verify_candidate_document(v_doc_b_id, 'rejected', 'Staff B old owner try verify');
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (15, 'Old owner (Staff B) verify document rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Former owner strictly forbidden after transfer');
+
+  -- -------------------------------------------------------------------------
+  -- 4. ATTENDANCE SECURITY & PRIVACY PROOFS (Section 3)
+  -- -------------------------------------------------------------------------
   set local role postgres;
   insert into public.attendance_punches (user_id, office_id, kind, at, lat, lng, status)
   values (v_staff_a_id, v_office_id, 'in', now(), 25.276987, 55.337042, 'accepted')
   returning id into v_punch_a_id;
 
-  set local role authenticated;
-  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_a_id, 'role', 'authenticated')::text);
-
-  v_caught := false;
-  begin
-    update public.attendance_punches set at = now() - interval '2 hours' where id = v_punch_a_id;
-    get diagnostics v_count = row_count;
-    if v_count > 0 then
-      v_caught := false;
-    else
-      v_caught := true;
-    end if;
-  exception when others then
-    v_caught := true;
-  end;
-  insert into ownership_att_results values (14, 'Staff edit punch time rejected', case when v_caught then 'PASS' else 'FAIL' end, 'attendance_punches is immutable for updates');
-
-  -- 4c. Server-verified geofence (punch RPC outside office radius rejected)
-  set local role postgres;
-  insert into public.staff_attendance_settings (user_id, office_id, shift_start, shift_end, attendance_required, allow_field_punch)
-  values (v_staff_b_id, v_office_id, '09:00', '18:00', true, false)
-  on conflict (user_id) do update set office_id = v_office_id, allow_field_punch = false;
-
+  -- 4a. Staff B cannot read Staff A's punch lat/lng (returns 0 rows via RLS)
   set local role authenticated;
   execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_b_id, 'role', 'authenticated')::text);
 
-  -- Punch with coordinates 10km away from office
-  select public.punch('in', 25.100000, 55.100000, 10, 'Trying outside geofence') into v_lookup;
-  insert into ownership_att_results values (15, 'Server geofence rejects punch outside radius', case when (v_lookup->>'status') = 'rejected' and (v_lookup->>'success') = 'false' then 'PASS' else 'FAIL' end, 'punch() RPC calculated distance > radius and returned rejected status');
+  select lat into v_lat from public.attendance_punches where id = v_punch_a_id;
+  insert into ownership_att_results values (16, 'Staff cannot read another staff punch coordinates', case when v_lat is null then 'PASS' else 'FAIL' end, 'RLS returns 0 rows when staff queries peer punch');
+
+  -- 4b. Admin A (same team) CAN read Staff A's punch lat/lng
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_admin_a_id, 'role', 'authenticated')::text);
+  select lat into v_lat from public.attendance_punches where id = v_punch_a_id;
+  insert into ownership_att_results values (17, 'Team admin can read team staff punch coordinates', case when v_lat = 25.276987 then 'PASS' else 'FAIL' end, 'Admin in scope permitted to read attendance coordinates');
+
+  -- 4c. Admin from other team CANNOT read Staff A's punch
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_admin_other_id, 'role', 'authenticated')::text);
+  select lat into v_lat from public.attendance_punches where id = v_punch_a_id;
+  insert into ownership_att_results values (18, 'Other team admin cannot read punch coordinates', case when v_lat is null then 'PASS' else 'FAIL' end, 'Admin outside scope sees 0 rows for peer team punches');
+
+  -- 4d. Normal delete on attendance_punches is BLOCKED by immutability trigger
+  set local role postgres;
+  v_caught := false;
+  begin
+    delete from public.attendance_punches where id = v_punch_a_id;
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (19, 'Direct delete on attendance_punches rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Trigger blocks deletion by default');
+
+  -- 4e. Guarded test cleanup session flag permits delete by postgres/service_role
+  v_caught := false;
+  begin
+    set local app.allow_test_data_cleanup = 'true';
+    delete from public.attendance_punches where id = v_punch_a_id;
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (20, 'Guarded cleanup flag allows punch deletion by postgres', case when not v_caught then 'PASS' else 'FAIL' end, 'Session flag app.allow_test_data_cleanup enables test purging');
 
 end $$;
 

@@ -149,6 +149,8 @@ begin
   -- ---------------------------------------------------------------------------
   -- TEST 4: VAT-Exclusive Ledger Calculation (Fee 10,000 -> Payable 10,500)
   -- ---------------------------------------------------------------------------
+  update public.company_settings set vat_enabled = true;
+
   v_res2 := public.create_student_with_enrollment(
     p_full_name := 'Test VAT Exclusive Student',
     p_mobile := '+971509998882',

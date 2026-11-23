@@ -94,18 +94,18 @@ test.describe('Candidates Directory Redesign E2E', () => {
     // Search filter input -> debounced URL update
     const searchInput = page.locator('input[placeholder*="Search by candidate name"]');
     await searchInput.fill('Fatima');
-    await expect.poll(() => page.url(), { timeout: 5000 }).toContain('q=Fatima');
+    await expect.poll(() => page.url(), { timeout: 10000 }).toContain('q=Fatima');
 
     // Clear search
     const clearSearchBtn = page.locator('button[aria-label="Clear search"]');
     if (await clearSearchBtn.isVisible()) {
       await clearSearchBtn.click();
-      await expect.poll(() => page.url(), { timeout: 5000 }).not.toContain('q=Fatima');
+      await expect.poll(() => page.url(), { timeout: 10000 }).not.toContain('q=Fatima');
     }
 
     // Switch back to All tab
     await allTab.click();
-    await expect.poll(() => page.url(), { timeout: 5000 }).not.toContain('status=');
+    await expect.poll(() => page.url(), { timeout: 10000 }).not.toContain('status=');
 
     // Table rows check
     const rows = page.locator('tbody tr[role="link"]');

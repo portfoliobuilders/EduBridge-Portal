@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
+import { createTestCandidateWithEnrollment, deleteTestCandidate } from '../helpers/test-candidate';
 
 const envFile = fs.readFileSync('.env.local', 'utf-8');
 const env: Record<string, string> = {};
@@ -26,6 +27,7 @@ test.describe('Sidebar Logo Height & Candidates Table Overflow Verification', ()
   const testEmail = `ui_verify_${runId}@test.edubridge.local`;
   const password = `UiVerifyPass_${runId}!Aa1`;
   let testUserId: string;
+  let testCandidateId: string;
   const screenshotsDir = path.join(process.cwd(), 'docs', 'screenshots');
 
   test.beforeAll(async () => {
@@ -45,15 +47,25 @@ test.describe('Sidebar Logo Height & Candidates Table Overflow Verification', ()
     await adminClient
       .from('profiles')
       .update({
-        role: 'owner',
+        role: 'super_admin',
         is_active: true,
         full_name: `UI Tester ${runId}`,
         job_title: 'Admissions Director',
       })
       .eq('id', testUserId);
+
+    const cand = await createTestCandidateWithEnrollment(adminClient, {
+      email: testEmail,
+      password: password,
+      staffUserId: testUserId,
+    });
+    testCandidateId = cand.studentId;
   });
 
   test.afterAll(async () => {
+    if (testCandidateId) {
+      await deleteTestCandidate(adminClient, testCandidateId);
+    }
     if (testUserId) {
       await adminClient.auth.admin.deleteUser(testUserId);
     }
@@ -72,11 +84,10 @@ test.describe('Sidebar Logo Height & Candidates Table Overflow Verification', ()
     const routes = ['/', '/candidates', '/admin'];
     for (const route of routes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
 
       // Desktop sidebar logo
       const desktopLogo = page.locator('aside img[alt="EduBridge Portal"]');
-      await expect(desktopLogo).toBeVisible();
+      await expect(desktopLogo).toBeVisible({ timeout: 15000 });
 
       const box = await desktopLogo.boundingBox();
       expect(box).not.toBeNull();

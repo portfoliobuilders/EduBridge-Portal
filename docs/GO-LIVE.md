@@ -24,7 +24,7 @@ This checklist must be executed in sequence before turning over the live applica
   ```bash
   npx supabase migration list --remote
   ```
-  Ensure all migrations (0001 through 0047) are applied and in sync.
+  Ensure all migrations (0001 through 0050) are applied and in sync.
 - [ ] **Advisors Security & Performance Audit**:
   ```bash
   npx supabase db advisors --remote
@@ -63,7 +63,7 @@ This checklist must be executed in sequence before turning over the live applica
   - Confirm default fee structures and currencies.
 - [ ] **Staff Accounts**:
   - Invite official admissions counselors and staff members via `/admin/staff`.
-  - Ensure roles are assigned appropriately (`owner` vs `staff`).
+  - Ensure roles are assigned appropriately (`super_admin`, `admin`, or `staff`).
 
 ---
 
@@ -82,4 +82,4 @@ This checklist must be executed in sequence before turning over the live applica
 ### 5. Final Handover
 - [ ] Disposable test accounts (@test.edubridge.local) deleted from Supabase Auth.
 - [ ] Provide EduBridge Managing Director with `docs/OWNER-GUIDE.md` and `docs/OWNER-GUIDE.pdf`.
-- [ ] Owner changes temporary credentials to strong, private production password.
+- [ ] Super Admin changes temporary credentials to strong, private production password.

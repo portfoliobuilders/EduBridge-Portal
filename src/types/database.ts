@@ -2255,6 +2255,61 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_test_attendance_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      create_document_upload_link:
+        | {
+            Args: {
+              p_expiry_days?: number
+              p_requested_types: string[]
+              p_student_id: string
+            }
+            Returns: {
+              created_at: string
+              created_by: string
+              expires_at: string
+              id: string
+              last_used_at: string | null
+              requested_types: string[]
+              revoked_at: string | null
+              student_id: string
+              token: string
+              upload_count: number
+            }
+            SetofOptions: {
+              from: "*"
+              to: "document_upload_links"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_expiry_days?: number
+              p_requested_types: string[]
+              p_student_id: string
+            }
+            Returns: {
+              created_at: string
+              created_by: string
+              expires_at: string
+              id: string
+              last_used_at: string | null
+              requested_types: string[]
+              revoked_at: string | null
+              student_id: string
+              token: string
+              upload_count: number
+            }
+            SetofOptions: {
+              from: "*"
+              to: "document_upload_links"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       create_notification: {
         Args: {
           p_body: string
