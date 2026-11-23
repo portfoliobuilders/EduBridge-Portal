@@ -48,6 +48,7 @@ interface HomePunchCardProps {
 export function HomePunchCard({ initialData, compact = false }: HomePunchCardProps) {
   const [data, setData] = useState<TodayAttendanceData | undefined>(initialData)
   const [loading, setLoading] = useState(!initialData)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [punching, setPunching] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false)
@@ -58,15 +59,36 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
   // Live timer for active session
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
-  // Fetch status on load if not provided
-  useEffect(() => {
-    if (!initialData) {
-      getTodayAttendanceStatusAction().then((res) => {
+  const fetchStatus = () => {
+    setLoading(true)
+    setLoadError(null)
+    getTodayAttendanceStatusAction()
+      .then((res) => {
         setLoading(false)
         if (res.success && res.data) {
           setData(res.data)
+        } else if (!res.success) {
+          setLoadError(res.error || 'Failed to load attendance status')
         }
       })
+      .catch((err) => {
+        setLoading(false)
+        setLoadError(err instanceof Error ? err.message : 'Failed to load attendance status')
+      })
+  }
+
+  // Fetch status on load if not provided
+  useEffect(() => {
+    let ignore = false
+    if (!initialData) {
+      void Promise.resolve().then(() => {
+        if (!ignore) {
+          fetchStatus()
+        }
+      })
+    }
+    return () => {
+      ignore = true
     }
   }, [initialData])
 
@@ -202,6 +224,21 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
     return (
       <div className="bg-white rounded-2xl border border-[#E4E7E7] p-5 animate-pulse flex items-center justify-center min-h-[140px]">
         <Loader2 className="w-6 h-6 text-[#00A57E] animate-spin" />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="bg-white rounded-2xl border border-red-200 p-5 flex flex-col items-center justify-center min-h-[140px] text-center space-y-2">
+        <p className="text-xs text-red-600">Couldn&apos;t load attendance status</p>
+        <button
+          type="button"
+          onClick={fetchStatus}
+          className="text-xs font-semibold text-[#00805F] hover:underline"
+        >
+          Retry
+        </button>
       </div>
     )
   }

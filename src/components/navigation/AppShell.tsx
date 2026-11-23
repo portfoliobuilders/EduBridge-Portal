@@ -219,7 +219,7 @@ export function AppShell({
           >
             <span className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              + New Receipt
+              New Receipt
             </span>
             <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded bg-white/20 px-1.5 font-mono text-[11px] font-bold text-white group-hover:bg-white/30">
               N

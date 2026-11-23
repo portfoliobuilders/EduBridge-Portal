@@ -489,6 +489,7 @@ export type Database = {
           attendance_min_hours_half_day: number
           attendance_timezone: string
           celebration_emails_enabled: boolean
+          celebrations_enabled: boolean
           created_at: string
           default_vat_treatment: string
           email: string
@@ -527,6 +528,7 @@ export type Database = {
           attendance_min_hours_half_day?: number
           attendance_timezone?: string
           celebration_emails_enabled?: boolean
+          celebrations_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
           email: string
@@ -565,6 +567,7 @@ export type Database = {
           attendance_min_hours_half_day?: number
           attendance_timezone?: string
           celebration_emails_enabled?: boolean
+          celebrations_enabled?: boolean
           created_at?: string
           default_vat_treatment?: string
           email?: string

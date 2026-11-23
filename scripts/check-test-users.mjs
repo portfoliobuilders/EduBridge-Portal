@@ -43,6 +43,8 @@ const KNOWN_DEACTIVATED_TEST_USERS = new Set([
   '8f1e5e31-765f-408d-836a-e1545b07c814',
   'df0fb55f-250a-441a-9a9b-f1c96ba7c302',
   '145978bf-a070-4780-bce4-550253ce1627',
+  '1a035590-e28e-460a-88d5-51da61c64596',
+  '8f1433d4-f377-4c9c-a6e6-34b702195ea4',
 ])
 
 async function main() {

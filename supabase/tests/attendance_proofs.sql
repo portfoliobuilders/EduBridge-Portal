@@ -69,6 +69,7 @@ begin
     attendance_required = true;
 
   -- Clean up any punches for today in test transaction
+  set local app.allow_test_data_cleanup = 'true';
   delete from public.attendance_punches where user_id in (v_staff1_id, v_staff2_id);
   delete from public.attendance_days where user_id in (v_staff1_id, v_staff2_id);
   delete from public.leave_requests where user_id in (v_staff1_id, v_staff2_id);

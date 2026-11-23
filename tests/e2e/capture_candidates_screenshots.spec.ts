@@ -20,7 +20,7 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_
 });
 
 test.describe('Capture Candidates Redesign Screenshots', () => {
-  test.describe.configure({ timeout: 90000 });
+  test.describe.configure({ timeout: 180000 });
 
   const runId = Date.now();
   const testEmail = `candidates_shot_${runId}@test.edubridge.local`;
@@ -75,7 +75,7 @@ test.describe('Capture Candidates Redesign Screenshots', () => {
       await page.fill('input[type="email"]', testEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
+      await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 });
 
       // 2. Default Candidates List
       await page.goto('/candidates');

@@ -35,6 +35,16 @@ export function AdminStaffEditForm({
   const [reportsTo, setReportsTo] = useState(staff.reports_to || '')
   const [adminScope, setAdminScope] = useState(staff.admin_scope || 'team')
   const [isActive, setIsActive] = useState(Boolean(staff.is_active))
+  const [excludeFromCelebrations, setExcludeFromCelebrations] = useState(
+    !(staff.celebrate_birthday && staff.celebrate_anniversary)
+  )
+
+  // Sensitive details (stored in staff_sensitive_details)
+  const [personalEmail, setPersonalEmail] = useState(staff.personal_email || '')
+  const [dob, setDob] = useState(staff.dob || '')
+  const [address, setAddress] = useState(staff.address || '')
+  const [emergencyContactName, setEmergencyContactName] = useState(staff.emergency_contact_name || '')
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(staff.emergency_contact_phone || '')
 
   // Attendance Settings
   const [officeId, setOfficeId] = useState(attendanceSettings?.office_id || (offices[0]?.id || ''))
@@ -67,6 +77,7 @@ export function AdminStaffEditForm({
     formData.append('reports_to', reportsTo)
     formData.append('admin_scope', adminScope)
     formData.append('is_active', String(isActive))
+    formData.append('exclude_from_celebrations', String(excludeFromCelebrations))
 
     // Attendance Settings
     formData.append('office_id', officeId)
@@ -75,6 +86,13 @@ export function AdminStaffEditForm({
     formData.append('grace_minutes', String(graceMinutes))
     formData.append('attendance_required', String(attendanceRequired))
     formData.append('allow_field_punch', String(allowFieldPunch))
+
+    // Sensitive Details (staff_sensitive_details)
+    formData.append('personal_email', personalEmail)
+    formData.append('dob', dob)
+    formData.append('address', address)
+    formData.append('emergency_contact_name', emergencyContactName)
+    formData.append('emergency_contact_phone', emergencyContactPhone)
 
     const res = await updateStaffAction(formData)
     setSaving(false)
@@ -220,6 +238,20 @@ export function AdminStaffEditForm({
             className="data-[state=checked]:bg-[#00A57E]"
           />
         </div>
+
+        <div className="pt-2 flex items-center justify-between border-t border-[#F5F6F6]">
+          <div>
+            <p className="text-xs font-semibold text-[#0A0A0A]">Exclude from celebrations</p>
+            <p className="text-[11px] text-[#6B7272]">
+              Use if the staff member asks not to be celebrated.
+            </p>
+          </div>
+          <Switch
+            checked={excludeFromCelebrations}
+            onCheckedChange={setExcludeFromCelebrations}
+            className="data-[state=checked]:bg-[#00A57E]"
+          />
+        </div>
       </div>
 
       {/* Attendance & Geofencing Settings */}
@@ -354,35 +386,74 @@ export function AdminStaffEditForm({
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Phone:</span>
+            <span className="text-[#6B7272] block">Work Phone:</span>
             <span className="font-semibold text-[#0A0A0A]">{staff.phone || '—'}</span>
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Personal Email:</span>
-            <span className="font-semibold text-[#0A0A0A]">{staff.personal_email || '—'}</span>
+            <Label htmlFor="admin_personal_email" className="text-xs font-semibold text-[#0A0A0A]">
+              Personal Email
+            </Label>
+            <Input
+              id="admin_personal_email"
+              type="email"
+              value={personalEmail}
+              onChange={(e) => setPersonalEmail(e.target.value)}
+              placeholder="e.g. personal@gmail.com"
+              className="mt-1 text-xs rounded-xl border-[#E4E7E7]"
+            />
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Date of Birth:</span>
-            <span className="font-semibold text-[#0A0A0A]">
-              {staff.dob ? new Date(staff.dob).toLocaleDateString('en-GB') : '—'}
-            </span>
+            <Label htmlFor="admin_dob" className="text-xs font-semibold text-[#0A0A0A]">
+              Date of Birth
+            </Label>
+            <Input
+              id="admin_dob"
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="mt-1 text-xs rounded-xl border-[#E4E7E7]"
+            />
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Residential Address:</span>
-            <span className="font-semibold text-[#0A0A0A]">{staff.address || '—'}</span>
+            <Label htmlFor="admin_address" className="text-xs font-semibold text-[#0A0A0A]">
+              Residential Address
+            </Label>
+            <Input
+              id="admin_address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. Dubai Marina, Dubai"
+              className="mt-1 text-xs rounded-xl border-[#E4E7E7]"
+            />
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Emergency Contact Name:</span>
-            <span className="font-semibold text-[#0A0A0A]">{staff.emergency_contact_name || '—'}</span>
+            <Label htmlFor="admin_emergency_name" className="text-xs font-semibold text-[#0A0A0A]">
+              Emergency Contact Name
+            </Label>
+            <Input
+              id="admin_emergency_name"
+              value={emergencyContactName}
+              onChange={(e) => setEmergencyContactName(e.target.value)}
+              placeholder="e.g. Spouse / Parent"
+              className="mt-1 text-xs rounded-xl border-[#E4E7E7]"
+            />
           </div>
 
           <div>
-            <span className="text-[#6B7272] block">Emergency Contact Phone:</span>
-            <span className="font-semibold text-[#0A0A0A]">{staff.emergency_contact_phone || '—'}</span>
+            <Label htmlFor="admin_emergency_phone" className="text-xs font-semibold text-[#0A0A0A]">
+              Emergency Contact Phone
+            </Label>
+            <Input
+              id="admin_emergency_phone"
+              value={emergencyContactPhone}
+              onChange={(e) => setEmergencyContactPhone(e.target.value)}
+              placeholder="e.g. +971 50 123 4567"
+              className="mt-1 text-xs rounded-xl border-[#E4E7E7]"
+            />
           </div>
         </div>
       </div>

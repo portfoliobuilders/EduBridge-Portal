@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function LeaderboardPage() {
   const { profile } = await requireUser()
-  const { data, showAedToStaff } = await getLeaderboardAction({
+  const { data, error, showAedToStaff } = await getLeaderboardAction({
     period: 'this_month',
     metric: 'admissions',
   })
@@ -20,6 +20,7 @@ export default async function LeaderboardPage() {
   return (
     <LeaderboardClient
       initialEntries={data}
+      initialError={error}
       initialPeriod="this_month"
       initialMetric="admissions"
       showAedToStaff={showAedToStaff}

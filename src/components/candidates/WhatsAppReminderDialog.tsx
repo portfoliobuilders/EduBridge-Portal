@@ -63,13 +63,13 @@ export function WhatsAppReminderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-full bg-white rounded-[14px] border-[#E4E7E7] p-6 shadow-xl">
-        <DialogHeader className="space-y-1">
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#E6F6F2] flex items-center justify-center text-[#00A57E]">
               <MessageCircle className="w-4 h-4" />
             </div>
-            <DialogTitle className="text-lg font-bold text-[#0A0A0A]">
+            <DialogTitle className="text-base font-bold text-[#0A0A0A]">
               Send WhatsApp Reminders
             </DialogTitle>
           </div>
@@ -78,7 +78,7 @@ export function WhatsAppReminderDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-1">
+        <div className="p-6 space-y-2 max-h-[300px] overflow-y-auto">
           {candidates.map((c, idx) => {
             const candidateId = c.id || String(idx)
             const isDone = !!sentMap[candidateId]
@@ -132,12 +132,12 @@ export function WhatsAppReminderDialog({
           })}
         </div>
 
-        <DialogFooter className="mt-6 flex items-center justify-between gap-2 border-t border-[#E4E7E7] pt-4">
+        <DialogFooter>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border-[#E4E7E7] text-xs h-10 px-4"
+            className="rounded-xl border-[#E4E7E7] text-xs h-9 px-4"
           >
             Close
           </Button>
@@ -146,7 +146,7 @@ export function WhatsAppReminderDialog({
             <Button
               type="button"
               onClick={handleOpenActive}
-              className="bg-[#00A57E] hover:bg-[#00805F] text-white rounded-xl text-xs font-semibold h-10 px-4 flex items-center gap-1.5 shadow-sm"
+              className="bg-[#00A57E] hover:bg-[#00805F] text-white rounded-xl text-xs font-semibold h-9 px-4 flex items-center gap-1.5 shadow-xs"
             >
               <span>
                 Chat with {(activeCandidate.full_name || 'Candidate').split(' ')[0]} ({currentIndex + 1}/{candidates.length})

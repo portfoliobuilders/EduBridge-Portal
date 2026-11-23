@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 
 interface LeaderboardClientProps {
   initialEntries: LeaderboardEntry[]
+  initialError?: string | null
   initialPeriod: LeaderboardPeriod
   initialMetric: LeaderboardMetric
   showAedToStaff: boolean
@@ -24,6 +25,7 @@ interface LeaderboardClientProps {
 
 export function LeaderboardClient({
   initialEntries,
+  initialError = null,
   initialPeriod,
   initialMetric,
   showAedToStaff,
@@ -34,6 +36,7 @@ export function LeaderboardClient({
   const [metric, setMetric] = useState<LeaderboardMetric>(initialMetric)
   const [teamScope, setTeamScope] = useState<'all' | 'my_team'>('all')
   const [entries, setEntries] = useState<LeaderboardEntry[]>(initialEntries)
+  const [error, setError] = useState<string | null>(initialError)
   const [isPending, startTransition] = useTransition()
 
   const isAdminOrSuper =
@@ -60,9 +63,14 @@ export function LeaderboardClient({
     scope: 'all' | 'my_team'
   ) => {
     startTransition(async () => {
+      setError(null)
       const teamId = scope === 'my_team' ? viewerId : null
       const res = await getLeaderboardAction({ period: p, metric: m, teamId })
-      setEntries(res.data)
+      if (res.error) {
+        setError(res.error)
+      } else {
+        setEntries(res.data)
+      }
     })
   }
 
@@ -190,31 +198,45 @@ export function LeaderboardClient({
         </div>
       )}
 
-      {/* Loading Overlay or Podium + Table */}
-      <div className={cn('space-y-6 transition-opacity', isPending && 'opacity-60 pointer-events-none')}>
-        {/* Top 3 Podium */}
-        <LeaderboardPodium
-          topThree={topThree}
-          metric={metric}
-        />
-
-        {/* Full Ranked Table */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-bold text-[#0A0A0A]">
-              Complete Standings ({entries.length} staff)
-            </h2>
-            <span className="text-xs text-[#6B7272]">
-              Ties resolved by earliest achievement
-            </span>
-          </div>
-
-          <LeaderboardTable
-            entries={entries}
+      {/* Loading Overlay, Error State, or Podium + Table */}
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center space-y-3">
+          <p className="text-sm font-semibold text-red-800">Couldn&apos;t load leaderboard data</p>
+          <p className="text-xs text-red-600">{error}</p>
+          <button
+            type="button"
+            onClick={() => fetchData(period, metric, teamScope)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-red-300 rounded-xl text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors shadow-2xs"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <div className={cn('space-y-6 transition-opacity', isPending && 'opacity-60 pointer-events-none')}>
+          {/* Top 3 Podium */}
+          <LeaderboardPodium
+            topThree={topThree}
             metric={metric}
           />
+
+          {/* Full Ranked Table */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-sm font-bold text-[#0A0A0A]">
+                Complete Standings ({entries.length} staff)
+              </h2>
+              <span className="text-xs text-[#6B7272]">
+                Ties resolved by earliest achievement
+              </span>
+            </div>
+
+            <LeaderboardTable
+              entries={entries}
+              metric={metric}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Sticky Floating Viewer Position */}
       <StickyViewerPosition

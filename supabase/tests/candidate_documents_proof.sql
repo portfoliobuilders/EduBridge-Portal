@@ -165,20 +165,12 @@ begin
   end if;
   raise notice 'Test 8 Passed: archive_candidate_document RPC archived document';
 
-  -- Test 9: Create and revoke document upload link
-  insert into public.document_upload_links (
-    student_id,
-    token,
-    requested_types,
-    expires_at,
-    created_by
-  ) values (
-    v_student_id,
-    v_link_token,
-    array[v_doc_type_id],
-    now() + interval '7 days',
-    v_owner_id
-  ) returning id into v_link_id;
+  -- Test 9: Create and revoke document upload link via RPC (direct insert prohibited)
+  select id into v_link_id from public.create_document_upload_link(
+    p_student_id := v_student_id,
+    p_requested_types := array[v_doc_type_id],
+    p_expiry_days := 7
+  );
 
   perform public.revoke_document_upload_link(p_link_id := v_link_id);
 

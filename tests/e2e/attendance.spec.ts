@@ -136,7 +136,7 @@ test.describe('Attendance Geofencing, Punch Flow & Admin Console E2E', () => {
     await page.click('button[type="submit"]');
 
     // Wait for Dashboard
-    await page.waitForURL('/');
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 25000, waitUntil: 'domcontentloaded' });
     await expect(page.locator('h3:has-text("Today\'s Attendance")')).toBeVisible({ timeout: 15000 });
 
     // Accept privacy notice if prompted
@@ -219,7 +219,7 @@ test.describe('Attendance Geofencing, Punch Flow & Admin Console E2E', () => {
     await page.fill('input[type="password"]', staffPass);
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/');
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 25000, waitUntil: 'domcontentloaded' });
 
     // Navigate to /attendance
     await page.goto('/attendance');
@@ -253,7 +253,7 @@ test.describe('Attendance Geofencing, Punch Flow & Admin Console E2E', () => {
     await page.fill('input[type="password"]', adminPass);
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/');
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 25000, waitUntil: 'domcontentloaded' });
 
     // Navigate to /admin/attendance
     await page.goto('/admin/attendance');

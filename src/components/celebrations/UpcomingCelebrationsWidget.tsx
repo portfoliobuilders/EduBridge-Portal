@@ -12,22 +12,39 @@ import { cn } from '@/lib/utils'
 export function UpcomingCelebrationsWidget() {
   const [upcoming, setUpcoming] = useState<UpcomingCelebration[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadCelebrations = () => {
+    setLoading(true)
+    setError(null)
+    getUpcomingCelebrationsThisWeekAction()
+      .then((res) => {
+        if (res.success && res.upcoming) {
+          setUpcoming(res.upcoming)
+        } else if (!res.success) {
+          setError(res.error || 'Failed to load celebrations')
+        }
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load celebrations')
+        setLoading(false)
+      })
+  }
 
   useEffect(() => {
-    let active = true
-    getUpcomingCelebrationsThisWeekAction().then((res) => {
-      if (!active) return
-      if (res.success && res.upcoming) {
-        setUpcoming(res.upcoming)
+    let ignore = false
+    void Promise.resolve().then(() => {
+      if (!ignore) {
+        loadCelebrations()
       }
-      setLoading(false)
     })
     return () => {
-      active = false
+      ignore = true
     }
   }, [])
 
-  if (!loading && upcoming.length === 0) {
+  if (!loading && !error && upcoming.length === 0) {
     return null
   }
 
@@ -48,6 +65,17 @@ export function UpcomingCelebrationsWidget() {
       {loading ? (
         <div className="py-4 text-center text-xs text-[#6B7272]">
           Checking milestones...
+        </div>
+      ) : error ? (
+        <div className="py-4 text-center space-y-2">
+          <p className="text-xs text-red-600">Couldn&apos;t load upcoming celebrations</p>
+          <button
+            type="button"
+            onClick={loadCelebrations}
+            className="text-[11px] font-semibold text-[#00805F] hover:underline"
+          >
+            Retry
+          </button>
         </div>
       ) : (
         <div className="space-y-2.5">

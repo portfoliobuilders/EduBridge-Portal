@@ -12,31 +12,47 @@ export function LeaderboardWidget() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [isPending, startTransition] = useTransition()
   const [initialLoaded, setInitialLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadData = (m: LeaderboardMetric) => {
+    setError(null)
+    getLeaderboardAction({ period: 'this_month', metric: m })
+      .then((res) => {
+        if (res.error) {
+          setError(res.error)
+        } else {
+          setEntries(res.data.slice(0, 3))
+        }
+        setInitialLoaded(true)
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load top performers')
+        setInitialLoaded(true)
+      })
+  }
 
   useEffect(() => {
-    let isCurrent = true
-
-    getLeaderboardAction({ period: 'this_month', metric: 'admissions' })
-      .then((res) => {
-        if (isCurrent) {
-          setEntries(res.data.slice(0, 3))
-          setInitialLoaded(true)
-        }
-      })
-      .catch(() => {
-        if (isCurrent) setInitialLoaded(true)
-      })
-
+    let ignore = false
+    void Promise.resolve().then(() => {
+      if (!ignore) {
+        loadData('admissions')
+      }
+    })
     return () => {
-      isCurrent = false
+      ignore = true
     }
   }, [])
 
   const handleMetricToggle = (newMetric: LeaderboardMetric) => {
     setMetric(newMetric)
     startTransition(async () => {
+      setError(null)
       const res = await getLeaderboardAction({ period: 'this_month', metric: newMetric })
-      setEntries(res.data.slice(0, 3))
+      if (res.error) {
+        setError(res.error)
+      } else {
+        setEntries(res.data.slice(0, 3))
+      }
     })
   }
 
@@ -111,6 +127,17 @@ export function LeaderboardWidget() {
       <div className={cn('py-2 divide-y divide-[#E4E7E7]/40 min-h-[140px] flex flex-col justify-center transition-opacity', isPending && 'opacity-60')}>
         {!initialLoaded ? (
           <div className="py-6 text-center text-xs text-[#6B7272]">Loading top performers...</div>
+        ) : error ? (
+          <div className="py-6 text-center space-y-2">
+            <p className="text-xs text-red-600">Couldn&apos;t load top performers</p>
+            <button
+              type="button"
+              onClick={() => loadData(metric)}
+              className="text-[11px] font-semibold text-[#00805F] hover:underline"
+            >
+              Retry
+            </button>
+          </div>
         ) : entries.length === 0 ? (
           <div className="py-6 text-center text-xs text-[#6B7272]">No records yet this month</div>
         ) : (

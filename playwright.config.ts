@@ -8,6 +8,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './tests/global-setup.ts',
   timeout: 90000,
+  workers: 2,
   expect: {
     timeout: 15000,
   },
@@ -19,18 +20,19 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'Serial Settings Tests',
-      testMatch: /.*(admin_role|leaderboard|vat_treatment)\.spec\.ts/,
-      fullyParallel: false,
-      workers: 1,
+      name: 'Google Chrome',
+      testIgnore: /.*(admin_role|leaderboard|vat_treatment)\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome',
       },
     },
     {
-      name: 'Google Chrome',
-      testIgnore: /.*(admin_role|leaderboard|vat_treatment)\.spec\.ts/,
+      name: 'Serial Settings Tests',
+      dependencies: ['Google Chrome'],
+      testMatch: /.*(admin_role|leaderboard|vat_treatment)\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
       use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome',

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,9 @@ export function RequestRegularizationDialog({
   defaultDate,
   onSubmitted,
 }: RequestRegularizationDialogProps) {
+  // Current date in Asia/Dubai format YYYY-MM-DD
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date())
+
   const [date, setDate] = useState(defaultDate || '')
   const [inTime, setInTime] = useState('09:00')
   const [outTime, setOutTime] = useState('18:00')
@@ -39,6 +43,10 @@ export function RequestRegularizationDialog({
     e.preventDefault()
     if (!date) {
       setError('Please choose the date you wish to regularize.')
+      return
+    }
+    if (date > todayStr) {
+      setError('Regularization date cannot be in the future.')
       return
     }
     if (!inTime || !outTime) {
@@ -81,93 +89,102 @@ export function RequestRegularizationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold text-[#0A0A0A]">
-            Request Attendance Regularization
-          </DialogTitle>
-          <DialogDescription className="text-xs text-[#6B7272]">
+          <DialogTitle>Request Attendance Regularization</DialogTitle>
+          <DialogDescription>
             Submit a correction for missed punches, machine errors, or approved out-of-office duties.
-            Once approved by an administrator, your hours and day status will be updated automatically.
+            Future dates are not permitted.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {error && (
-            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <DialogBody>
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="reg-date" className="text-xs font-semibold text-[#0A0A0A]">
-              Attendance Date
-            </Label>
-            <Input
-              id="reg-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="text-xs rounded-xl"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="reg-in-time" className="text-xs font-semibold text-[#0A0A0A]">
-                Requested Punch In
+              <Label htmlFor="reg-date" className="text-xs font-semibold text-[#0A0A0A]">
+                Attendance Date <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="reg-in-time"
-                type="time"
-                value={inTime}
-                onChange={(e) => setInTime(e.target.value)}
+                id="reg-date"
+                type="date"
+                max={todayStr}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 className="text-xs rounded-xl"
                 required
               />
+              <p className="text-[10px] text-[#6B7272]">Cannot regularize future dates.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-in-time" className="text-xs font-semibold text-[#0A0A0A]">
+                  Requested Punch In <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="reg-in-time"
+                  type="time"
+                  value={inTime}
+                  onChange={(e) => setInTime(e.target.value)}
+                  className="text-xs rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-out-time" className="text-xs font-semibold text-[#0A0A0A]">
+                  Requested Punch Out <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="reg-out-time"
+                  type="time"
+                  value={outTime}
+                  onChange={(e) => setOutTime(e.target.value)}
+                  className="text-xs rounded-xl"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="reg-out-time" className="text-xs font-semibold text-[#0A0A0A]">
-                Requested Punch Out
+              <Label htmlFor="reg-reason" className="text-xs font-semibold text-[#0A0A0A]">
+                Reason for Adjustment <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="reg-out-time"
-                type="time"
-                value={outTime}
-                onChange={(e) => setOutTime(e.target.value)}
+              <Textarea
+                id="reg-reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Explain why the punch was missed or needs adjustment..."
+                rows={3}
                 className="text-xs rounded-xl"
                 required
               />
+              <p className="text-[10px] text-[#6B7272]">Minimum 3 characters required.</p>
             </div>
-          </div>
+          </DialogBody>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="reg-reason" className="text-xs font-semibold text-[#0A0A0A]">
-              Reason for Correction
-            </Label>
-            <Textarea
-              id="reg-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Forgot to punch out due to offsite candidate consultation..."
-              rows={3}
-              className="text-xs rounded-xl"
-              required
-            />
-          </div>
-
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="text-xs">
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+              className="border-[#E4E7E7] text-xs h-9 rounded-xl font-medium"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={submitting}
-              className="text-xs bg-[#00A57E] hover:bg-[#00805F] text-white"
+              disabled={submitting || !date || date > todayStr}
+              className="bg-[#00A57E] hover:bg-[#00805F] text-white text-xs h-9 rounded-xl font-semibold px-4"
             >
-              {submitting ? 'Submitting...' : 'Submit Regularization'}
+              {submitting ? 'Submitting...' : 'Submit Request'}
             </Button>
           </DialogFooter>
         </form>

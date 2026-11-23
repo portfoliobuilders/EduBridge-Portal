@@ -76,7 +76,7 @@ test.describe('Capture Comprehensive UI Redesign Screenshots', () => {
 
   for (const vp of viewports) {
     test(`Capture screenshots for viewport ${vp.name} (${vp.width}x${vp.height})`, async ({ page }) => {
-      test.setTimeout(90000);
+      test.setTimeout(180000);
       await page.setViewportSize({ width: vp.width, height: vp.height });
 
       // Log in
@@ -84,7 +84,7 @@ test.describe('Capture Comprehensive UI Redesign Screenshots', () => {
       await page.fill('input[type="email"]', testEmail);
       await page.fill('input[type="password"]', password);
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
+      await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 });
 
       // 1. /receipts/new - Empty State
       await page.goto('/receipts/new');

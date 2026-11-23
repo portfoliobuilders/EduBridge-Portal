@@ -139,13 +139,14 @@ function SendEmailForm({
         </div>
       </div>
 
-      <DialogFooter className="gap-2 sm:gap-0">
+      <DialogFooter>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onClose}
           disabled={loading}
+          className="rounded-xl border-[#E4E7E7] text-xs h-9 px-4"
         >
           Cancel
         </Button>
@@ -154,7 +155,7 @@ function SendEmailForm({
           size="sm"
           onClick={handleSend}
           disabled={loading || !email.trim()}
-          className="bg-[#00A57E] hover:bg-[#00805F] text-white"
+          className="rounded-xl bg-[#00A57E] hover:bg-[#00805F] text-white text-xs h-9 px-4"
         >
           {loading ? (
             <>

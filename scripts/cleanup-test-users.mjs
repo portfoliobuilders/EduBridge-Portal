@@ -96,6 +96,9 @@ async function main() {
       continue
     }
 
+    // 7a. Delete notifications received by this user OR referencing this test user/candidate
+    await admin.from('notifications').delete().eq('user_id', uid)
+
     // 7b. Handle attendance punches: purge via guarded test cleanup RPC
     const { data: punches } = await admin
       .from('attendance_punches')
@@ -191,6 +194,78 @@ async function main() {
   }
 
   console.log('\n--- Cleanup complete ---')
+
+  // Purge test notifications delivered to real staff (e.g. sales@edubridgeeducation.com)
+  console.log('\nPurging leaked test notifications delivered to real staff...')
+  const testTitlePatterns = [
+    'New Team Member: Crawl%',
+    'New Team Member: Smoke%',
+    'New Team Member: UI Tester%',
+    'New Team Member: Doc Staff%',
+    'New Team Member: Colleague Staff%',
+    'New Team Member: Celebrant Staff%',
+    'New Team Member: Surface Tester%',
+    'New Team Member: Admin Attendance%',
+    'New Team Member: Joe Attendance%',
+    'New Team Member: Candidate QA Tester%',
+    'New Team Member: Admin Tester%',
+    'New Team Member: Admin Manager%',
+    'New Team Member: Counsellor LB%',
+    'New Team Member: Fix Tester%',
+    'New Team Member: Redesign Auditor%',
+    'New Team Member: Screenshot Tester%',
+    'New Team Member: Fatima Al Nahyan%',
+    'New Team Member: test_%',
+    'New Team Member: debug_%',
+    'New Enrollment: Crawl Candidate%',
+    'New Enrollment: Smoke Candidate%',
+    'New Enrollment: Test Candidate%',
+    'New Enrollment: Exclusive Candidate%',
+    'New Enrollment: None Candidate%',
+    'New Enrollment: Inclusive Candidate%',
+    'New Enrollment: Fatima Al Mansoori%',
+    'Document Uploaded: Fatima Al Mansoori%',
+  ]
+
+  let purgedCount = 0
+  for (const pattern of testTitlePatterns) {
+    const { data: deleted, error: delNotifErr } = await admin
+      .from('notifications')
+      .delete()
+      .like('title', pattern)
+      .select('id')
+    if (delNotifErr) {
+      console.warn(`  Failed to delete notifications matching "${pattern}":`, delNotifErr.message)
+    } else if (deleted && deleted.length > 0) {
+      purgedCount += deleted.length
+      console.log(`  Purged ${deleted.length} notifications matching "${pattern}"`)
+    }
+  }
+
+  // Also clean notifications whose body references test candidates or sample receipts
+  const testBodyPatterns = [
+    '%Smoke Staff%',
+    '%Crawl Staff%',
+    '%UI Tester%',
+    '%Screenshot Tester%',
+    '%Redesign Auditor%',
+    '%Candidate QA Tester%',
+    '%Fatima Al Nahyan%',
+    '%Candidate 1795%',
+  ]
+  for (const bPattern of testBodyPatterns) {
+    const { data: deleted } = await admin
+      .from('notifications')
+      .delete()
+      .like('body', bPattern)
+      .select('id')
+    if (deleted && deleted.length > 0) {
+      purgedCount += deleted.length
+      console.log(`  Purged ${deleted.length} notifications matching body "${bPattern}"`)
+    }
+  }
+
+  console.log(`✅ Total leaked test notifications purged: ${purgedCount}`)
 }
 
 main().catch(err => { console.error(err); process.exit(1) })

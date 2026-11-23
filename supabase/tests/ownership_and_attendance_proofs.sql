@@ -15,10 +15,11 @@ create temp table ownership_att_results (
   details text
 ) on commit drop;
 
-grant all on ownership_att_results to authenticated, anon;
+grant all on ownership_att_results to authenticated, anon, service_role;
 
 do $$
 declare
+  v_sa_id uuid := '00000000-0000-4000-8000-000000000001'::uuid;
   v_admin_a_id uuid := '10101010-1010-4010-8010-101010101010'::uuid;
   v_admin_other_id uuid := '11111111-1010-4010-8010-111111111111'::uuid;
   v_staff_a_id uuid := '20202020-2020-4020-8020-202020202020'::uuid;
@@ -42,6 +43,7 @@ begin
   -- 0. Seed test staff & admins
   insert into auth.users (id, email)
   values
+    (v_sa_id, 'test_sa@test.edubridge.local'),
     (v_admin_a_id, 'test_adm_a@test.edubridge.local'),
     (v_admin_other_id, 'test_adm_other@test.edubridge.local'),
     (v_staff_a_id, 'test_staff_a@test.edubridge.local'),
@@ -50,6 +52,7 @@ begin
 
   insert into public.profiles (id, full_name, role, is_active, admin_scope, reports_to, work_email)
   values
+    (v_sa_id, 'Super Admin Test', 'super_admin', true, 'company', null, 'test_sa@test.edubridge.local'),
     (v_admin_a_id, 'Admin A', 'admin', true, 'team', null, 'test_adm_a@test.edubridge.local'),
     (v_admin_other_id, 'Admin Other Team', 'admin', true, 'team', null, 'test_adm_other@test.edubridge.local'),
     (v_staff_a_id, 'Staff A', 'staff', true, 'team', v_admin_a_id, 'test_staff_a@test.edubridge.local'),
@@ -250,6 +253,39 @@ begin
     v_caught := true;
   end;
   insert into ownership_att_results values (20, 'Guarded cleanup flag allows punch deletion by postgres', case when not v_caught then 'PASS' else 'FAIL' end, 'Session flag app.allow_test_data_cleanup enables test purging');
+
+  -- 4f. Super_admin calling cleanup_test_attendance_user is REJECTED (only service_role permitted)
+  set local role authenticated;
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_sa_id, 'role', 'authenticated')::text);
+  v_caught := false;
+  begin
+    perform public.cleanup_test_attendance_user(v_staff_a_id);
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (21, 'Super_admin calling cleanup_test_attendance_user is rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Revoked execute / guard rejects authenticated super_admin');
+
+  -- 4g. Direct INSERT on document_upload_links by authenticated user fails
+  execute format('set local "request.jwt.claims" = %L', json_build_object('sub', v_staff_a_id, 'role', 'authenticated')::text);
+  v_caught := false;
+  begin
+    insert into public.document_upload_links (student_id, token, requested_types, expires_at, created_by)
+    values (v_student_b_id, 'test_direct_insert_fail_token_1234567890abcdef1234567890', array[v_doc_type_id], now() + interval '1 day', v_staff_a_id);
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (22, 'Direct insert on document_upload_links rejected', case when v_caught then 'PASS' else 'FAIL' end, 'Direct INSERT policy dropped; must use create_document_upload_link RPC');
+
+  -- 4h. Service role calling cleanup_test_attendance_user succeeds
+  set local role service_role;
+  execute format('set local "request.jwt.claims" = %L', json_build_object('role', 'service_role')::text);
+  v_caught := false;
+  begin
+    perform public.cleanup_test_attendance_user(v_staff_a_id);
+  exception when others then
+    v_caught := true;
+  end;
+  insert into ownership_att_results values (23, 'Service_role calling cleanup_test_attendance_user succeeds', case when not v_caught then 'PASS' else 'FAIL' end, 'cleanup_test_attendance_user authorized for service_role');
 
 end $$;
 

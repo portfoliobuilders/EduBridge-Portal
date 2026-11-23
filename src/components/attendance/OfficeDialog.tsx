@@ -71,7 +71,7 @@ export function OfficeDialog({ open, onOpenChange, office, onSaved }: OfficeDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent variant="wide">
         <DialogHeader>
           <DialogTitle>{office ? 'Edit Office Geofence' : 'Add New Office'}</DialogTitle>
           <DialogDescription>
@@ -79,14 +79,15 @@ export function OfficeDialog({ open, onOpenChange, office, onSaved }: OfficeDial
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {error && (
-            <div className="p-3 text-xs text-red-600 bg-red-50 rounded-lg border border-red-200">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            {error && (
+              <div className="p-3 text-xs text-red-600 bg-red-50 rounded-lg border border-red-200">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="off-name">Office Name</Label>
               <Input
@@ -173,12 +174,22 @@ export function OfficeDialog({ open, onOpenChange, office, onSaved }: OfficeDial
             </div>
             <Switch checked={isActive} onCheckedChange={setIsActive} />
           </div>
+          </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="rounded-xl border-[#E4E7E7] text-xs h-9 px-4"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving} className="bg-[#00A57E] hover:bg-[#00805F] text-white">
+            <Button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-[#00A57E] hover:bg-[#00805F] text-white text-xs h-9 px-4"
+            >
               {saving ? 'Saving...' : 'Save Office'}
             </Button>
           </DialogFooter>

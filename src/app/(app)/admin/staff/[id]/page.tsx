@@ -20,15 +20,23 @@ export default async function AdminStaffDetailPage({ params }: AdminStaffDetailP
   const { id } = await params
   const supabase = await createClient()
 
-  // Query staff_directory_view which enforces RLS: sensitive details visible only to self + admins in scope + super_admin
-  const { data: staff, error } = await supabase
-    .from('staff_directory_view')
-    .select('*')
-    .eq('id', id)
-    .single()
+  // Query profiles and staff_sensitive_details (enforcing RLS: sensitive details visible only to self + admins in scope + super_admin)
+  const [profileRes, sensitiveRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', id).single(),
+    supabase.from('staff_sensitive_details').select('*').eq('user_id', id).maybeSingle(),
+  ])
 
-  if (error || !staff) {
+  if (profileRes.error || !profileRes.data) {
     notFound()
+  }
+
+  const staff = {
+    ...profileRes.data,
+    personal_email: sensitiveRes.data?.personal_email ?? null,
+    dob: sensitiveRes.data?.dob ?? null,
+    address: sensitiveRes.data?.address ?? null,
+    emergency_contact_name: sensitiveRes.data?.emergency_contact_name ?? null,
+    emergency_contact_phone: sensitiveRes.data?.emergency_contact_phone ?? null,
   }
 
   // Get active managers for reporting hierarchy dropdown
@@ -94,7 +102,7 @@ export default async function AdminStaffDetailPage({ params }: AdminStaffDetailP
               )}
             </div>
             <p className="text-xs text-[#6B7272] mt-0.5">
-              {staff.job_title || 'Team Member'} · {staff.work_email}
+              {staff.job_title || (staff.role === 'super_admin' || staff.role === 'owner' ? 'Super Admin' : staff.role === 'admin' ? 'Admin' : 'Staff')} · {staff.work_email}
             </p>
             <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs text-[#6B7272]">
               {staff.employee_id && (

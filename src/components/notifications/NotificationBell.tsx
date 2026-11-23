@@ -1,9 +1,18 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, CheckCheck, ExternalLink, Gift, CreditCard, UserCheck, FileText, ArrowRightLeft } from 'lucide-react'
+import {
+  Bell,
+  CheckCheck,
+  Gift,
+  CreditCard,
+  UserCheck,
+  FileText,
+  ArrowRightLeft,
+  Calendar,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
   getNotificationsAction,
@@ -11,6 +20,16 @@ import {
   markAllNotificationsReadAction,
   type NotificationItem,
 } from '@/app/(app)/notifications/actions'
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover'
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+} from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 
 interface NotificationBellProps {
@@ -24,11 +43,21 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile viewport (<640px)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     let active = true
-    getNotificationsAction('all', 15).then((res) => {
+    getNotificationsAction('all', 20).then((res) => {
       if (!active) return
       if (res.success && res.notifications) {
         setNotifications(res.notifications)
@@ -53,7 +82,7 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
             filter: `user_id=eq.${userId}`,
           },
           () => {
-            getNotificationsAction('all', 15).then((res) => {
+            getNotificationsAction('all', 20).then((res) => {
               if (res.success && res.notifications) {
                 setNotifications(res.notifications)
                 setUnreadCount(res.notifications.filter((n) => !n.read_at).length)
@@ -73,21 +102,6 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
       }
     }
   }, [userId])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
 
   const handleMarkAsRead = async (id: string, link?: string | null) => {
     await markNotificationReadAction(id)
@@ -122,121 +136,176 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
 
   const getIconForType = (type: string) => {
     if (type.startsWith('celebration')) {
-      return <Gift className="w-4 h-4 text-[#F5C451]" />
+      return (
+        <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
+          <Gift className="w-4 h-4" />
+        </div>
+      )
     }
     if (type.startsWith('payment') || type.startsWith('receipt')) {
-      return <CreditCard className="w-4 h-4 text-[#00A57E]" />
+      return (
+        <div className="w-8 h-8 rounded-full bg-[#E6F6F2] text-[#00805F] border border-[#CCEDE5] flex items-center justify-center shrink-0">
+          <CreditCard className="w-4 h-4" />
+        </div>
+      )
     }
     if (type.startsWith('document')) {
-      return <FileText className="w-4 h-4 text-blue-500" />
+      return (
+        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center shrink-0">
+          <FileText className="w-4 h-4" />
+        </div>
+      )
     }
     if (type.startsWith('transfer')) {
-      return <ArrowRightLeft className="w-4 h-4 text-amber-500" />
+      return (
+        <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center shrink-0">
+          <ArrowRightLeft className="w-4 h-4" />
+        </div>
+      )
     }
-    return <UserCheck className="w-4 h-4 text-[#6B7272]" />
+    if (type.startsWith('leave') || type.startsWith('attendance')) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-600 border border-teal-200/60 flex items-center justify-center shrink-0">
+          <Calendar className="w-4 h-4" />
+        </div>
+      )
+    }
+    return (
+      <div className="w-8 h-8 rounded-full bg-[#F5F6F6] text-[#6B7272] border border-[#E4E7E7] flex items-center justify-center shrink-0">
+        <UserCheck className="w-4 h-4" />
+      </div>
+    )
+  }
+
+  const bellTriggerButton = (
+    <button
+      type="button"
+      className={cn(
+        'relative p-2 rounded-xl text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#00A57E]/20 cursor-pointer',
+        className
+      )}
+      aria-label="Notifications"
+      title="Notifications"
+    >
+      <Bell className="w-5 h-5" />
+      {unreadCount > 0 && (
+        <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#C53030] rounded-full ring-2 ring-white animate-in zoom-in-50">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </button>
+  )
+
+  const dropdownContent = (
+    <div className="flex flex-col h-full overflow-hidden bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E4E7E7] bg-white shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="font-display font-semibold text-sm text-[#0A0A0A]">
+            Notifications
+          </span>
+          {unreadCount > 0 && (
+            <span className="text-[11px] font-semibold text-[#00805F] bg-[#E6F6F2] px-2 py-0.5 rounded-full border border-[#CCEDE5]">
+              {unreadCount} unread
+            </span>
+          )}
+        </div>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={handleMarkAllRead}
+            disabled={loading}
+            className="text-xs text-[#00A57E] hover:text-[#00805F] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            <span>Mark all read</span>
+          </button>
+        )}
+      </div>
+
+      {/* List Content */}
+      <div className="flex-1 overflow-y-auto divide-y divide-[#F5F6F6]">
+        {notifications.length === 0 ? (
+          <div className="py-12 px-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#E6F6F2] text-[#00A57E] flex items-center justify-center mx-auto mb-3">
+              <Bell className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-semibold text-[#0A0A0A]">You&apos;re all caught up</p>
+            <p className="text-xs text-[#6B7272] mt-0.5">No notifications right now.</p>
+          </div>
+        ) : (
+          <>
+            {todayList.length > 0 && (
+              <div>
+                <div className="px-5 py-1.5 text-[11px] font-semibold text-[#6B7272] uppercase tracking-wider bg-[#F5F6F6]/80 sticky top-0 z-10 backdrop-blur-xs border-b border-[#E4E7E7]/40">
+                  Today
+                </div>
+                {todayList.map((notif) => (
+                  <NotificationRow
+                    key={notif.id}
+                    notif={notif}
+                    icon={getIconForType(notif.type)}
+                    onMarkRead={handleMarkAsRead}
+                  />
+                ))}
+              </div>
+            )}
+
+            {earlierList.length > 0 && (
+              <div>
+                <div className="px-5 py-1.5 text-[11px] font-semibold text-[#6B7272] uppercase tracking-wider bg-[#F5F6F6]/80 sticky top-0 z-10 backdrop-blur-xs border-b border-[#E4E7E7]/40">
+                  Earlier
+                </div>
+                {earlierList.map((notif) => (
+                  <NotificationRow
+                    key={notif.id}
+                    notif={notif}
+                    icon={getIconForType(notif.type)}
+                    onMarkRead={handleMarkAsRead}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-[#E4E7E7] bg-[#F5F6F6]/70 text-center shrink-0">
+        <Link
+          href="/notifications"
+          onClick={() => setIsOpen(false)}
+          className="text-xs font-semibold text-[#00A57E] hover:text-[#00805F] transition-colors inline-flex items-center gap-1.5"
+        >
+          <span>View all notifications →</span>
+        </Link>
+      </div>
+    </div>
+  )
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger render={bellTriggerButton} />
+        <SheetContent side="bottom" className="max-h-[85vh] p-0 flex flex-col rounded-t-[20px] overflow-hidden">
+          {dropdownContent}
+        </SheetContent>
+      </Sheet>
+    )
   }
 
   return (
-    <div className={cn('relative inline-block', className)} ref={panelRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="relative p-2 rounded-xl text-[#6B7272] hover:text-[#0A0A0A] hover:bg-[#F5F6F6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#00A57E]/20"
-        aria-label="Notifications"
-        title="Notifications"
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger render={bellTriggerButton} />
+      <PopoverContent
+        side="right"
+        align="start"
+        sideOffset={12}
+        className="w-[400px] max-h-[70vh] p-0 flex flex-col overflow-hidden rounded-2xl shadow-xl border border-[#E4E7E7] bg-white"
       >
-        <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#C53030] rounded-full ring-2 ring-white animate-in zoom-in-50">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-[#E4E7E7] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7E7] bg-white">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-[#0A0A0A]">Notifications</span>
-              {unreadCount > 0 && (
-                <span className="text-[11px] font-medium text-[#00805F] bg-[#E6F6F2] px-2 py-0.5 rounded-full">
-                  {unreadCount} unread
-                </span>
-              )}
-            </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                disabled={loading}
-                className="text-xs text-[#00A57E] hover:text-[#00805F] font-medium flex items-center gap-1 transition-colors"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Mark all read
-              </button>
-            )}
-          </div>
-
-          {/* List Content */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F5F6F6]">
-            {notifications.length === 0 ? (
-              <div className="py-12 px-4 text-center">
-                <Bell className="w-8 h-8 text-[#E4E7E7] mx-auto mb-2" />
-                <p className="text-sm font-medium text-[#0A0A0A]">All caught up!</p>
-                <p className="text-xs text-[#6B7272] mt-0.5">No notifications at the moment.</p>
-              </div>
-            ) : (
-              <>
-                {todayList.length > 0 && (
-                  <div>
-                    <div className="px-4 py-1.5 text-[11px] font-semibold text-[#6B7272] uppercase tracking-wider bg-[#F5F6F6]">
-                      Today
-                    </div>
-                    {todayList.map((notif) => (
-                      <NotificationRow
-                        key={notif.id}
-                        notif={notif}
-                        icon={getIconForType(notif.type)}
-                        onMarkRead={handleMarkAsRead}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {earlierList.length > 0 && (
-                  <div>
-                    <div className="px-4 py-1.5 text-[11px] font-semibold text-[#6B7272] uppercase tracking-wider bg-[#F5F6F6]">
-                      Earlier
-                    </div>
-                    {earlierList.map((notif) => (
-                      <NotificationRow
-                        key={notif.id}
-                        notif={notif}
-                        icon={getIconForType(notif.type)}
-                        onMarkRead={handleMarkAsRead}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="px-4 py-2.5 border-t border-[#E4E7E7] bg-[#F5F6F6] text-center">
-            <Link
-              href="/notifications"
-              onClick={() => setIsOpen(false)}
-              className="text-xs font-semibold text-[#00A57E] hover:text-[#00805F] transition-colors inline-flex items-center gap-1"
-            >
-              View all notifications
-              <ExternalLink className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
+        {dropdownContent}
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -255,16 +324,17 @@ function NotificationRow({
     <div
       onClick={() => onMarkRead(notif.id, notif.link)}
       className={cn(
-        'flex items-start gap-3 px-4 py-3 hover:bg-[#F5F6F6]/80 cursor-pointer transition-colors relative group',
-        isUnread && 'bg-[#E6F6F2]/30'
+        'flex items-start gap-3 px-5 py-3.5 hover:bg-[#F5F6F6] cursor-pointer transition-colors relative group',
+        isUnread && 'bg-[#E6F6F2]/25'
       )}
+      title={notif.body}
     >
-      <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-[#F5F6F6] border border-[#E4E7E7]">
+      <div className="shrink-0 mt-0.5">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-1">
-          <p className={cn('text-xs font-medium text-[#0A0A0A] truncate', isUnread && 'font-semibold')}>
+        <div className="flex items-center justify-between gap-2">
+          <p className={cn('text-xs font-medium text-[#0A0A0A] truncate', isUnread && 'font-semibold text-[#0A0A0A]')}>
             {notif.title}
           </p>
           {isUnread && (
@@ -274,7 +344,7 @@ function NotificationRow({
         <p className="text-xs text-[#6B7272] line-clamp-2 mt-0.5 leading-relaxed">
           {notif.body}
         </p>
-        <span className="text-[10px] text-[#6B7272]/70 mt-1 block">
+        <span className="text-[10px] text-[#6B7272]/70 mt-1 block font-medium">
           {formatRelativeTime(notif.created_at)}
         </span>
       </div>

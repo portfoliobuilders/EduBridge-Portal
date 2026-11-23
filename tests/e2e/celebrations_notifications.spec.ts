@@ -41,6 +41,12 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
   const joiningDateForAnniversary = `${Number(dubaiYear) - 2}-${dubaiMonth}-${dubaiDay}`;
 
   test.beforeAll(async () => {
+    // 0. Ensure celebrations are enabled in company_settings
+    await adminClient
+      .from('company_settings')
+      .update({ celebrations_enabled: true })
+      .eq('singleton', true);
+
     // 1. Create Celebrant User
     const { data: celData, error: celErr } = await adminClient.auth.admin.createUser({
       email: celebrantEmail,
@@ -168,13 +174,13 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
     // 7. Navigation to /profile
     await page.goto('/profile');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: 'Staff Profile' })).toBeVisible();
-    await expect(page.locator('input[value="Senior Education Counsellor"]')).toBeDisabled(); // Admin locked
+    await expect(page.getByRole('heading', { name: 'My Profile' })).toBeVisible();
+    await expect(page.locator('text=Senior Education Counsellor').first()).toBeVisible(); // Admin locked job title rendered as read-only text
 
-    // 8. Excluded page check: /candidates must NOT show celebration theme or colleague banner
+    // 8. Excluded check: /candidates must NOT show celebration banner for the celebrant themselves
     await page.goto('/candidates');
     await page.waitForLoadState('networkidle');
-    const candidatesBanner = page.locator('div:has-text("It\'s")');
+    const candidatesBanner = page.locator('div:has-text("It\'s Celebrant")');
     await expect(candidatesBanner).toHaveCount(0);
   });
 

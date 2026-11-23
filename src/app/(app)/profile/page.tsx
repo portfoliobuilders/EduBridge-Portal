@@ -15,7 +15,7 @@ export default async function ProfilePage() {
   if (!res.success || !res.profile) {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-[#E4E7E7] max-w-xl mx-auto my-12">
-        <h2 className="text-lg font-bold text-[#0A0A0A]">Could not load profile</h2>
+        <h2 className="font-display text-lg font-bold text-[#0A0A0A]">Could not load profile</h2>
         <p className="text-xs text-[#6B7272] mt-1">{res.error || 'Please sign in again.'}</p>
       </div>
     )
@@ -24,13 +24,13 @@ export default async function ProfilePage() {
   const attendanceRes = await getMonthAttendanceAction(undefined, res.profile.id)
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-[960px] mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0A0A0A] tracking-tight">
-          My Staff Profile
+        <h1 className="font-display text-2xl font-bold text-[#0A0A0A] tracking-tight">
+          My Profile
         </h1>
         <p className="text-xs text-[#6B7272] mt-1">
-          Manage your contact information, photo, celebration preferences, and confidential details.
+          Manage your personal and contact details, confidential emergency contact, and profile photo.
         </p>
       </div>
 

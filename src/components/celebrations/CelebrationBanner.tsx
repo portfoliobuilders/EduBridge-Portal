@@ -181,7 +181,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
 
       {/* Send Wish Modal */}
       <Dialog open={wishModalOpen} onOpenChange={setWishModalOpen}>
-        <DialogContent className="sm:max-w-[420px] rounded-2xl">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base text-[#0A0A0A]">
               {selectedCelebrant?.kind === 'birthday' ? (
@@ -202,7 +202,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
           </DialogHeader>
 
           {sentSuccess ? (
-            <div className="py-6 text-center space-y-2">
+            <div className="py-8 px-6 text-center space-y-2">
               <div className="w-12 h-12 bg-[#E6F6F2] text-[#00A57E] rounded-full flex items-center justify-center mx-auto text-xl">
                 ✨
               </div>
@@ -210,7 +210,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
               <p className="text-xs text-[#6B7272]">Thank you for making their day special.</p>
             </div>
           ) : (
-            <div className="space-y-3 py-2">
+            <div className="p-6 space-y-3">
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -249,12 +249,12 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
           )}
 
           {!sentSuccess && (
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setWishModalOpen(false)}
-                className="rounded-xl border-[#E4E7E7]"
+                className="rounded-xl border-[#E4E7E7] text-xs h-9 px-4"
               >
                 Cancel
               </Button>
@@ -262,7 +262,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
                 size="sm"
                 disabled={sending || !message.trim()}
                 onClick={handleSendWish}
-                className="rounded-xl bg-[#00A57E] hover:bg-[#00805F] text-white font-medium"
+                className="rounded-xl bg-[#00A57E] hover:bg-[#00805F] text-white font-medium text-xs h-9 px-4"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
                 {sending ? 'Sending...' : 'Send Wish'}

@@ -202,6 +202,10 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
     }
   }
 
+  const excludeFromCelebrations = formData.has('exclude_from_celebrations')
+    ? formData.get('exclude_from_celebrations') === 'true'
+    : null
+
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -215,6 +219,8 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
       is_active: data.is_active,
       employee_id: data.employee_id || null,
       joining_date: data.joining_date || null,
+      celebrate_birthday: excludeFromCelebrations !== null ? !excludeFromCelebrations : undefined,
+      celebrate_anniversary: excludeFromCelebrations !== null ? !excludeFromCelebrations : undefined,
       updated_at: new Date().toISOString(),
     })
     .eq('id', data.userId)
@@ -246,6 +252,37 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
       })
   }
 
+  // Sensitive details update if provided (saved to staff_sensitive_details)
+  const personalEmail = formData.has('personal_email') ? (formData.get('personal_email') ? String(formData.get('personal_email')).trim() : null) : undefined
+  const dob = formData.has('dob') ? (formData.get('dob') ? String(formData.get('dob')).trim() : null) : undefined
+  const address = formData.has('address') ? (formData.get('address') ? String(formData.get('address')).trim() : null) : undefined
+  const emergencyName = formData.has('emergency_contact_name') ? (formData.get('emergency_contact_name') ? String(formData.get('emergency_contact_name')).trim() : null) : undefined
+  let emergencyPhone = formData.has('emergency_contact_phone') ? (formData.get('emergency_contact_phone') ? String(formData.get('emergency_contact_phone')).trim() : null) : undefined
+  if (emergencyPhone) {
+    const parsedEmerg = parsePhoneNumberFromString(emergencyPhone, 'AE')
+    if (parsedEmerg && parsedEmerg.isValid()) {
+      emergencyPhone = parsedEmerg.format('E.164')
+    }
+  }
+
+  if (personalEmail !== undefined || dob !== undefined || address !== undefined || emergencyName !== undefined || emergencyPhone !== undefined) {
+    const { error: sensErr } = await supabase
+      .from('staff_sensitive_details')
+      .upsert({
+        user_id: data.userId,
+        personal_email: personalEmail ?? null,
+        dob: dob ?? null,
+        address: address ?? null,
+        emergency_contact_name: emergencyName ?? null,
+        emergency_contact_phone: emergencyPhone ?? null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+
+    if (sensErr) {
+      return { success: false, error: sensErr.message }
+    }
+  }
+
   revalidatePath('/admin/staff')
   revalidatePath(`/admin/staff/${data.userId}`)
   revalidatePath('/admin/attendance')
@@ -256,17 +293,25 @@ export async function getStaffMemberForAdminAction(id: string) {
   await requireAdminOrAbove()
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from('staff_directory_view')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const [profileRes, sensitiveRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', id).single(),
+    supabase.from('staff_sensitive_details').select('*').eq('user_id', id).maybeSingle(),
+  ])
 
-  if (error) {
-    return { success: false, error: error.message }
+  if (profileRes.error) {
+    return { success: false, error: profileRes.error.message }
   }
 
-  return { success: true, staff: data }
+  const staff = {
+    ...profileRes.data,
+    personal_email: sensitiveRes.data?.personal_email ?? null,
+    dob: sensitiveRes.data?.dob ?? null,
+    address: sensitiveRes.data?.address ?? null,
+    emergency_contact_name: sensitiveRes.data?.emergency_contact_name ?? null,
+    emergency_contact_phone: sensitiveRes.data?.emergency_contact_phone ?? null,
+  }
+
+  return { success: true, staff }
 }
 
 export async function toggleStaffRoleAction(

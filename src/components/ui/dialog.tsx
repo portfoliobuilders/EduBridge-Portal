@@ -39,14 +39,18 @@ function DialogOverlay({
   )
 }
 
+interface DialogContentProps extends DialogPrimitive.Popup.Props {
+  showCloseButton?: boolean
+  variant?: "default" | "wide"
+}
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  variant = "default",
   ...props
-}: DialogPrimitive.Popup.Props & {
-  showCloseButton?: boolean
-}) {
+}: DialogContentProps) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -54,8 +58,9 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed z-50 flex flex-col bg-white text-[#0A0A0A] border border-[#E4E7E7] shadow-xl duration-150 outline-none overflow-hidden",
-          // Desktop: centered, 560px wide, 14px radius, 90vh max height
-          "sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-[560px] sm:rounded-[14px] sm:max-h-[90vh]",
+          // Desktop: centered, max 520px (wide 640px), 16px radius, 90vh max height
+          "sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:rounded-[16px] sm:max-h-[90vh]",
+          variant === "wide" ? "sm:max-w-[640px]" : "sm:max-w-[520px]",
           // Mobile (<640px): bottom sheet, full width, rounded top, safe area padding
           "max-sm:bottom-0 max-sm:inset-x-0 max-sm:max-w-full max-sm:max-h-[92vh] max-sm:rounded-t-[20px] max-sm:rounded-b-none max-sm:border-b-0 max-sm:pb-[env(safe-area-inset-bottom,0px)]",
           "data-open:animate-in data-open:fade-in-0 sm:data-open:zoom-in-95 max-sm:data-open:slide-in-from-bottom data-closed:animate-out data-closed:fade-out-0 sm:data-closed:zoom-out-95 max-sm:data-closed:slide-out-to-bottom",
@@ -76,13 +81,13 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3 text-[#6B7272] hover:text-[#0A0A0A] h-9 w-9 p-0 rounded-full"
+                className="absolute top-4 right-4 text-[#6B7272] hover:text-[#0A0A0A] h-8 w-8 p-0 rounded-full"
                 size="icon"
                 aria-label="Close dialog"
               />
             }
           >
-            <XIcon className="w-5 h-5" />
+            <XIcon className="w-4 h-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -95,7 +100,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1.5 px-6 pt-5 pb-3 border-b border-[#E4E7E7] shrink-0 text-left", className)}
+      className={cn("flex flex-col gap-1 px-6 pt-5 pb-4 border-b border-[#E4E7E7] shrink-0 text-left", className)}
       {...props}
     />
   )
@@ -105,7 +110,7 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-body"
-      className={cn("flex-1 overflow-y-auto px-6 py-4 space-y-4", className)}
+      className={cn("flex-1 overflow-y-auto px-6 py-5 space-y-4", className)}
       {...props}
     />
   )
@@ -123,17 +128,17 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-row items-center justify-between gap-3 px-6 py-4 border-t border-[#E4E7E7] bg-white shrink-0 mt-auto",
+        "flex flex-row items-center justify-end gap-3 px-6 py-4 border-t border-[#E4E7E7] bg-white shrink-0 mt-auto",
         className
       )}
       {...props}
     >
-      {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" className="border-[#E4E7E7]" />}>
+        <DialogPrimitive.Close render={<Button variant="outline" className="border-[#E4E7E7] text-xs h-9 rounded-xl" />}>
           Close
         </DialogPrimitive.Close>
       )}
+      {children}
     </div>
   )
 }
@@ -143,7 +148,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-display text-lg font-semibold leading-tight text-[#0A0A0A]",
+        "font-display text-base sm:text-lg font-semibold leading-tight text-[#0A0A0A]",
         className
       )}
       {...props}
@@ -159,7 +164,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-xs sm:text-sm text-[#6B7272] leading-normal",
+        "text-xs sm:text-xs text-[#6B7272] leading-normal mt-0.5",
         className
       )}
       {...props}

@@ -16,6 +16,7 @@ export interface StaffProfileFull {
   is_active: boolean
   job_title?: string | null
   reports_to?: string | null
+  reports_to_name?: string | null
   admin_scope: string
   employee_id?: string | null
   joining_date?: string | null
@@ -41,9 +42,6 @@ const updateProfileSchema = z.object({
   address: z.string().trim().max(300).optional().nullable(),
   emergency_contact_name: z.string().trim().max(100).optional().nullable(),
   emergency_contact_phone: z.string().trim().optional().nullable(),
-  celebrate_birthday: z.boolean(),
-  celebrate_anniversary: z.boolean(),
-  email_digest_enabled: z.boolean(),
 })
 
 export async function getMyProfileAction(): Promise<{
@@ -55,18 +53,37 @@ export async function getMyProfileAction(): Promise<{
     const { user } = await requireUser()
     const supabase = await createClient()
 
-    // Query staff_directory_view which joins profiles + staff_sensitive_details (allowed for self by RLS)
-    const { data, error } = await supabase
-      .from('staff_directory_view')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+    // Query profiles and staff_sensitive_details directly by user ID (enforced by RLS)
+    const [profileRes, sensitiveRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('staff_sensitive_details').select('*').eq('user_id', user.id).maybeSingle(),
+    ])
 
-    if (error) {
-      return { success: false, error: error.message }
+    if (profileRes.error) {
+      return { success: false, error: profileRes.error.message }
     }
 
-    return { success: true, profile: data as StaffProfileFull }
+    let reportsToName: string | null = null
+    if (profileRes.data.reports_to) {
+      const { data: mgr } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', profileRes.data.reports_to)
+        .maybeSingle()
+      reportsToName = mgr?.full_name ?? null
+    }
+
+    const profile: StaffProfileFull = {
+      ...profileRes.data,
+      reports_to_name: reportsToName,
+      personal_email: sensitiveRes.data?.personal_email ?? null,
+      dob: sensitiveRes.data?.dob ?? null,
+      address: sensitiveRes.data?.address ?? null,
+      emergency_contact_name: sensitiveRes.data?.emergency_contact_name ?? null,
+      emergency_contact_phone: sensitiveRes.data?.emergency_contact_phone ?? null,
+    }
+
+    return { success: true, profile }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to load profile'
     return { success: false, error: message }
@@ -78,7 +95,7 @@ export async function updateMyProfileAction(formData: FormData): Promise<{
   error?: string
 }> {
   try {
-    await requireUser()
+    const { user } = await requireUser()
     const raw = {
       display_name: formData.get('display_name') ? String(formData.get('display_name')) : null,
       phone: formData.get('phone') ? String(formData.get('phone')) : null,
@@ -87,9 +104,6 @@ export async function updateMyProfileAction(formData: FormData): Promise<{
       address: formData.get('address') ? String(formData.get('address')) : null,
       emergency_contact_name: formData.get('emergency_contact_name') ? String(formData.get('emergency_contact_name')) : null,
       emergency_contact_phone: formData.get('emergency_contact_phone') ? String(formData.get('emergency_contact_phone')) : null,
-      celebrate_birthday: formData.get('celebrate_birthday') === 'true',
-      celebrate_anniversary: formData.get('celebrate_anniversary') === 'true',
-      email_digest_enabled: formData.get('email_digest_enabled') === 'true',
     }
 
     const parsed = updateProfileSchema.safeParse(raw)
@@ -115,22 +129,35 @@ export async function updateMyProfileAction(formData: FormData): Promise<{
 
     const supabase = await createClient()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.rpc as any)('update_my_profile', {
-      p_display_name: parsed.data.display_name || null,
-      p_phone: formattedPhone || null,
-      p_personal_email: parsed.data.personal_email || null,
-      p_dob: parsed.data.dob || null,
-      p_address: parsed.data.address || null,
-      p_emergency_contact_name: parsed.data.emergency_contact_name || null,
-      p_emergency_contact_phone: formattedEmergencyPhone || null,
-      p_celebrate_birthday: parsed.data.celebrate_birthday,
-      p_celebrate_anniversary: parsed.data.celebrate_anniversary,
-      p_email_digest_enabled: parsed.data.email_digest_enabled,
-    })
+    // 1. Update non-sensitive profile fields on public.profiles (only editable by staff)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        display_name: parsed.data.display_name || null,
+        phone: formattedPhone || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
 
-    if (error) {
-      return { success: false, error: error.message }
+    if (profileError) {
+      return { success: false, error: profileError.message }
+    }
+
+    // 2. Upsert sensitive details into public.staff_sensitive_details
+    const { error: sensitiveError } = await supabase
+      .from('staff_sensitive_details')
+      .upsert({
+        user_id: user.id,
+        personal_email: parsed.data.personal_email || null,
+        dob: parsed.data.dob || null,
+        address: parsed.data.address || null,
+        emergency_contact_name: parsed.data.emergency_contact_name || null,
+        emergency_contact_phone: formattedEmergencyPhone || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+
+    if (sensitiveError) {
+      return { success: false, error: sensitiveError.message }
     }
 
     revalidatePath('/profile')
@@ -194,10 +221,10 @@ export async function uploadAvatarAction(formData: FormData): Promise<{
 
     // Update profiles table
     const supabase = await createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await (supabase.rpc as any)('update_my_profile', {
-      p_avatar_url: avatarUrl,
-    })
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
 
     if (updateError) {
       return { success: false, error: updateError.message }

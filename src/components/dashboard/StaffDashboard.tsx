@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatAED } from '@/lib/money'
 import { formatDubaiDate, formatDubaiDateTime } from '@/lib/date'
-import { LeaderboardWidget } from '@/components/leaderboard/LeaderboardWidget'
 
 interface PendingBalanceItem {
   enrollment_id: string
@@ -197,9 +196,6 @@ export function StaffDashboard({
           <p className="text-xs text-[#6B7272] mt-1">Total vouchers issued by me</p>
         </div>
       </div>
-
-      {/* Leaderboard Widget */}
-      <LeaderboardWidget />
 
       {/* Candidate Documents via Link Widget (Last 7 Days) */}
       {documentStats && (

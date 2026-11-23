@@ -47,6 +47,7 @@ export interface CompanySettingsData {
   email_doc_request_template?: string | null
   admins_can_void?: boolean
   support_access_enabled?: boolean
+  celebrations_enabled?: boolean
   celebration_emails_enabled?: boolean
   show_aed_to_staff?: boolean
   monthly_top_performer_notification?: boolean
@@ -151,6 +152,7 @@ export function SettingsClient({
       }
       formData.append('admins_can_void', String(Boolean(settings.admins_can_void)))
       formData.append('support_access_enabled', String(Boolean(settings.support_access_enabled)))
+      formData.append('celebrations_enabled', String(Boolean(settings.celebrations_enabled)))
       formData.append('celebration_emails_enabled', String(Boolean(settings.celebration_emails_enabled ?? true)))
       formData.append('show_aed_to_staff', String(Boolean(settings.show_aed_to_staff)))
       formData.append('monthly_top_performer_notification', String(Boolean(settings.monthly_top_performer_notification)))
@@ -903,32 +905,89 @@ export function SettingsClient({
           </div>
 
           <div className="space-y-4">
-            {/* Celebration Milestone Emails */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
-              <div className="space-y-0.5">
-                <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+            {/* Celebrations Card */}
+            <div className="p-5 rounded-2xl border border-border bg-white shadow-xs space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  Staff Celebration Emails
-                </span>
-                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-                  Automatically send branded congratulations emails to staff on their birthdays and work anniversaries at 08:30 Asia/Dubai. In-app notifications and dashboard reminders for admins remain active regardless.
+                  Celebrations
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Configure company-wide celebration features and automated milestone emails.
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={Boolean(settings.celebration_emails_enabled ?? true)}
-                onClick={() => handleInputChange('celebration_emails_enabled', !(settings.celebration_emails_enabled ?? true))}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  (settings.celebration_emails_enabled ?? true) ? 'bg-primary' : 'bg-neutral-300'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    (settings.celebration_emails_enabled ?? true) ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+
+              <div className="space-y-4 pt-2">
+                {/* Master Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-semibold text-foreground">
+                      Enable birthday & work-anniversary celebrations
+                    </span>
+                    <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                      Master switch for company celebrations. When enabled, team members see birthday and work-anniversary hero greetings, banners, wishes, and confetti on their milestone days. Default is OFF.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={Boolean(settings.celebrations_enabled)}
+                    onClick={() => handleInputChange('celebrations_enabled', !settings.celebrations_enabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      settings.celebrations_enabled ? 'bg-primary' : 'bg-neutral-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Staff Celebration Emails (disabled while master is off) */}
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4 transition-opacity ${
+                  !settings.celebrations_enabled ? 'opacity-60' : ''
+                }`}>
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-semibold text-foreground">
+                      Staff Celebration Emails
+                    </span>
+                    <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                      Automatically send branded congratulations emails to staff on their birthdays and work anniversaries at 08:30 Asia/Dubai.
+                      {!settings.celebrations_enabled && (
+                        <span className="block text-amber-700 font-medium mt-0.5">
+                          (Disabled while master celebration switch is off)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    disabled={!settings.celebrations_enabled}
+                    aria-checked={Boolean(settings.celebration_emails_enabled ?? true)}
+                    onClick={() => {
+                      if (settings.celebrations_enabled) {
+                        handleInputChange('celebration_emails_enabled', !(settings.celebration_emails_enabled ?? true))
+                      }
+                    }}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      !settings.celebrations_enabled
+                        ? 'cursor-not-allowed bg-neutral-300'
+                        : (settings.celebration_emails_enabled ?? true)
+                        ? 'cursor-pointer bg-primary'
+                        : 'cursor-pointer bg-neutral-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        (settings.celebration_emails_enabled ?? true) && settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Show AED amounts to staff on leaderboard */}

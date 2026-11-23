@@ -27,7 +27,6 @@ import {
   TopEntitiesChart,
 } from '@/components/dashboard/OwnerCharts'
 import { UpcomingCelebrationsWidget } from '@/components/celebrations/UpcomingCelebrationsWidget'
-import { LeaderboardWidget } from '@/components/leaderboard/LeaderboardWidget'
 
 interface StaffLeaderboardRow {
   staff_id: string
@@ -185,11 +184,8 @@ export function OwnerDashboard({
         )}
       </div>
 
-      {/* Leaderboard & Celebrations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <LeaderboardWidget />
-        <UpcomingCelebrationsWidget />
-      </div>
+      {/* Celebrations Widget */}
+      <UpcomingCelebrationsWidget />
 
       {/* Candidate Documents via Link Widget (Last 7 Days) */}
       {documentStats && (
