@@ -29,9 +29,9 @@ begin
   -- 1. Create test users in auth.users & profiles
   insert into auth.users (id, email)
   values
-    (v_sa, 'cel_sa_proof@temp.local'),
-    (v_staff, 'cel_staff_proof@temp.local'),
-    (v_inactive, 'cel_inactive_proof@temp.local')
+    (v_sa, 'cel_sa_proof@test.edubridge.local'),
+    (v_staff, 'cel_staff_proof@test.edubridge.local'),
+    (v_inactive, 'cel_inactive_proof@test.edubridge.local')
   on conflict (id) do nothing;
 
   update public.profiles set

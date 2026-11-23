@@ -8,7 +8,7 @@ grant all on test_results to authenticated, anon;
 
 -- Setup temporary test staff user
 insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid, 'proof_staff@edubridge.test', '', now(), now(), now())
+values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid, 'proof_staff@test.edubridge.local', '', now(), now(), now())
 on conflict (id) do nothing;
 
 insert into profiles (id, full_name, role, is_active)

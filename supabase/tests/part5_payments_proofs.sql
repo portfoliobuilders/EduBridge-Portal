@@ -55,7 +55,7 @@ begin
     p_full_name := 'Test Duplicate Student',
     p_mobile := '+971509998881',
     p_whatsapp := '+971509998881',
-    p_email := 'dup.test@edubridge.test',
+    p_email := 'dup.test@test.edubridge.local',
     p_notes := 'Initial student',
     p_university_id := v_uni_id,
     p_course_id := v_course_id,

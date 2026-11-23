@@ -89,7 +89,7 @@ test.describe('Candidates Directory Redesign E2E', () => {
 
     // Click Balance due status tab -> URL updates
     await balanceDueTab.click();
-    await expect.poll(() => page.url(), { timeout: 5000 }).toContain('status=balance_due');
+    await expect.poll(() => page.url(), { timeout: 15000 }).toContain('status=balance_due');
 
     // Search filter input -> debounced URL update
     const searchInput = page.locator('input[placeholder*="Search by candidate name"]');

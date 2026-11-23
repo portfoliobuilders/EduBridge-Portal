@@ -149,7 +149,7 @@ begin
   select
     'EB-STU-' || lpad((50000 + i)::text, 5, '0'),
     case when i % 5 = 0 then 'Fatima Ahmed Al Mansoori ' || i
-         when i % 5 = 1 then 'Mohammed Rashid Al Nuaimi ' || i
+         when i % 5 = 1 then 'Candidate Al Nuaimi ' || i
          when i % 5 = 2 then 'Sultan Zayed Al Nahyan ' || i
          when i % 5 = 3 then 'Mariam Saeed Al Marri ' || i
          else 'Abdullah Khalid Al Qasimi ' || i end,

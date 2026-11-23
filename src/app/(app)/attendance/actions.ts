@@ -213,6 +213,13 @@ export async function getMonthAttendanceAction(yearMonth?: string, targetUserId?
       .gte('date', startDate)
       .lte('date', endDate)
 
+    // User attendance settings (weekly off, etc.)
+    const { data: settings } = await supabase
+      .from('staff_attendance_settings')
+      .select('*, office:offices(*)')
+      .eq('user_id', uid)
+      .maybeSingle()
+
     // Compute totals
     let totalWorkedMinutes = 0
     let daysPresent = 0
@@ -264,6 +271,7 @@ export async function getMonthAttendanceAction(yearMonth?: string, targetUserId?
         leaves: leaves || [],
         regularizations: regularizations || [],
         holidays: holidays || [],
+        settings,
         summary: {
           totalWorkedMinutes,
           daysPresent,

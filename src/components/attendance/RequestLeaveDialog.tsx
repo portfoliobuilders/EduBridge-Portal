@@ -17,14 +17,23 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Calendar } from 'lucide-react'
 import { submitLeaveRequestAction } from '@/app/(app)/attendance/actions'
+import { calculateLeaveWorkingDays } from '@/lib/attendance/utils'
 
 interface RequestLeaveDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmitted?: () => void
+  weeklyOff?: number[]
+  holidays?: (string | { date: string })[]
 }
 
-export function RequestLeaveDialog({ open, onOpenChange, onSubmitted }: RequestLeaveDialogProps) {
+export function RequestLeaveDialog({
+  open,
+  onOpenChange,
+  onSubmitted,
+  weeklyOff = [0],
+  holidays = [],
+}: RequestLeaveDialogProps) {
   const [type, setType] = useState<'annual' | 'sick' | 'unpaid' | 'other'>('annual')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
@@ -33,21 +42,16 @@ export function RequestLeaveDialog({ open, onOpenChange, onSubmitted }: RequestL
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Compute working days (excluding Sunday default weekly off)
+  // Compute working days from configured weekly off days and holidays
   const workingDays = useMemo(() => {
-    if (!fromDate || !toDate || toDate < fromDate) return 0
-    const start = new Date(fromDate + 'T00:00:00')
-    const end = new Date(toDate + 'T00:00:00')
-    let count = 0
-    const cur = new Date(start)
-    while (cur <= end) {
-      if (cur.getDay() !== 0) { // Sunday = 0
-        count++
-      }
-      cur.setDate(cur.getDate() + 1)
-    }
-    return halfDay ? Math.max(0.5, count * 0.5) : count
-  }, [fromDate, toDate, halfDay])
+    return calculateLeaveWorkingDays({
+      fromDate,
+      toDate,
+      weeklyOff,
+      holidays,
+      halfDay,
+    })
+  }, [fromDate, toDate, halfDay, weeklyOff, holidays])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

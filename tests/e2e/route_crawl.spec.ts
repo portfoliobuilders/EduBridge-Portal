@@ -23,6 +23,7 @@ const crawlResults: RouteResult[] = [];
 
 test.describe('Role-based Route Crawl Matrix', () => {
   test.describe.configure({ mode: 'serial' });
+  test.setTimeout(180000);
 
   const runId = Date.now();
   const password = `Cr@wlPass_${runId}!Aa1`;
@@ -93,7 +94,7 @@ test.describe('Role-based Route Crawl Matrix', () => {
       .from('staff_sensitive_details')
       .upsert({
         user_id: staffUserId,
-        personal_email: `personal_${runId}@example.com`,
+        personal_email: `personal_${runId}@test.edubridge.local`,
         dob: '1995-05-15',
         address: 'Dubai Silicon Oasis, Dubai',
         emergency_contact_name: 'Emergency Contact',

@@ -389,8 +389,8 @@ export function OwnerDashboard({
             </thead>
             <tbody className="divide-y divide-[#E4E7E7] font-mono tabular-nums">
               {kpis?.by_staff && kpis.by_staff.length > 0 ? (
-                kpis.by_staff.map((s) => (
-                  <tr key={s.staff_id} className="hover:bg-[#F5F6F6]/50 transition">
+                kpis.by_staff.map((s, idx) => (
+                  <tr key={`${s.staff_id || 'staff'}-${idx}`} className="hover:bg-[#F5F6F6]/50 transition">
                     <td className="py-3.5 px-4 font-sans font-medium text-[#0A0A0A]">
                       {s.staff_name}
                     </td>

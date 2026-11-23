@@ -36,9 +36,9 @@ begin
   -- ---------------------------------------------------------------------------
   insert into auth.users (id, email)
   values
-    (v_owner_id, 'owner_test@edubridge.test'),
-    (v_staff1_id, 'staff1_test@edubridge.test'),
-    (v_staff2_id, 'staff2_test@edubridge.test')
+    (v_owner_id, 'owner_test@test.edubridge.local'),
+    (v_staff1_id, 'staff1_test@test.edubridge.local'),
+    (v_staff2_id, 'staff2_test@test.edubridge.local')
   on conflict (id) do nothing;
 
   insert into profiles (id, full_name, role, is_active)

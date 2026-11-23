@@ -31,7 +31,7 @@ declare
 begin
   -- Setup test owner
   insert into auth.users (id, email)
-  values (v_owner_id, 'test_remove_ref_owner@edubridge.test')
+  values (v_owner_id, 'test_remove_ref_owner@test.edubridge.local')
   on conflict (id) do nothing;
 
   insert into public.profiles (id, full_name, role, is_active)

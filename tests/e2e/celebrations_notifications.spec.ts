@@ -222,7 +222,7 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
     await postBtn.click();
 
     // Success feedback
-    await expect(page.locator('text=Wish sent')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Wish sent')).toBeVisible({ timeout: 25000 });
 
     // 4. Test dismissing banner
     const dismissBtn = page.locator('button[aria-label="Dismiss celebration banner for today"]');

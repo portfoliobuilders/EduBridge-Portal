@@ -100,6 +100,7 @@ test.describe('Capture Candidates Redesign Screenshots', () => {
       // 4. Selection bar (select first item)
       await page.goto('/candidates');
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
 
       const isMobile = vp.width < 1024;
       if (!isMobile) {

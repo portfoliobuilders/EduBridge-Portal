@@ -332,6 +332,8 @@ export function AttendanceClient({ initialData }: AttendanceClientProps) {
         open={leaveModalOpen}
         onOpenChange={setLeaveModalOpen}
         onSubmitted={() => reloadData()}
+        weeklyOff={data.settings?.weekly_off ?? [0]}
+        holidays={data.holidays ?? []}
       />
 
       {/* Regularization Request Dialog */}

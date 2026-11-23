@@ -165,3 +165,59 @@ export function getDubaiDateString(date: Date = new Date()): string {
   })
   return formatter.format(date) // Returns YYYY-MM-DD
 }
+
+/**
+ * Calculates working days between fromDate and toDate (inclusive)
+ * taking into account weekly off days (default [0] = Sunday) and holidays.
+ */
+export function calculateLeaveWorkingDays({
+  fromDate,
+  toDate,
+  weeklyOff = [0],
+  holidays = [],
+  halfDay = false,
+}: {
+  fromDate: string
+  toDate: string
+  weeklyOff?: number[]
+  holidays?: (string | { date: string })[]
+  halfDay?: boolean
+}): number {
+  if (!fromDate || !toDate || toDate < fromDate) return 0
+
+  const holidayDates = new Set(
+    holidays.map((h) => (typeof h === 'string' ? h : h.date))
+  )
+
+  const [startYear, startMonth, startDay] = fromDate.split('-').map(Number)
+  const [endYear, endMonth, endDay] = toDate.split('-').map(Number)
+
+  if (!startYear || !startMonth || !startDay || !endYear || !endMonth || !endDay) {
+    return 0
+  }
+
+  // Use UTC to avoid any DST or timezone jitter when iterating calendar days
+  const cur = new Date(Date.UTC(startYear, startMonth - 1, startDay))
+  const end = new Date(Date.UTC(endYear, endMonth - 1, endDay))
+
+  let count = 0
+  while (cur <= end) {
+    const dayOfWeek = cur.getUTCDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const y = cur.getUTCFullYear()
+    const m = String(cur.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(cur.getUTCDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${d}`
+
+    const isWeeklyOff = weeklyOff.includes(dayOfWeek)
+    const isHoliday = holidayDates.has(dateStr)
+
+    if (!isWeeklyOff && !isHoliday) {
+      count++
+    }
+
+    cur.setUTCDate(cur.getUTCDate() + 1)
+  }
+
+  if (count === 0) return 0
+  return halfDay ? count * 0.5 : count
+}

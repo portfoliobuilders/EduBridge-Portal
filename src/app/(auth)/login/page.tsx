@@ -99,11 +99,10 @@ function LoginForm() {
           <Image
             src="/brand/edubridge-logo-color.svg"
             alt="EduBridge Portal"
-            width={140}
-            height={36}
+            width={748}
+            height={518}
             priority
-            style={{ width: 'auto', height: '36px' }}
-            className="h-9 w-auto max-w-[140px] object-contain"
+            className="h-9 w-auto object-contain"
           />
         </div>
 
@@ -272,10 +271,9 @@ export default function LoginPage() {
           <Image
             src="/brand/edubridge-logo-white.svg"
             alt="EduBridge Portal"
-            width={220}
-            height={50}
+            width={753}
+            height={547}
             priority
-            style={{ width: 'auto', height: 'auto', maxWidth: '220px' }}
             className="max-w-[220px] w-auto h-auto object-contain"
           />
         </div>
@@ -329,10 +327,9 @@ export default function LoginPage() {
           <Image
             src="/brand/edubridge-logo-white.svg"
             alt="EduBridge Portal"
-            width={160}
-            height={38}
+            width={753}
+            height={547}
             priority
-            style={{ width: 'auto', height: 'auto', maxWidth: '160px' }}
             className="max-w-[160px] w-auto h-auto object-contain"
           />
           <div className="border-l border-white/25 pl-6 hidden md:block">

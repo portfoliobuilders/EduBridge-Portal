@@ -52,7 +52,7 @@ test.describe('UI Polish Verification & Screenshots', () => {
       email: staffEmail,
       password,
       email_confirm: true,
-      user_metadata: { full_name: 'Rashid Al Maktoum' },
+      user_metadata: { full_name: 'Tariq Mansoor' },
     })
     if (stErr) throw stErr
     staffId = stData.user.id
@@ -123,9 +123,9 @@ test.describe('UI Polish Verification & Screenshots', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 })
 
-    const bell = page.locator('button[aria-label="Open notifications menu"]')
+    const bell = page.locator('button[aria-label^="Notifications"]:visible')
     await bell.click()
-    await page.waitForSelector('text=Notifications', { timeout: 10000 })
+    await page.locator('[data-slot="popover-content"]').getByText('Notifications', { exact: true }).waitFor({ timeout: 10000 })
     await page.screenshot({
       path: 'screenshots/notifications_popover_desktop_1280.png',
     })
@@ -139,9 +139,9 @@ test.describe('UI Polish Verification & Screenshots', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 })
 
-    const bell = page.locator('button[aria-label="Open notifications menu"]')
+    const bell = page.locator('button[aria-label^="Notifications"]:visible')
     await bell.click()
-    await page.waitForSelector('text=Notifications', { timeout: 10000 })
+    await page.locator('[data-slot="sheet-content"]').getByText('Notifications', { exact: true }).waitFor({ timeout: 10000 })
     await page.screenshot({
       path: 'screenshots/notifications_bottomsheet_mobile_375.png',
     })
@@ -158,7 +158,7 @@ test.describe('UI Polish Verification & Screenshots', () => {
       await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 })
 
       await page.goto('/')
-      await page.waitForSelector('text=Welcome, Rashid Al Maktoum', { timeout: 15000 })
+      await page.waitForSelector('text=Welcome, Tariq Mansoor', { timeout: 15000 })
       await expect(page.locator('text=Top 3 This Month')).toHaveCount(0)
 
       await page.screenshot({

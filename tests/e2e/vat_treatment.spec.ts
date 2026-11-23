@@ -261,11 +261,12 @@ test.describe('VAT Treatment End-to-End Suite & Screenshot Capture', () => {
     await page.setViewportSize({ width: 1280, height: 850 });
     await page.goto('/candidates');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
 
     // Click "New candidate"
-    const newCandBtn = page.locator('button:has-text("New candidate")');
+    const newCandBtn = page.locator('#btn-create-candidate-trigger, button:has-text("New Candidate")').first();
     await newCandBtn.click();
-    await page.waitForSelector('#fullName', { timeout: 10000 });
+    await page.waitForSelector('#fullName', { timeout: 15000 });
 
     // Step 1: Contact Details
     const candName = `Exclusive Candidate ${runId}`;

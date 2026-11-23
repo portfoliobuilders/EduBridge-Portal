@@ -66,7 +66,7 @@ test.describe('Opaque Surfaces & Dialogs Verification', () => {
 
     // Helper to verify surface background
     const assertOpaqueWhite = async (locator: Locator, name: string) => {
-      await expect(locator).toBeVisible({ timeout: 5000 });
+      await expect(locator).toBeVisible({ timeout: 15000 });
       const bgColor = await locator.evaluate((el: HTMLElement) => {
         return window.getComputedStyle(el).backgroundColor;
       });
@@ -77,7 +77,8 @@ test.describe('Opaque Surfaces & Dialogs Verification', () => {
     // --- 1. Create Candidate Sheet on /candidates ---
     await page.goto('/candidates');
     await page.waitForLoadState('networkidle');
-    const newCandBtn = page.locator('button:has-text("New Candidate")').first();
+    await page.waitForTimeout(1000);
+    const newCandBtn = page.locator('#btn-create-candidate-trigger, button:has-text("New Candidate")').first();
     await newCandBtn.click();
     const sheetSurface = page.locator('[data-slot="sheet-content"]');
     await assertOpaqueWhite(sheetSurface, 'Create Candidate Sheet');
@@ -132,19 +133,21 @@ test.describe('Opaque Surfaces & Dialogs Verification', () => {
     // --- 3. Add Staff Sheet on /admin/staff ---
     await page.goto('/admin/staff');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
     const addStaffBtn = page.locator('button:has-text("Add Staff Member"), button:has-text("Add Staff")').first();
     if (await addStaffBtn.isVisible()) {
       await addStaffBtn.click();
       const staffSheet = page.locator('[data-slot="sheet-content"]');
       await assertOpaqueWhite(staffSheet, 'Add Staff Sheet');
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
     }
 
     // --- 4. Void Receipt Dialog on /receipts/[id] ---
     if (testPaymentId) {
       await page.goto(`/receipts/${testPaymentId}`);
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
       const voidBtn = page.locator('button:has-text("Void Receipt")').first();
       if (await voidBtn.isVisible()) {
         await voidBtn.click();

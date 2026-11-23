@@ -9,7 +9,7 @@ grant all on test_output to authenticated, anon;
 
 -- Setup test staff user
 insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, 'test_guard_staff@edubridge.test', '', now(), now(), now())
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, 'test_guard_staff@test.edubridge.local', '', now(), now(), now())
 on conflict (id) do nothing;
 
 insert into profiles (id, full_name, role, is_active)

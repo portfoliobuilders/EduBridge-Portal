@@ -63,9 +63,9 @@ begin
   -- 1. Setup Identities
   insert into auth.users (id, email)
   values
-    (v_owner_id, 'owner_p7@edubridge.test'),
-    (v_staff_a_id, 'staff_a_joe@edubridge.test'),
-    (v_staff_b_id, 'staff_b@edubridge.test')
+    (v_owner_id, 'owner_p7@test.edubridge.local'),
+    (v_staff_a_id, 'staff_a_joe@test.edubridge.local'),
+    (v_staff_b_id, 'staff_b@test.edubridge.local')
   on conflict (id) do nothing;
 
   insert into public.profiles (id, full_name, role, is_active)

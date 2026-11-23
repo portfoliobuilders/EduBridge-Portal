@@ -57,14 +57,14 @@ begin
   -- -------------------------------------------------------------------------
   insert into auth.users (id, email)
   values
-    (v_sa_id, 'test_sa@temp.local'),
-    (v_admin_comp_id, 'test_admin_comp@temp.local'),
-    (v_admin_team_id, 'test_admin_team@temp.local'),
-    (v_staff_1_id, 'test_staff_1@temp.local'),
-    (v_staff_2_id, 'test_staff_2@temp.local'),
-    (v_staff_out_id, 'test_staff_out@temp.local'),
-    (v_support_id, 'test_support@temp.local'),
-    (v_sole_sa_id, 'test_sole_sa@temp.local')
+    (v_sa_id, 'test_sa@test.edubridge.local'),
+    (v_admin_comp_id, 'test_admin_comp@test.edubridge.local'),
+    (v_admin_team_id, 'test_admin_team@test.edubridge.local'),
+    (v_staff_1_id, 'test_staff_1@test.edubridge.local'),
+    (v_staff_2_id, 'test_staff_2@test.edubridge.local'),
+    (v_staff_out_id, 'test_staff_out@test.edubridge.local'),
+    (v_support_id, 'test_support@test.edubridge.local'),
+    (v_sole_sa_id, 'test_sole_sa@test.edubridge.local')
   on conflict (id) do nothing;
 
   -- Configure roles and scopes

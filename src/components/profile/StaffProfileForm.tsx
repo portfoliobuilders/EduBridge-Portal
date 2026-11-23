@@ -185,10 +185,18 @@ export function StaffProfileForm({ initialProfile }: StaffProfileFormProps) {
 
       {/* CARD 1: Identity Card (Merged Header & Company Details) */}
       <div className="bg-white rounded-2xl border border-[#E4E7E7] p-6 shadow-xs relative">
-        {/* Managed by admin lock hint (top-right) */}
-        <div className="absolute top-6 right-6 flex items-center gap-1.5 text-[11px] text-[#6B7272] bg-[#F5F6F6] px-2.5 py-1 rounded-full border border-[#E4E7E7]/60">
-          <Lock className="w-3 h-3 text-[#6B7272]" />
-          <span>Managed by admin</span>
+        <div className="flex items-center justify-between border-b border-[#E4E7E7] pb-3 mb-6">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-[#00A57E]" />
+            <h3 className="font-display text-sm font-bold text-[#0A0A0A]">
+              Identity
+            </h3>
+          </div>
+          {/* Managed by admin lock hint */}
+          <div className="flex items-center gap-1.5 text-[11px] text-[#6B7272] bg-[#F5F6F6] px-2.5 py-1 rounded-full border border-[#E4E7E7]/60">
+            <Lock className="w-3 h-3 text-[#6B7272]" />
+            <span>Managed by admin</span>
+          </div>
         </div>
 
         {/* Top: Avatar + Identity Info */}

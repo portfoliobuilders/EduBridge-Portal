@@ -43,9 +43,9 @@ begin
   -- 1. Identity setup
   insert into auth.users (id, email)
   values
-    (v_owner_id, 'test_token_owner@edubridge.test'),
-    (v_receiving_staff_id, 'test_token_staff_rec@edubridge.test'),
-    (v_other_staff_id, 'test_token_staff_oth@edubridge.test')
+    (v_owner_id, 'test_token_owner@test.edubridge.local'),
+    (v_receiving_staff_id, 'test_token_staff_rec@test.edubridge.local'),
+    (v_other_staff_id, 'test_token_staff_oth@test.edubridge.local')
   on conflict (id) do nothing;
 
   insert into public.profiles (id, full_name, role, is_active)

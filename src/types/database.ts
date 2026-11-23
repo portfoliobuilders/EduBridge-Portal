@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -2800,6 +2800,17 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      update_staff_sensitive_details: {
+        Args: {
+          p_address?: string
+          p_dob?: string
+          p_emergency_contact_name?: string
+          p_emergency_contact_phone?: string
+          p_personal_email?: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       verify_candidate_document: {
         Args: { p_document_id: string; p_notes?: string; p_status: string }

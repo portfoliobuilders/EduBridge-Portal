@@ -119,7 +119,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
           <div className="flex -space-x-1.5 overflow-hidden shrink-0">
             {colleagueCelebrations.slice(0, 3).map((c) => (
               <div
-                key={c.user_id}
+                key={`${c.user_id}-${c.kind}`}
                 className="w-6 h-6 rounded-full border-2 border-white bg-[#00A57E] text-white flex items-center justify-center font-bold text-[10px] overflow-hidden shrink-0"
               >
                 {c.avatar_url ? (
@@ -157,7 +157,7 @@ export function CelebrationBanner({ celebrations }: CelebrationBannerProps) {
         <div className="flex items-center gap-2 shrink-0">
           {colleagueCelebrations.map((c) => (
             <button
-              key={c.user_id}
+              key={`${c.user_id}-${c.kind}`}
               type="button"
               onClick={() => handleOpenWishModal(c)}
               className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00A57E] hover:bg-[#00805F] text-white rounded-lg font-medium text-xs transition-colors shadow-2xs"

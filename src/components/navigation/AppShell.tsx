@@ -152,11 +152,10 @@ export function AppShell({
             <Image
               src="/brand/edubridge-logo-color.svg"
               alt="EduBridge Portal"
-              width={160}
-              height={32}
+              width={748}
+              height={518}
               priority
-              style={{ width: 'auto', height: '32px' }}
-              className="h-8 w-auto max-h-8 object-contain"
+              className="h-8 w-auto object-contain"
             />
           </Link>
           <NotificationBell userId={profile.id} />
@@ -295,11 +294,10 @@ export function AppShell({
             <Image
               src="/brand/edubridge-logo-color.svg"
               alt="EduBridge Portal"
-              width={160}
-              height={32}
+              width={748}
+              height={518}
               priority
-              style={{ width: 'auto', height: '32px' }}
-              className="h-8 w-auto max-h-8 object-contain"
+              className="h-8 w-auto object-contain"
             />
           </Link>
 

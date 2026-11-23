@@ -106,13 +106,6 @@ export function StudentsListTable({
     }
   }
 
-  const handleToggleSelect = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    )
-  }
-
   const selectedStudents = students.filter((s): s is StudentDirectoryRow & { id: string } =>
     Boolean(s.id && selectedIds.includes(s.id))
   )
@@ -175,7 +168,17 @@ export function StudentsListTable({
   }
 
   // Row navigation handler
-  const handleRowClick = (studentId: string) => {
+  const handleRowClick = (studentId: string, e?: React.MouseEvent) => {
+    if (e) {
+      const target = e.target as HTMLElement
+      if (
+        target?.closest('input[type="checkbox"]') ||
+        target?.closest('button') ||
+        target?.closest('a')
+      ) {
+        return
+      }
+    }
     router.push(`/candidates/${studentId}`)
   }
 
@@ -310,8 +313,12 @@ export function StudentsListTable({
                     tabIndex={0}
                     role="link"
                     aria-label={`View ${candidateName}`}
-                    onClick={() => handleRowClick(studentId)}
+                    onClick={(e) => handleRowClick(studentId, e)}
                     onKeyDown={(e) => {
+                      const target = e.target as HTMLElement
+                      if (target?.closest('input') || target?.closest('button') || target?.closest('a')) {
+                        return
+                      }
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
                         handleRowClick(studentId)
@@ -330,7 +337,13 @@ export function StudentsListTable({
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={(e) => handleToggleSelect(studentId, e as unknown as React.MouseEvent)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onChange={() => {
+                          setSelectedIds((prev) =>
+                            prev.includes(studentId) ? prev.filter((item) => item !== studentId) : [...prev, studentId]
+                          )
+                        }}
                         className="w-4 h-4 rounded border-[#E4E7E7] text-[#00A57E] focus:ring-[#00A57E] cursor-pointer align-middle"
                         aria-label={`Select ${candidateName}`}
                       />
@@ -548,7 +561,7 @@ export function StudentsListTable({
               key={studentId}
               tabIndex={0}
               role="link"
-              onClick={() => handleRowClick(studentId)}
+              onClick={(e) => handleRowClick(studentId, e)}
               className={cn(
                 'rounded-[14px] bg-white border p-4 space-y-3 transition-all cursor-pointer shadow-xs active:bg-[#F5F6F6]/60',
                 isSelected ? 'border-[#00A57E] ring-1 ring-[#00A57E]' : 'border-[#E4E7E7]'

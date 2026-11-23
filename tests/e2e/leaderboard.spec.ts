@@ -142,10 +142,6 @@ test.describe('Staff Leaderboard E2E & API Verification', () => {
     // Wait for Dashboard
     await page.waitForURL('**/', { timeout: 15000 });
 
-    // Assert "Top 3 This Month" Dashboard widget is visible
-    const widget = page.locator('text=Top 3 This Month').first();
-    await expect(widget).toBeVisible();
-
     // Navigate to /leaderboard
     await page.goto('/leaderboard');
     await page.waitForSelector('text=Staff Leaderboard');

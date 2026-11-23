@@ -56,12 +56,12 @@ begin
 
   insert into auth.users (id, email)
   values
-    (v_super_admin, 'test_super_admin@temp.local'),
-    (v_admin, 'test_admin@temp.local'),
-    (v_staff_a, 'test_staff_a@temp.local'),
-    (v_staff_b, 'test_staff_b@temp.local'),
-    (v_staff_opt_out, 'test_staff_opt_out@temp.local'),
-    (v_staff_leap, 'test_staff_leap@temp.local')
+    (v_super_admin, 'test_super_admin@test.edubridge.local'),
+    (v_admin, 'test_admin@test.edubridge.local'),
+    (v_staff_a, 'test_staff_a@test.edubridge.local'),
+    (v_staff_b, 'test_staff_b@test.edubridge.local'),
+    (v_staff_opt_out, 'test_staff_opt_out@test.edubridge.local'),
+    (v_staff_leap, 'test_staff_leap@test.edubridge.local')
   on conflict (id) do nothing;
 
   update public.profiles set

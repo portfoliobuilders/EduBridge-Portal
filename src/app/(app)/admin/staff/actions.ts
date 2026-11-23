@@ -190,6 +190,11 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
     if (data.is_support) {
       return { success: false, error: 'Admins cannot configure support status.' }
     }
+    // Scope check: Admins can only edit staff within visible_user_ids(); never super_admin or other admins
+    const { data: canManage } = await supabase.rpc('can_manage_user', { p_target: data.userId })
+    if (!canManage) {
+      return { success: false, error: 'Unauthorized: you do not have permission to manage this staff member.' }
+    }
   }
 
   let formattedPhone: string | null = null
@@ -266,20 +271,21 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
   }
 
   if (personalEmail !== undefined || dob !== undefined || address !== undefined || emergencyName !== undefined || emergencyPhone !== undefined) {
-    const { error: sensErr } = await supabase
-      .from('staff_sensitive_details')
-      .upsert({
-        user_id: data.userId,
-        personal_email: personalEmail ?? null,
-        dob: dob ?? null,
-        address: address ?? null,
-        emergency_contact_name: emergencyName ?? null,
-        emergency_contact_phone: emergencyPhone ?? null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+    const { data: rpcRes, error: sensErr } = await supabase.rpc('update_staff_sensitive_details', {
+      p_user_id: data.userId,
+      p_personal_email: personalEmail ?? undefined,
+      p_dob: dob ?? undefined,
+      p_address: address ?? undefined,
+      p_emergency_contact_name: emergencyName ?? undefined,
+      p_emergency_contact_phone: emergencyPhone ?? undefined,
+    })
 
     if (sensErr) {
       return { success: false, error: sensErr.message }
+    }
+    const resObj = rpcRes as { success: boolean; error?: string } | null
+    if (resObj && !resObj.success) {
+      return { success: false, error: resObj.error || 'Failed to update sensitive details' }
     }
   }
 

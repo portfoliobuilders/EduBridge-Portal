@@ -6,6 +6,7 @@ import {
   determineDayStatus,
   formatWorkedHours,
   getDubaiDateString,
+  calculateLeaveWorkingDays,
 } from './utils'
 
 describe('Attendance Domain Utils', () => {
@@ -135,6 +136,87 @@ describe('Attendance Domain Utils', () => {
       // 2026-11-22 21:00:00 UTC = 2026-11-23 01:00:00 Asia/Dubai (UTC+4)
       const date = new Date('2026-11-22T21:00:00.000Z')
       expect(getDubaiDateString(date)).toBe('2026-11-23')
+    })
+  })
+
+  describe('calculateLeaveWorkingDays', () => {
+    it('returns 0 for invalid or reversed date range', () => {
+      expect(calculateLeaveWorkingDays({ fromDate: '2026-11-25', toDate: '2026-11-20' })).toBe(0)
+      expect(calculateLeaveWorkingDays({ fromDate: '', toDate: '2026-11-25' })).toBe(0)
+    })
+
+    it('excludes default Sunday (0) weekly off', () => {
+      // 2026-11-23 (Mon) to 2026-11-29 (Sun) = 7 days, 1 Sunday -> 6 working days
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: [0],
+      })
+      expect(days).toBe(6)
+    })
+
+    it('computes working days using custom weekly off days (e.g. Friday and Saturday off)', () => {
+      // 2026-11-23 (Mon) to 2026-11-29 (Sun) = 7 days
+      // Weekly off: 5 (Fri) and 6 (Sat)
+      // Mon, Tue, Wed, Thu, Sun are working -> 5 working days
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: [5, 6],
+      })
+      expect(days).toBe(5)
+    })
+
+    it('excludes public holidays configured within range', () => {
+      // 2026-11-23 (Mon) to 2026-11-29 (Sun)
+      // Off: Sunday (0) -> 6 days
+      // Holiday on 2026-11-25 (Wed) -> 5 working days
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: [0],
+        holidays: [{ date: '2026-11-25' }],
+      })
+      expect(days).toBe(5)
+    })
+
+    it('does not double-count a holiday that falls on a weekly off day', () => {
+      // Sunday 2026-11-29 is both weekly off and holiday
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: [0],
+        holidays: ['2026-11-29'],
+      })
+      expect(days).toBe(6)
+    })
+
+    it('computes half-day duration correctly', () => {
+      const fullDays = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-27', // Mon to Fri = 5 days
+        weeklyOff: [0],
+        halfDay: false,
+      })
+      expect(fullDays).toBe(5)
+
+      const halfDays = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-27',
+        weeklyOff: [0],
+        halfDay: true,
+      })
+      expect(halfDays).toBe(2.5)
+    })
+
+    it('returns 0 when all selected days fall on weekly off or holidays', () => {
+      // 2026-11-29 is Sunday (weekly off)
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-29',
+        toDate: '2026-11-29',
+        weeklyOff: [0],
+      })
+      expect(days).toBe(0)
     })
   })
 })
