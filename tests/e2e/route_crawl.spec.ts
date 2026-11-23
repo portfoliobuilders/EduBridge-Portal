@@ -147,7 +147,11 @@ test.describe('Role-based Route Crawl Matrix', () => {
       await deleteTestCandidate(adminClient, testCandidateId);
     }
     if (staffUserId) {
-      await adminClient.auth.admin.deleteUser(staffUserId);
+      const { error: delErr } = await adminClient.auth.admin.deleteUser(staffUserId);
+      if (delErr) {
+        await adminClient.from('profiles').update({ is_active: false }).eq('id', staffUserId);
+        await adminClient.auth.admin.updateUserById(staffUserId, { ban_duration: '876600h' });
+      }
     }
     if (adminUserId) {
       await adminClient.auth.admin.deleteUser(adminUserId);
@@ -195,7 +199,10 @@ test.describe('Role-based Route Crawl Matrix', () => {
     role: 'super_admin' | 'admin' | 'staff',
     email: string
   ) {
-    // 1. Log in
+    // 1. Clear session cookies so each role test starts completely fresh
+    await page.context().clearCookies();
+
+    // 2. Log in
     await page.goto('/login');
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', password);
