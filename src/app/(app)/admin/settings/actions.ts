@@ -39,6 +39,7 @@ const companySettingsSchema = z
     celebration_emails_enabled: z.boolean().default(true),
     show_aed_to_staff: z.boolean().default(false),
     monthly_top_performer_notification: z.boolean().default(false),
+    attendance_default_weekly_off: z.array(z.number()).default([5]),
   })
   .superRefine((data, ctx) => {
     if (data.vat_enabled && (!data.trn || data.trn.trim() === '')) {
@@ -91,6 +92,12 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
     celebration_emails_enabled: formData.get('celebration_emails_enabled') !== 'false',
     show_aed_to_staff: formData.get('show_aed_to_staff') === 'true',
     monthly_top_performer_notification: formData.get('monthly_top_performer_notification') === 'true',
+    attendance_default_weekly_off: formData.get('attendance_default_weekly_off')
+      ? String(formData.get('attendance_default_weekly_off'))
+          .split(',')
+          .map((x) => parseInt(x.trim(), 10))
+          .filter((n) => !isNaN(n))
+      : [5],
   }
 
   const parsed = companySettingsSchema.safeParse(raw)
@@ -129,6 +136,7 @@ export async function updateCompanySettingsAction(formData: FormData): Promise<A
       celebration_emails_enabled: data.celebration_emails_enabled,
       show_aed_to_staff: data.show_aed_to_staff,
       monthly_top_performer_notification: data.monthly_top_performer_notification,
+      attendance_default_weekly_off: data.attendance_default_weekly_off,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

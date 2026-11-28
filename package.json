@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "check:test-users": "dotenvx run -f .env.local -- node scripts/check-test-users.mjs",
-    "cleanup:test-users": "dotenvx run -f .env.local -- node scripts/cleanup-test-users.mjs"
+    "cleanup:test-users": "dotenvx run -f .env.local -- node scripts/cleanup-test-users.mjs",
+    "seed:demo": "dotenvx run -f .env.local -- node scripts/seed-demo.mjs",
+    "seed:demo:clean": "dotenvx run -f .env.local -- node scripts/seed-demo.mjs --clean"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

@@ -640,6 +640,30 @@ export type Database = {
           },
         ]
       }
+      demo_seed_runs: {
+        Row: {
+          cleaned_at: string | null
+          created_at: string
+          id: string
+          manifest: Json
+          run_label: string
+        }
+        Insert: {
+          cleaned_at?: string | null
+          created_at?: string
+          id?: string
+          manifest?: Json
+          run_label: string
+        }
+        Update: {
+          cleaned_at?: string | null
+          created_at?: string
+          id?: string
+          manifest?: Json
+          run_label?: string
+        }
+        Relationships: []
+      }
       document_access_log: {
         Row: {
           action: string
@@ -951,6 +975,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           date: string
+          half_day: boolean
           id: string
           name: string
           office_id: string | null
@@ -959,6 +984,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date: string
+          half_day?: boolean
           id?: string
           name: string
           office_id?: string | null
@@ -967,6 +993,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date?: string
+          half_day?: boolean
           id?: string
           name?: string
           office_id?: string | null
@@ -1347,6 +1374,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_sales_team: boolean
           is_support: boolean
           job_title: string | null
           joining_date: string | null
@@ -1368,6 +1396,7 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean
+          is_sales_team?: boolean
           is_support?: boolean
           job_title?: string | null
           joining_date?: string | null
@@ -1389,6 +1418,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_sales_team?: boolean
           is_support?: boolean
           job_title?: string | null
           joining_date?: string | null
@@ -2258,6 +2288,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_demo_seed_run: { Args: { p_run_id: string }; Returns: Json }
       cleanup_test_attendance_user: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -2417,29 +2448,48 @@ export type Database = {
       get_link_documents_stats: { Args: { p_days?: number }; Returns: Json }
       get_public_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_statement: { Args: { p_token: string }; Returns: Json }
-      get_staff_leaderboard: {
-        Args: {
-          p_from?: string
-          p_metric?: string
-          p_period?: string
-          p_team_id?: string
-          p_to?: string
-        }
-        Returns: {
-          admissions_count: number
-          avatar_url: string
-          collections_amount: number
-          first_name: string
-          full_name: string
-          is_self: boolean
-          job_title: string
-          prev_rank: number
-          rank: number
-          rank_delta: number
-          user_id: string
-          value_delta: number
-        }[]
-      }
+      get_staff_leaderboard:
+        | {
+            Args: {
+              p_custom_from?: string
+              p_custom_to?: string
+              p_include_test?: boolean
+              p_metric?: string
+              p_period?: string
+              p_team_id?: string
+            }
+            Returns: {
+              admissions_count: number
+              avatar_url: string
+              collections_amount: number
+              first_name: string
+              full_name: string
+              is_self: boolean
+              job_title: string
+              prev_rank: number
+              rank: number
+              rank_delta: number
+              user_id: string
+              value_delta: number
+            }[]
+          }
+        | {
+            Args: {
+              p_end_date: string
+              p_include_test?: boolean
+              p_limit?: number
+              p_start_date: string
+            }
+            Returns: {
+              avatar_url: string
+              full_name: string
+              rank: number
+              receipts_count: number
+              students_count: number
+              total_revenue: number
+              user_id: string
+            }[]
+          }
       get_staff_list: {
         Args: never
         Returns: {
@@ -2450,6 +2500,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_sales_team: boolean
           is_support: boolean
           job_title: string
           last_sign_in_at: string
@@ -2490,6 +2541,7 @@ export type Database = {
       is_super_admin: { Args: never; Returns: boolean }
       lookup_candidate_for_payment: { Args: { p_query: string }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }
+      mark_daily_absences: { Args: { p_date?: string }; Returns: number }
       mark_notification_read: { Args: { p_id: string }; Returns: boolean }
       process_daily_attendance_absences: {
         Args: { p_target_date?: string }
@@ -2785,6 +2837,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_sales_team: boolean
           is_support: boolean
           job_title: string | null
           joining_date: string | null

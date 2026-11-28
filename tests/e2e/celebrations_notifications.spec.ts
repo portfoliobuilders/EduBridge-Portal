@@ -27,6 +27,7 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
 
   let celebrantId: string;
   let colleagueId: string;
+  let initialCelebrationsEnabled: boolean = false;
 
   // Format today's date in Asia/Dubai
   const now = new Date();
@@ -41,7 +42,16 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
   const joiningDateForAnniversary = `${Number(dubaiYear) - 2}-${dubaiMonth}-${dubaiDay}`;
 
   test.beforeAll(async () => {
-    // 0. Ensure celebrations are enabled in company_settings
+    // 0. Save current celebrations setting and ensure celebrations are enabled in company_settings
+    const { data: currSettings } = await adminClient
+      .from('company_settings')
+      .select('celebrations_enabled')
+      .eq('singleton', true)
+      .single();
+    if (currSettings) {
+      initialCelebrationsEnabled = Boolean(currSettings.celebrations_enabled);
+    }
+
     await adminClient
       .from('company_settings')
       .update({ celebrations_enabled: true })
@@ -113,6 +123,11 @@ test.describe('Notifications, Profiles, and Celebrations E2E', () => {
   test.afterAll(async () => {
     if (celebrantId) await adminClient.auth.admin.deleteUser(celebrantId);
     if (colleagueId) await adminClient.auth.admin.deleteUser(colleagueId);
+    // Restore original celebrations_enabled setting
+    await adminClient
+      .from('company_settings')
+      .update({ celebrations_enabled: initialCelebrationsEnabled })
+      .eq('singleton', true);
   });
 
   test('Celebrant Experience: Top strip, hero card, notification bell, profile page', async ({

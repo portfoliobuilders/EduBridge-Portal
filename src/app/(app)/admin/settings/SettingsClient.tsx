@@ -14,14 +14,37 @@ import {
   ShieldCheck,
   KeyRound,
   Trophy,
+  CalendarDays,
+  Calendar,
+  Plus,
+  Trash2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { updateCompanySettingsAction, uploadLogoAction } from './actions'
+import { saveHolidayAction, deleteHolidayAction } from '@/app/(app)/admin/attendance/actions'
 import { toast } from 'sonner'
+import Link from 'next/link'
+
+export interface HolidayItem {
+  id: string
+  date: string
+  name: string
+  office_id?: string | null
+  half_day?: boolean
+}
 
 export interface CompanySettingsData {
   name: string
@@ -51,6 +74,7 @@ export interface CompanySettingsData {
   celebration_emails_enabled?: boolean
   show_aed_to_staff?: boolean
   monthly_top_performer_notification?: boolean
+  attendance_default_weekly_off?: number[]
 }
 
 const TEMPLATE_VARIABLES = [
@@ -66,11 +90,27 @@ const TEMPLATE_VARIABLES = [
 
 export function SettingsClient({
   initialSettings,
+  initialHolidays = [],
 }: {
   initialSettings: CompanySettingsData
+  initialHolidays?: HolidayItem[]
 }) {
   const [settings, setSettings] = useState<CompanySettingsData>(initialSettings)
-  const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'billing' | 'templates' | 'security'>('general')
+  const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'billing' | 'templates' | 'security' | 'work_calendar'>('general')
+
+  // Holidays state
+  const [holidays, setHolidays] = useState<HolidayItem[]>(initialHolidays)
+  const [showAddHoliday, setShowAddHoliday] = useState(false)
+  const [newHolidayDate, setNewHolidayDate] = useState('')
+  const [newHolidayName, setNewHolidayName] = useState('')
+  const [newHolidayHalfDay, setNewHolidayHalfDay] = useState(false)
+  const [holidaySaving, setHolidaySaving] = useState(false)
+
+  // Import UAE Holidays state
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importYear, setImportYear] = useState('2026')
+  const [importText, setImportText] = useState('')
+  const [importing, setImporting] = useState(false)
 
   // Logo upload state
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -86,8 +126,141 @@ export function SettingsClient({
     'whatsapp_receipt' | 'whatsapp_statement' | 'whatsapp_doc_request' | 'email' | 'email_doc_request'
   >('whatsapp_receipt')
 
-  const handleInputChange = (field: keyof CompanySettingsData, value: string | boolean | number | null) => {
+  const handleInputChange = (field: keyof CompanySettingsData, value: string | boolean | number | null | number[]) => {
     setSettings((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSaveHoliday = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newHolidayDate || !newHolidayName.trim()) {
+      toast.error('Date and holiday name are required')
+      return
+    }
+    setHolidaySaving(true)
+    const res = await saveHolidayAction({
+      date: newHolidayDate,
+      name: newHolidayName.trim(),
+      half_day: newHolidayHalfDay,
+    })
+    setHolidaySaving(false)
+    if (res.success) {
+      toast.success('Holiday added successfully')
+      setHolidays((prev) =>
+        [
+          ...prev,
+          {
+            id: `h-${Date.now()}`,
+            date: newHolidayDate,
+            name: newHolidayName.trim(),
+            half_day: newHolidayHalfDay,
+          },
+        ].sort((a, b) => a.date.localeCompare(b.date))
+      )
+      setShowAddHoliday(false)
+      setNewHolidayDate('')
+      setNewHolidayName('')
+      setNewHolidayHalfDay(false)
+    } else {
+      toast.error(res.error || 'Failed to save holiday')
+    }
+  }
+
+  const handleDeleteHoliday = async (id: string, name: string) => {
+    if (!confirm(`Delete holiday "${name}"?`)) return
+    const res = await deleteHolidayAction(id)
+    if (res.success) {
+      toast.success('Holiday deleted')
+      setHolidays((prev) => prev.filter((h) => h.id !== id))
+    } else {
+      toast.error(res.error || 'Failed to delete holiday')
+    }
+  }
+
+  const handleOpenImportModal = (year: string) => {
+    setImportYear(year)
+    const uae2026 = [
+      `2026-01-01, New Year's Day`,
+      `2026-03-20, Eid al-Fitr (Day 1)`,
+      `2026-03-21, Eid al-Fitr (Day 2)`,
+      `2026-03-22, Eid al-Fitr (Day 3)`,
+      `2026-05-26, Arafat Day`,
+      `2026-05-27, Eid al-Adha (Day 1)`,
+      `2026-05-28, Eid al-Adha (Day 2)`,
+      `2026-05-29, Eid al-Adha (Day 3)`,
+      `2026-06-16, Islamic New Year`,
+      `2026-08-25, Prophet Muhammad's Birthday`,
+      `2026-12-01, Commemoration Day`,
+      `2026-12-02, UAE National Day`,
+      `2026-12-03, UAE National Day Holiday`,
+    ].join('\n')
+
+    const uae2027 = [
+      `2027-01-01, New Year's Day`,
+      `2027-03-09, Eid al-Fitr (Day 1)`,
+      `2027-03-10, Eid al-Fitr (Day 2)`,
+      `2027-03-11, Eid al-Fitr (Day 3)`,
+      `2027-05-16, Arafat Day`,
+      `2027-05-17, Eid al-Adha (Day 1)`,
+      `2027-05-18, Eid al-Adha (Day 2)`,
+      `2027-05-19, Eid al-Adha (Day 3)`,
+      `2027-06-06, Islamic New Year`,
+      `2027-08-15, Prophet Muhammad's Birthday`,
+      `2027-12-01, Commemoration Day`,
+      `2027-12-02, UAE National Day`,
+      `2027-12-03, UAE National Day Holiday`,
+    ].join('\n')
+
+    setImportText(year === '2027' ? uae2027 : uae2026)
+    setShowImportModal(true)
+  }
+
+  const handleProcessImport = async () => {
+    const lines = importText
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+    if (lines.length === 0) {
+      toast.error('No valid holiday entries provided')
+      return
+    }
+
+    setImporting(true)
+    let addedCount = 0
+    const newItems: HolidayItem[] = []
+
+    for (const line of lines) {
+      const parts = line.split(',')
+      if (parts.length >= 2) {
+        const date = parts[0].trim()
+        const name = parts.slice(1).join(',').trim()
+        const isHalf = line.toLowerCase().includes('half')
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date) && name) {
+          const res = await saveHolidayAction({
+            date,
+            name,
+            half_day: isHalf,
+          })
+          if (res.success) {
+            addedCount++
+            newItems.push({
+              id: `imported-${Date.now()}-${Math.random()}`,
+              date,
+              name,
+              half_day: isHalf,
+            })
+          }
+        }
+      }
+    }
+
+    setImporting(false)
+    if (addedCount > 0) {
+      toast.success(`Successfully imported ${addedCount} holiday(s)`)
+      setHolidays((prev) => [...prev, ...newItems].sort((a, b) => a.date.localeCompare(b.date)))
+      setShowImportModal(false)
+    } else {
+      toast.error('Failed to import holidays. Ensure format: YYYY-MM-DD, Holiday Name')
+    }
   }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +329,10 @@ export function SettingsClient({
       formData.append('celebration_emails_enabled', String(Boolean(settings.celebration_emails_enabled ?? true)))
       formData.append('show_aed_to_staff', String(Boolean(settings.show_aed_to_staff)))
       formData.append('monthly_top_performer_notification', String(Boolean(settings.monthly_top_performer_notification)))
+      formData.append(
+        'attendance_default_weekly_off',
+        (settings.attendance_default_weekly_off || [5]).join(',')
+      )
 
       const res = await updateCompanySettingsAction(formData)
       if (res.success) {
@@ -238,6 +415,17 @@ export function SettingsClient({
         >
           <ShieldCheck className="w-4 h-4" />
           Security & Access
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('work_calendar')}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === 'work_calendar'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
+        >
+          <CalendarDays className="w-4 h-4" />
+          Work Calendar
         </button>
       </div>
 
@@ -933,22 +1121,19 @@ export function SettingsClient({
                     role="switch"
                     aria-checked={Boolean(settings.celebrations_enabled)}
                     onClick={() => handleInputChange('celebrations_enabled', !settings.celebrations_enabled)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                      settings.celebrations_enabled ? 'bg-primary' : 'bg-neutral-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${settings.celebrations_enabled ? 'bg-primary' : 'bg-neutral-300'
+                      }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
                     />
                   </button>
                 </div>
 
                 {/* Staff Celebration Emails (disabled while master is off) */}
-                <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4 transition-opacity ${
-                  !settings.celebrations_enabled ? 'opacity-60' : ''
-                }`}>
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-[#F5F6F6] gap-4 transition-opacity ${!settings.celebrations_enabled ? 'opacity-60' : ''
+                  }`}>
                   <div className="space-y-0.5">
                     <span className="text-sm font-semibold text-foreground">
                       Staff Celebration Emails
@@ -972,18 +1157,16 @@ export function SettingsClient({
                         handleInputChange('celebration_emails_enabled', !(settings.celebration_emails_enabled ?? true))
                       }
                     }}
-                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                      !settings.celebrations_enabled
-                        ? 'cursor-not-allowed bg-neutral-300'
-                        : (settings.celebration_emails_enabled ?? true)
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${!settings.celebrations_enabled
+                      ? 'cursor-not-allowed bg-neutral-300'
+                      : (settings.celebration_emails_enabled ?? true)
                         ? 'cursor-pointer bg-primary'
                         : 'cursor-pointer bg-neutral-300'
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        (settings.celebration_emails_enabled ?? true) && settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${(settings.celebration_emails_enabled ?? true) && settings.celebrations_enabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
                     />
                   </button>
                 </div>
@@ -1006,14 +1189,12 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.show_aed_to_staff)}
                 onClick={() => handleInputChange('show_aed_to_staff', !settings.show_aed_to_staff)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  settings.show_aed_to_staff ? 'bg-primary' : 'bg-neutral-300'
-                }`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${settings.show_aed_to_staff ? 'bg-primary' : 'bg-neutral-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    settings.show_aed_to_staff ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${settings.show_aed_to_staff ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
@@ -1034,14 +1215,12 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.monthly_top_performer_notification)}
                 onClick={() => handleInputChange('monthly_top_performer_notification', !settings.monthly_top_performer_notification)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  settings.monthly_top_performer_notification ? 'bg-primary' : 'bg-neutral-300'
-                }`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${settings.monthly_top_performer_notification ? 'bg-primary' : 'bg-neutral-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    settings.monthly_top_performer_notification ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${settings.monthly_top_performer_notification ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
@@ -1063,7 +1242,7 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.admins_can_void)}
                 onClick={() => handleInputChange('admins_can_void', !settings.admins_can_void)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${settings.admins_can_void ? 'bg-primary' : 'bg-neutral-300'
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${settings.admins_can_void ? 'bg-primary' : 'bg-neutral-300'
                   }`}
               >
                 <span
@@ -1090,7 +1269,7 @@ export function SettingsClient({
                 role="switch"
                 aria-checked={Boolean(settings.support_access_enabled)}
                 onClick={() => handleInputChange('support_access_enabled', !settings.support_access_enabled)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${settings.support_access_enabled ? 'bg-primary' : 'bg-neutral-300'
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-primary focus:ring-offset-2 ${settings.support_access_enabled ? 'bg-primary' : 'bg-neutral-300'
                   }`}
               >
                 <span
@@ -1111,6 +1290,296 @@ export function SettingsClient({
           </div>
         </div>
       )}
+
+      {/* 6. Work Calendar */}
+      {activeTab === 'work_calendar' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-2xl border border-border shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-primary" />
+                  Work Calendar & Holidays
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Configure company-wide weekly off schedule and official public holidays.
+                </p>
+              </div>
+              <Link
+                href="/admin/attendance"
+                className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 self-start sm:self-auto"
+              >
+                Go to Attendance Dashboard &rarr;
+              </Link>
+            </div>
+
+            {/* Weekly Off Days Card */}
+            <div className="p-5 rounded-2xl border border-border bg-[#F5F6F6] space-y-3">
+              <div>
+                <Label className="text-sm font-semibold text-foreground">
+                  Default Weekly Off Days <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Standard weekly rest days for all staff. Default is Friday (until EduBridge confirms). Staff without an individual override on their profile follow this schedule.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[
+                  { day: 1, label: 'Monday' },
+                  { day: 2, label: 'Tuesday' },
+                  { day: 3, label: 'Wednesday' },
+                  { day: 4, label: 'Thursday' },
+                  { day: 5, label: 'Friday' },
+                  { day: 6, label: 'Saturday' },
+                  { day: 0, label: 'Sunday' },
+                ].map((item) => {
+                  const currentOff = settings.attendance_default_weekly_off || [5]
+                  const isSelected = currentOff.includes(item.day)
+                  return (
+                    <button
+                      key={item.day}
+                      type="button"
+                      onClick={() => {
+                        let updated: number[]
+                        if (isSelected) {
+                          if (currentOff.length === 1) {
+                            toast.error('At least one weekly off day must be selected')
+                            return
+                          }
+                          updated = currentOff.filter((d) => d !== item.day)
+                        } else {
+                          updated = [...currentOff, item.day]
+                        }
+                        handleInputChange('attendance_default_weekly_off', updated)
+                      }}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${isSelected
+                        ? 'bg-primary text-white border-primary shadow-xs'
+                        : 'bg-white text-muted-foreground border-border hover:text-foreground hover:bg-neutral-50'
+                        }`}
+                    >
+                      {item.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Tip: Click to toggle days on or off. Click &ldquo;Save Company Settings&rdquo; below to apply.
+              </p>
+            </div>
+
+            {/* Public Holidays Card */}
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    Public Holidays
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Public holidays are automatically excluded from absence marking and leave day counts.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenImportModal('2026')}
+                    className="rounded-xl text-xs h-9 gap-1.5"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-primary" />
+                    Import UAE Holidays
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setShowAddHoliday(true)}
+                    className="rounded-xl text-xs h-9 gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Holiday
+                  </Button>
+                </div>
+              </div>
+
+              {holidays.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs">
+                  No public holidays configured yet. Use &ldquo;Add Holiday&rdquo; or &ldquo;Import UAE Holidays&rdquo; above.
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-border rounded-xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-neutral-50 border-b border-border text-muted-foreground font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-4">Date</th>
+                        <th className="py-2.5 px-4">Holiday Name</th>
+                        <th className="py-2.5 px-4">Duration</th>
+                        <th className="py-2.5 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {holidays.map((h) => (
+                        <tr key={h.id} className="hover:bg-neutral-50/50 transition-colors">
+                          <td className="py-2.5 px-4 font-mono font-medium text-foreground">
+                            {h.date}
+                          </td>
+                          <td className="py-2.5 px-4 font-medium text-foreground">
+                            {h.name}
+                          </td>
+                          <td className="py-2.5 px-4">
+                            {h.half_day ? (
+                              <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
+                                Half Day
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
+                                Full Day
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-4 text-right">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteHoliday(h.id, h.name)}
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Holiday Dialog */}
+      <Dialog open={showAddHoliday} onOpenChange={setShowAddHoliday}>
+        <DialogContent className="sm:max-w-[425px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Public Holiday</DialogTitle>
+            <DialogDescription className="text-xs">
+              Add a single holiday to the company calendar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Date (YYYY-MM-DD) *</Label>
+              <Input
+                type="date"
+                value={newHolidayDate}
+                onChange={(e) => setNewHolidayDate(e.target.value)}
+                className="h-10 rounded-xl"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Holiday Name *</Label>
+              <Input
+                value={newHolidayName}
+                onChange={(e) => setNewHolidayName(e.target.value)}
+                placeholder="e.g. UAE National Day"
+                className="h-10 rounded-xl"
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="halfDayCheck"
+                checked={newHolidayHalfDay}
+                onChange={(e) => setNewHolidayHalfDay(e.target.checked)}
+                className="rounded border-border text-primary focus:ring-primary w-4 h-4"
+              />
+              <Label htmlFor="halfDayCheck" className="text-xs font-normal cursor-pointer">
+                Half-day holiday (e.g. half-day working)
+              </Label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAddHoliday(false)}
+              className="rounded-xl text-xs h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveHoliday}
+              disabled={holidaySaving}
+              className="rounded-xl text-xs h-10 font-semibold"
+            >
+              {holidaySaving ? 'Saving...' : 'Save Holiday'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import UAE Holidays Dialog */}
+      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+        <DialogContent className="sm:max-w-[540px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Import UAE Public Holidays</DialogTitle>
+            <DialogDescription className="text-xs">
+              Pre-filled with official UAE public holidays. You can edit, paste, or adjust dates in CSV format (YYYY-MM-DD, Holiday Name).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-semibold">Select Year:</Label>
+              <div className="flex items-center gap-1">
+                {['2026', '2027'].map((yr) => (
+                  <Button
+                    key={yr}
+                    type="button"
+                    variant={importYear === yr ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleOpenImportModal(yr)}
+                    className="h-8 rounded-lg text-xs"
+                  >
+                    {yr}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Holidays List (CSV format)</Label>
+              <Textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                rows={9}
+                className="font-mono text-xs rounded-xl"
+                placeholder="2026-01-01, New Year's Day&#10;2026-12-02, UAE National Day"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowImportModal(false)}
+              className="rounded-xl text-xs h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleProcessImport}
+              disabled={importing}
+              className="rounded-xl text-xs h-10 font-semibold"
+            >
+              {importing ? 'Importing...' : 'Import Holidays'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Save Button Bar */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">

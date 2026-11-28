@@ -58,11 +58,11 @@ begin
   where id = v_admin_id;
 
   update public.profiles
-  set full_name = 'LB Staff One', role = 'staff', is_active = true, reports_to = v_admin_id, is_support = false, work_email = 'lb_staff1_' || v_staff1_id || '@test.edubridge.local'
+  set full_name = 'LB Staff One', role = 'staff', is_active = true, is_sales_team = true, reports_to = v_admin_id, is_support = false, work_email = 'lb_staff1_' || v_staff1_id || '@test.edubridge.local'
   where id = v_staff1_id;
 
   update public.profiles
-  set full_name = 'LB Staff Two', role = 'staff', is_active = true, reports_to = null, is_support = false, work_email = 'lb_staff2_' || v_staff2_id || '@test.edubridge.local'
+  set full_name = 'LB Staff Two', role = 'staff', is_active = true, is_sales_team = true, reports_to = null, is_support = false, work_email = 'lb_staff2_' || v_staff2_id || '@test.edubridge.local'
   where id = v_staff2_id;
 
   update public.profiles

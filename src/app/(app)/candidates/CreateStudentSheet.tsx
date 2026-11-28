@@ -63,6 +63,7 @@ export interface StaffOption {
   full_name: string
   role: string
   job_title?: string | null
+  is_sales_team?: boolean
 }
 
 export interface CreateCandidateSuccessData {
@@ -1307,10 +1308,20 @@ export function CreateStudentSheet({
                         </Label>
                         {isOwner ? (
                           <Combobox
-                            items={staffList.map((st) => ({
-                              value: st.id,
-                              label: st.job_title ? `${st.full_name} · ${st.job_title}` : st.full_name,
-                            }))}
+                            items={[
+                              ...staffList
+                                .filter((st) => st.is_sales_team)
+                                .map((st) => ({
+                                  value: st.id,
+                                  label: `${st.full_name}${st.job_title ? ` · ${st.job_title}` : ''} (Sales Team)`,
+                                })),
+                              ...staffList
+                                .filter((st) => !st.is_sales_team)
+                                .map((st) => ({
+                                  value: st.id,
+                                  label: `${st.full_name}${st.job_title ? ` · ${st.job_title}` : ''} (Other staff)`,
+                                })),
+                            ]}
                             value={admissionStaffId}
                             onChange={setAdmissionStaffId}
                             placeholder="Select staff member..."

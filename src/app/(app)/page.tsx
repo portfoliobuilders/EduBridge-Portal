@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Dashboard',
 }
 import { createClient } from '@/lib/supabase/server'
+import { getCelebrationsTodayCached } from '@/lib/celebrations'
 import { getDubaiDateRange } from '@/lib/date'
 import { OwnerDashboard } from '@/components/dashboard/OwnerDashboard'
 import { StaffDashboard } from '@/components/dashboard/StaffDashboard'
@@ -50,15 +51,14 @@ export default async function HomePage() {
 
   if (profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner') {
     const todayRange = getDubaiDateRange('today')
-    const [{ data: kpis }, { data: docStats }, { data: celebrations }] = await Promise.all([
+    const [{ data: kpis }, { data: docStats }, celebrations] = await Promise.all([
       supabase.rpc('dashboard_kpis', {
         p_from: todayRange.from,
         p_to: todayRange.to,
         p_staff_id: undefined,
       }),
       supabase.rpc('get_link_documents_stats', { p_days: 7 }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.rpc as any)('get_celebrations_today'),
+      getCelebrationsTodayCached(),
     ])
 
     const selfCelebration = Array.isArray(celebrations)
@@ -111,11 +111,12 @@ export default async function HomePage() {
       p_staff_id: profile.id,
       p_min_balance: 0,
     }),
-    supabase.rpc('report_collections', {
-      p_from: '2020-01-01T00:00:00Z',
-      p_to: new Date().toISOString(),
-      p_staff_id: profile.id,
-    }),
+    supabase
+      .from('payments')
+      .select('id, receipt_no, paid_at, mode, purpose, amount, status, student:students(full_name)')
+      .eq('received_by', profile.id)
+      .order('paid_at', { ascending: false })
+      .limit(10),
     supabase
       .from('enrollments')
       .select('id', { count: 'exact', head: true })
@@ -130,8 +131,7 @@ export default async function HomePage() {
       .limit(1)
       .maybeSingle(),
     supabase.rpc('get_link_documents_stats', { p_days: 7 }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.rpc as any)('get_celebrations_today'),
+    getCelebrationsTodayCached(),
   ])
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://edubridgeeducation.com'
@@ -139,12 +139,22 @@ export default async function HomePage() {
   const outstandingRows = (
     ((outstandingRes.data as Record<string, unknown>)?.rows as OutstandingRecord[]) || []
   )
-  const recentReceiptsRows = (
-    (((recentReceiptsRes.data as Record<string, unknown>)?.rows as RecentReceiptRecord[]) || []).slice(0, 10)
-  )
+  const recentReceiptsRows: RecentReceiptRecord[] = (recentReceiptsRes.data || []).map((p) => {
+    const stu = Array.isArray(p.student) ? p.student[0] : p.student
+    return {
+      id: p.id,
+      receipt_no: p.receipt_no,
+      paid_at: p.paid_at,
+      student_name: (stu as { full_name?: string } | null)?.full_name || 'Candidate',
+      mode: p.mode,
+      purpose: p.purpose,
+      amount: p.amount,
+      status: p.status,
+    }
+  })
 
-  const selfCelebration = Array.isArray(celebrationsRes.data)
-    ? (celebrationsRes.data.find((c: { user_id: string }) => c.user_id === profile.id) as CelebrationPerson | undefined)
+  const selfCelebration = Array.isArray(celebrationsRes)
+    ? (celebrationsRes.find((c: { user_id: string }) => c.user_id === profile.id) as CelebrationPerson | undefined)
     : undefined
 
   return (

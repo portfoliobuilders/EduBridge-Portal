@@ -3,6 +3,7 @@
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getUserProfile } from '@/lib/auth'
 import { getDubaiDateString } from '@/lib/attendance/utils'
 
 export interface PunchPayload {
@@ -92,31 +93,35 @@ export async function punchAction(payload: PunchPayload) {
  */
 export async function getTodayAttendanceStatusAction() {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const [{ user }, supabase] = await Promise.all([getUserProfile(), createClient()])
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: 'Unauthorized' }
     }
 
     const todayStr = getDubaiDateString(new Date())
+    // Dubai is UTC+4, so Dubai midnight is 20:00 UTC the previous day; use a safe 48h window to cover any TZ edge
+    const sinceIso = new Date(Date.now() - 48 * 3600 * 1000).toISOString()
 
-    // 1. Staff settings & office
-    const { data: settings } = await supabase
-      .from('staff_attendance_settings')
-      .select('*, office:offices(*)')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    // 2. Today's punches
-    const { data: punches } = await supabase
-      .from('attendance_punches')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('at', { ascending: true })
+    const [{ data: settings }, { data: punches }, { data: dayRecord }] = await Promise.all([
+      supabase
+        .from('staff_attendance_settings')
+        .select('*, office:offices(*)')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('attendance_punches')
+        .select('id, user_id, kind, at, status, distance_m, inside_geofence, flags, note')
+        .eq('user_id', user.id)
+        .gte('at', sinceIso)
+        .order('at', { ascending: true }),
+      supabase
+        .from('attendance_days')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', todayStr)
+        .maybeSingle(),
+    ])
 
     // Filter today's punches in Dubai timezone
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,14 +129,6 @@ export async function getTodayAttendanceStatusAction() {
       const punchDubaiDate = getDubaiDateString(new Date(p.at))
       return punchDubaiDate === todayStr
     })
-
-    // 3. Today's attendance day record
-    const { data: dayRecord } = await supabase
-      .from('attendance_days')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('date', todayStr)
-      .maybeSingle()
 
     // Calculate current status & session
     const acceptedPunches = todayPunches.filter((p) => p.status === 'accepted')
@@ -161,13 +158,9 @@ export async function getTodayAttendanceStatusAction() {
  */
 export async function getMonthAttendanceAction(yearMonth?: string, targetUserId?: string) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const [{ user }, supabase] = await Promise.all([getUserProfile(), createClient()])
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -176,49 +169,48 @@ export async function getMonthAttendanceAction(yearMonth?: string, targetUserId?
     const startDate = `${ym}-01`
     const endDate = `${ym}-31`
 
-    // Attendance days
-    const { data: days, error: daysError } = await supabase
-      .from('attendance_days')
-      .select('*')
-      .eq('user_id', uid)
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order('date', { ascending: true })
+    const [
+      { data: days, error: daysError },
+      { data: leaves },
+      { data: regularizations },
+      { data: holidays },
+      { data: settings },
+    ] = await Promise.all([
+      supabase
+        .from('attendance_days')
+        .select('*')
+        .eq('user_id', uid)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true }),
+      supabase
+        .from('leave_requests')
+        .select('*')
+        .eq('user_id', uid)
+        .or(`from_date.gte.${startDate},to_date.lte.${endDate}`)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('regularization_requests')
+        .select('*')
+        .eq('user_id', uid)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('holidays')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate),
+      supabase
+        .from('staff_attendance_settings')
+        .select('*, office:offices(*)')
+        .eq('user_id', uid)
+        .maybeSingle(),
+    ])
 
     if (daysError) {
       return { success: false, error: daysError.message }
     }
-
-    // Leave requests in month
-    const { data: leaves } = await supabase
-      .from('leave_requests')
-      .select('*')
-      .eq('user_id', uid)
-      .or(`from_date.gte.${startDate},to_date.lte.${endDate}`)
-      .order('created_at', { ascending: false })
-
-    // Regularization requests
-    const { data: regularizations } = await supabase
-      .from('regularization_requests')
-      .select('*')
-      .eq('user_id', uid)
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order('created_at', { ascending: false })
-
-    // Holidays
-    const { data: holidays } = await supabase
-      .from('holidays')
-      .select('*')
-      .gte('date', startDate)
-      .lte('date', endDate)
-
-    // User attendance settings (weekly off, etc.)
-    const { data: settings } = await supabase
-      .from('staff_attendance_settings')
-      .select('*, office:offices(*)')
-      .eq('user_id', uid)
-      .maybeSingle()
 
     // Compute totals
     let totalWorkedMinutes = 0

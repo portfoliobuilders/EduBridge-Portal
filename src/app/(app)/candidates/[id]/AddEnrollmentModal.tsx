@@ -197,10 +197,18 @@ export function AddEnrollmentModal({
     })),
   ]
 
-  const staffItems = staffList.map((st) => ({
-    value: st.id,
-    label: st.job_title ? `${st.full_name} · ${st.job_title}` : st.full_name,
-  }))
+  const salesStaff = staffList.filter((st) => st.is_sales_team)
+  const otherStaff = staffList.filter((st) => !st.is_sales_team)
+  const staffItems = [
+    ...salesStaff.map((st) => ({
+      value: st.id,
+      label: `${st.full_name}${st.job_title ? ` · ${st.job_title}` : ''} (Sales Team)`,
+    })),
+    ...otherStaff.map((st) => ({
+      value: st.id,
+      label: `${st.full_name}${st.job_title ? ` · ${st.job_title}` : ''} (Other staff)`,
+    })),
+  ]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

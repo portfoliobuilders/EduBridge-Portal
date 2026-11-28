@@ -21,78 +21,176 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
   const isOwner = profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
   const supabase = await createClient()
 
-  // 1. Fetch student record with guardian details
-  const { data: student, error: studentError } = await supabase
-    .from('students')
-    .select(`
-      id,
-      student_code,
-      full_name,
-      mobile,
-      whatsapp,
-      email,
-      notes,
-      guardian_name,
-      guardian_relation,
-      guardian_phone,
-      guardian_whatsapp,
-      guardian_email,
-      created_at,
-      created_by,
-      creator_profile:profiles!students_created_by_fkey ( full_name, role )
-    `)
-    .eq('id', id)
-    .single()
+  // 1. Fetch student, addresses, enrollments, ledger, payments, metadata & documents in parallel
+  const [
+    { data: student, error: studentError },
+    { data: rawAddresses },
+    { data: rawEnrollments },
+    { data: rawLedger },
+    { data: rawPayments },
+    { data: universitiesData },
+    { data: coursesData },
+    { data: specializationsData },
+    { data: staffData },
+    { data: settingsData },
+    { data: rawDocTypes },
+    { data: rawCandidateDocs },
+    { data: rawUploadLinks },
+  ] = await Promise.all([
+    supabase
+      .from('students')
+      .select(`
+        id,
+        student_code,
+        full_name,
+        mobile,
+        whatsapp,
+        email,
+        notes,
+        guardian_name,
+        guardian_relation,
+        guardian_phone,
+        guardian_whatsapp,
+        guardian_email,
+        created_at,
+        created_by,
+        creator_profile:profiles!students_created_by_fkey ( full_name, role )
+      `)
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('student_addresses')
+      .select('id, student_id, type, contact_name, contact_phone, line1, line2, city, state, postal_code, country, is_default')
+      .eq('student_id', id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('enrollments')
+      .select(`
+        id,
+        student_id,
+        university_id,
+        course_id,
+        specialization_id,
+        intake,
+        total_fee,
+        discount,
+        status,
+        vat_treatment,
+        vat_rate,
+        no_vat_reason,
+        opening_paid,
+        opening_paid_note,
+        share_token,
+        share_enabled,
+        created_at,
+        admission_staff_id,
+        universities ( name ),
+        courses ( name, level ),
+        specializations ( name ),
+        admission_staff:profiles!enrollments_admission_staff_id_fkey ( full_name )
+      `)
+      .eq('student_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('enrollment_ledger')
+      .select('enrollment_id, total_fee, discount, net_fee, taxable, vat_total, total_payable, total_paid, balance, vat_treatment, vat_rate, no_vat_reason, opening_paid, opening_paid_note, payment_count, last_payment_at')
+      .eq('student_id', id),
+    supabase
+      .from('payments')
+      .select(`
+        id,
+        receipt_no,
+        enrollment_id,
+        amount,
+        mode,
+        purpose,
+        purpose_note,
+        reference_no,
+        paid_at,
+        status,
+        void_reason,
+        voided_at,
+        balance_after_snapshot,
+        vat_amount,
+        taxable_amount,
+        vat_treatment,
+        vat_rate,
+        received_by_profile:profiles!payments_received_by_fkey ( full_name ),
+        voided_by_profile:profiles!payments_voided_by_fkey ( full_name )
+      `)
+      .eq('student_id', id)
+      .order('paid_at', { ascending: false }),
+    supabase
+      .from('universities')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('courses')
+      .select('id, university_id, name, level, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('specializations')
+      .select('id, course_id, name, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    isOwner
+      ? supabase
+        .from('profiles')
+        .select('id, full_name, role, job_title, is_sales_team')
+        .eq('is_active', true)
+        .order('full_name')
+      : Promise.resolve({ data: [] }),
+    supabase
+      .from('company_settings')
+      .select('vat_enabled, vat_rate, default_vat_treatment, no_vat_reason')
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('document_types')
+      .select('id, name, slug, helper_text, display_order')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('candidate_documents')
+      .select(`
+        id,
+        student_id,
+        document_type_id,
+        title,
+        file_path,
+        file_name,
+        size_bytes,
+        original_size_bytes,
+        mime_type,
+        id_proof_kind,
+        status,
+        notes,
+        uploaded_via,
+        uploaded_by,
+        verified_by,
+        verified_at,
+        created_at,
+        archived_at,
+        uploader:profiles!candidate_documents_uploaded_by_fkey ( full_name ),
+        verifier:profiles!candidate_documents_verified_by_fkey ( full_name )
+      `)
+      .eq('student_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('document_upload_links')
+      .select('id, token, requested_types, expires_at, revoked_at, created_at, upload_count')
+      .eq('student_id', id)
+      .order('created_at', { ascending: false }),
+  ])
 
   if (studentError || !student) {
     notFound()
   }
 
-  // 2. Fetch student's addresses
-  const { data: rawAddresses } = await supabase
-    .from('student_addresses')
-    .select('*')
-    .eq('student_id', id)
-    .order('created_at', { ascending: true })
-
-  // 3. Fetch student's enrollments
-  const { data: rawEnrollments } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      student_id,
-      university_id,
-      course_id,
-      specialization_id,
-      intake,
-      total_fee,
-      discount,
-      status,
-      vat_treatment,
-      vat_rate,
-      no_vat_reason,
-      opening_paid,
-      opening_paid_note,
-      share_token,
-      share_enabled,
-      created_at,
-      admission_staff_id,
-      universities ( name ),
-      courses ( name, level ),
-      specializations ( name ),
-      admission_staff:profiles!enrollments_admission_staff_id_fkey ( full_name )
-    `)
-    .eq('student_id', id)
-    .order('created_at', { ascending: false })
-
   const enrollmentsList = rawEnrollments || []
   const enrollmentIds = enrollmentsList.map((e) => e.id)
-
-  // 4. Fetch enrollment ledger views for accurate financial metrics
-  const { data: rawLedger } = await supabase
-    .from('enrollment_ledger')
-    .select('*')
-    .eq('student_id', id)
 
   const ledgerMap = new Map((rawLedger || []).map((l) => [l.enrollment_id, l]))
 
@@ -138,33 +236,6 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     }
   })
 
-  // 5. Fetch all payments for this student
-  const { data: rawPayments } = await supabase
-    .from('payments')
-    .select(`
-      id,
-      receipt_no,
-      enrollment_id,
-      amount,
-      mode,
-      purpose,
-      purpose_note,
-      reference_no,
-      paid_at,
-      status,
-      void_reason,
-      voided_at,
-      balance_after_snapshot,
-      vat_amount,
-      taxable_amount,
-      vat_treatment,
-      vat_rate,
-      received_by_profile:profiles!payments_received_by_fkey ( full_name ),
-      voided_by_profile:profiles!payments_voided_by_fkey ( full_name )
-    `)
-    .eq('student_id', id)
-    .order('paid_at', { ascending: false })
-
   const payments: PaymentItem[] = (rawPayments || []).map((p) => ({
     id: p.id,
     receipt_no: p.receipt_no,
@@ -186,33 +257,33 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     voided_by_profile: p.voided_by_profile as { full_name: string } | null,
   }))
 
-  // 6. Fetch share logs & audit logs for activity timeline
-  const fallbackId = '00000000-0000-0000-0000-000000000000'
-  const targetIds = enrollmentIds.length > 0 ? enrollmentIds : [fallbackId]
-
-  const [{ data: rawShareLogs }, { data: rawAuditLogs }] = await Promise.all([
-    supabase
-      .from('share_logs')
-      .select(`
-        id,
-        payment_id,
-        enrollment_id,
-        channel,
-        recipient,
-        sent_at,
-        sent_by_profile:profiles!share_logs_sent_by_fkey ( full_name )
-      `)
-      .in('enrollment_id', targetIds)
-      .order('sent_at', { ascending: false })
-      .limit(20),
-    supabase
-      .from('audit_log')
-      .select('id, row_id, action, at, diff')
-      .eq('table_name', 'enrollments')
-      .in('row_id', targetIds)
-      .order('at', { ascending: false })
-      .limit(20),
-  ])
+  // 2. Fetch share logs and audit logs in parallel (only when enrollments exist)
+  const [{ data: rawShareLogs }, { data: rawAuditLogs }] =
+    enrollmentIds.length > 0
+      ? await Promise.all([
+        supabase
+          .from('share_logs')
+          .select(`
+              id,
+              payment_id,
+              enrollment_id,
+              channel,
+              recipient,
+              sent_at,
+              sent_by_profile:profiles!share_logs_sent_by_fkey ( full_name )
+            `)
+          .in('enrollment_id', enrollmentIds)
+          .order('sent_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('audit_log')
+          .select('id, row_id, action, at, diff')
+          .eq('table_name', 'enrollments')
+          .in('row_id', enrollmentIds)
+          .order('at', { ascending: false })
+          .limit(20),
+      ])
+      : [{ data: [] }, { data: [] }]
 
   const shareLogs: ShareLogItem[] = (rawShareLogs || []).map((s) => ({
     id: s.id,
@@ -232,87 +303,18 @@ export default async function StudentDetailPage({ params }: StudentPageProps) {
     diff: (a.diff as AuditLogItem['diff']) || null,
   }))
 
-  // 7. Metadata for add-enrollment modal & documents
-  const [
-    { data: universitiesData },
-    { data: coursesData },
-    { data: specializationsData },
-    { data: staffData },
-    { data: settingsData },
-    { data: rawDocTypes },
-    { data: rawCandidateDocs },
-    { data: rawUploadLinks },
-  ] = await Promise.all([
-    supabase
-      .from('universities')
-      .select('id, name')
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('courses')
-      .select('id, university_id, name, level, default_fee')
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('specializations')
-      .select('id, course_id, name, default_fee')
-      .eq('is_active', true)
-      .order('name'),
-    isOwner
-      ? supabase
-          .from('profiles')
-          .select('id, full_name, role, job_title')
-          .eq('is_active', true)
-          .order('full_name')
-      : Promise.resolve({ data: [] }),
-    supabase
-      .from('company_settings')
-      .select('*')
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('document_types')
-      .select('id, name, slug, helper_text, display_order')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true }),
-    supabase
-      .from('candidate_documents')
-      .select('*')
-      .eq('student_id', id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('document_upload_links')
-      .select('id, token, requested_types, expires_at, revoked_at, created_at, upload_count')
-      .eq('student_id', id)
-      .order('created_at', { ascending: false }),
-  ])
-
-  // Collect user IDs for uploader and verifier profiles
-  const docUserIds = new Set<string>()
-  ;(rawCandidateDocs || []).forEach((d) => {
-    if (d.uploaded_by) docUserIds.add(d.uploaded_by)
-    if (d.verified_by) docUserIds.add(d.verified_by)
-  })
-
-  let userProfilesMap = new Map<string, string>()
-  if (docUserIds.size > 0) {
-    const { data: userProfiles } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', Array.from(docUserIds))
-    if (userProfiles) {
-      userProfilesMap = new Map(userProfiles.map((p) => [p.id, p.full_name]))
+  const documents = (rawCandidateDocs || []).map((d) => {
+    const uploaderObj = Array.isArray(d.uploader) ? d.uploader[0] : d.uploader
+    const verifierObj = Array.isArray(d.verifier) ? d.verifier[0] : d.verifier
+    return {
+      ...d,
+      id_proof_kind: d.id_proof_kind as 'aadhaar_masked' | 'passport' | null,
+      status: d.status as 'received' | 'verified' | 'rejected',
+      uploaded_via: d.uploaded_via as 'staff' | 'candidate_link',
+      uploader_name: (uploaderObj as { full_name?: string } | null)?.full_name || null,
+      verifier_name: (verifierObj as { full_name?: string } | null)?.full_name || null,
     }
-  }
-
-  const documents = (rawCandidateDocs || []).map((d) => ({
-    ...d,
-    id_proof_kind: d.id_proof_kind as 'aadhaar_masked' | 'passport' | null,
-    status: d.status as 'received' | 'verified' | 'rejected',
-    uploaded_via: d.uploaded_via as 'staff' | 'candidate_link',
-    uploader_name: d.uploaded_by ? userProfilesMap.get(d.uploaded_by) || null : null,
-    verifier_name: d.verified_by ? userProfilesMap.get(d.verified_by) || null : null,
-  }))
+  })
 
   const isAdmissionStaff =
     enrollmentsList.some((e) => e.admission_staff_id === user.id) || student.created_by === user.id

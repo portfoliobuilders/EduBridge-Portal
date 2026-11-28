@@ -35,6 +35,7 @@ export function AdminStaffEditForm({
   const [reportsTo, setReportsTo] = useState(staff.reports_to || '')
   const [adminScope, setAdminScope] = useState(staff.admin_scope || 'team')
   const [isActive, setIsActive] = useState(Boolean(staff.is_active))
+  const [isSalesTeam, setIsSalesTeam] = useState(Boolean(staff.is_sales_team))
   const [excludeFromCelebrations, setExcludeFromCelebrations] = useState(
     !(staff.celebrate_birthday && staff.celebrate_anniversary)
   )
@@ -53,6 +54,7 @@ export function AdminStaffEditForm({
   const [graceMinutes, setGraceMinutes] = useState(attendanceSettings?.grace_minutes ?? 15)
   const [attendanceRequired, setAttendanceRequired] = useState(attendanceSettings?.attendance_required ?? true)
   const [allowFieldPunch, setAllowFieldPunch] = useState(attendanceSettings?.allow_field_punch ?? false)
+  const [weeklyOff, setWeeklyOff] = useState<number[]>(attendanceSettings?.weekly_off || [5])
 
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
@@ -77,6 +79,7 @@ export function AdminStaffEditForm({
     formData.append('reports_to', reportsTo)
     formData.append('admin_scope', adminScope)
     formData.append('is_active', String(isActive))
+    formData.append('is_sales_team', String(isSalesTeam))
     formData.append('exclude_from_celebrations', String(excludeFromCelebrations))
 
     // Attendance Settings
@@ -86,6 +89,7 @@ export function AdminStaffEditForm({
     formData.append('grace_minutes', String(graceMinutes))
     formData.append('attendance_required', String(attendanceRequired))
     formData.append('allow_field_punch', String(allowFieldPunch))
+    formData.append('weekly_off', weeklyOff.join(','))
 
     // Sensitive Details (staff_sensitive_details)
     formData.append('personal_email', personalEmail)
@@ -174,16 +178,37 @@ export function AdminStaffEditForm({
             <Label htmlFor="role" className="text-xs font-semibold text-[#0A0A0A]">
               System Role
             </Label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 w-full h-9 rounded-xl border border-[#E4E7E7] bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#00A57E]/20"
-            >
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+            {staff.role === 'super_admin' || staff.role === 'owner' ? (
+              <div className="mt-1">
+                <Input disabled value="Super Admin (Protected)" className="text-xs bg-[#F5F6F6] text-[#6B7272]" />
+                <p className="text-[10px] text-[#6B7272] mt-0.5">Super admin role cannot be self-demoted.</p>
+              </div>
+            ) : (
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="mt-1 w-full h-9 rounded-xl border border-[#E4E7E7] bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#00A57E]/20"
+              >
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 bg-[#F5F6F6] rounded-xl border border-[#E4E7E7] sm:col-span-2">
+            <div className="space-y-0.5">
+              <Label className="text-xs font-semibold text-[#0A0A0A]">Sales Team Member</Label>
+              <p className="text-[11px] text-[#6B7272]">
+                Mark as active admissions sales personnel. Listed first in candidate admissions and eligible for sales leaderboard.
+              </p>
+            </div>
+            <Switch
+              checked={isSalesTeam}
+              onCheckedChange={setIsSalesTeam}
+              className="data-[state=checked]:bg-[#00A57E]"
+            />
           </div>
 
           {role === 'admin' && (
@@ -356,6 +381,43 @@ export function AdminStaffEditForm({
               onCheckedChange={setAllowFieldPunch}
               className="data-[state=checked]:bg-[#00A57E]"
             />
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2 pt-2 border-t border-[#F5F6F6]">
+            <Label className="text-xs font-semibold text-[#0A0A0A]">
+              Weekly Off Days (Override)
+            </Label>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {[
+                { val: 1, label: 'Mon' },
+                { val: 2, label: 'Tue' },
+                { val: 3, label: 'Wed' },
+                { val: 4, label: 'Thu' },
+                { val: 5, label: 'Fri' },
+                { val: 6, label: 'Sat' },
+                { val: 0, label: 'Sun' },
+              ].map((day) => {
+                const isSelected = weeklyOff.includes(day.val)
+                return (
+                  <button
+                    key={day.val}
+                    type="button"
+                    onClick={() => {
+                      setWeeklyOff((prev) =>
+                        prev.includes(day.val) ? prev.filter((d) => d !== day.val) : [...prev, day.val]
+                      )
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${isSelected
+                      ? 'bg-[#00A57E] text-white border-[#00A57E]'
+                      : 'bg-white text-[#6B7272] border-[#E4E7E7] hover:border-[#00A57E]'
+                      }`}
+                  >
+                    {day.label}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[11px] text-[#6B7272]">Default is Company Work Calendar setting.</p>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import {
   Sheet,
   SheetContent,
@@ -58,6 +59,7 @@ export interface StaffMember {
   reports_to_name: string | null
   admin_scope: 'team' | 'company' | string
   is_support: boolean
+  is_sales_team?: boolean
   is_active: boolean
   last_sign_in_at: string | null
   created_at: string
@@ -83,6 +85,7 @@ export function StaffClient({
   const [staffList, setStaffList] = useState<StaffMember[]>(initialStaff)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | 'super_admin' | 'admin' | 'staff'>('all')
+  const [salesFilter, setSalesFilter] = useState<'all' | 'sales' | 'non_sales'>('all')
   const [jobTitleFilter, setJobTitleFilter] = useState<string>('all')
   const [activeTab, setActiveTab] = useState<'all' | 'team'>('all')
 
@@ -97,6 +100,7 @@ export function StaffClient({
   const [formReportsTo, setFormReportsTo] = useState<string>('none')
   const [formAdminScope, setFormAdminScope] = useState<'team' | 'company'>('team')
   const [formIsSupport, setFormIsSupport] = useState(false)
+  const [formIsSalesTeam, setFormIsSalesTeam] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -131,6 +135,9 @@ export function StaffClient({
       if (s.job_title !== jobTitleFilter) return false
     }
 
+    if (salesFilter === 'sales' && !s.is_sales_team) return false
+    if (salesFilter === 'non_sales' && s.is_sales_team) return false
+
     if (activeTab === 'team') {
       // My team: direct or indirect reports, or self
       return s.reports_to === currentUserId || s.id === currentUserId
@@ -151,6 +158,7 @@ export function StaffClient({
     setFormReportsTo(isSuperAdmin ? 'none' : currentUserId)
     setFormAdminScope('team')
     setFormIsSupport(false)
+    setFormIsSalesTeam(false)
     setFormError(null)
     setSheetOpen(true)
   }
@@ -165,6 +173,7 @@ export function StaffClient({
     setFormReportsTo(member.reports_to || 'none')
     setFormAdminScope((member.admin_scope as 'team' | 'company') || 'team')
     setFormIsSupport(member.is_support)
+    setFormIsSalesTeam(Boolean(member.is_sales_team))
     setFormError(null)
     setSheetOpen(true)
   }
@@ -194,6 +203,7 @@ export function StaffClient({
       }
       formData.append('admin_scope', formAdminScope)
       formData.append('is_support', String(formIsSupport))
+      formData.append('is_sales_team', String(formIsSalesTeam))
 
       if (editingMember) {
         formData.append('userId', editingMember.id)
@@ -276,11 +286,10 @@ export function StaffClient({
         <button
           type="button"
           onClick={() => setActiveTab('all')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-            activeTab === 'all'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'all'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <Users className="w-4 h-4" />
           All Staff ({staffList.length})
@@ -288,11 +297,10 @@ export function StaffClient({
         <button
           type="button"
           onClick={() => setActiveTab('team')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-            activeTab === 'team'
-              ? 'bg-primary text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'team'
+            ? 'bg-primary text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
+            }`}
         >
           <Network className="w-4 h-4" />
           My Team ({myTeamCount})
@@ -318,48 +326,56 @@ export function StaffClient({
             <button
               type="button"
               onClick={() => setRoleFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                roleFilter === 'all'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${roleFilter === 'all'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               All Roles
             </button>
             <button
               type="button"
               onClick={() => setRoleFilter('super_admin')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                roleFilter === 'super_admin'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${roleFilter === 'super_admin'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               Super Admins
             </button>
             <button
               type="button"
               onClick={() => setRoleFilter('admin')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                roleFilter === 'admin'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${roleFilter === 'admin'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               Admins
             </button>
             <button
               type="button"
               onClick={() => setRoleFilter('staff')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                roleFilter === 'staff'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${roleFilter === 'staff'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               Staff
             </button>
           </div>
+
+          {/* Sales Team filter */}
+          <Select value={salesFilter} onValueChange={(val) => setSalesFilter(val as 'all' | 'sales' | 'non_sales')}>
+            <SelectTrigger className="h-10 w-[140px] rounded-xl text-xs bg-white shrink-0">
+              <SelectValue placeholder="Sales Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Staff</SelectItem>
+              <SelectItem value="sales">Sales Team Only</SelectItem>
+              <SelectItem value="non_sales">Non-Sales Only</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Job Title filter */}
           {jobTitles.length > 0 && (
@@ -474,7 +490,14 @@ export function StaffClient({
 
                       <td className="py-3 px-4">
                         <div className="space-y-1">
-                          <RoleBadge role={member.role} />
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <RoleBadge role={member.role} />
+                            {member.is_sales_team && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#E6F6F2] text-[#00805F] border border-[#00A57E]/30">
+                                Sales
+                              </span>
+                            )}
+                          </div>
                           {member.role === 'admin' && (
                             <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                               <Layers className="w-2.5 h-2.5" />
@@ -552,11 +575,10 @@ export function StaffClient({
                               variant="ghost"
                               size="sm"
                               onClick={() => handleInitiateActiveToggle(member)}
-                              className={`h-8 px-2 text-xs rounded-lg ${
-                                member.is_active
-                                  ? 'text-muted-foreground hover:text-destructive'
-                                  : 'text-primary hover:text-primary/80'
-                              }`}
+                              className={`h-8 px-2 text-xs rounded-lg ${member.is_active
+                                ? 'text-muted-foreground hover:text-destructive'
+                                : 'text-primary hover:text-primary/80'
+                                }`}
                             >
                               <Power className="w-3.5 h-3.5 mr-1" />
                               {member.is_active ? 'Deactivate' : 'Reactivate'}
@@ -689,6 +711,20 @@ export function StaffClient({
                   </p>
                 </div>
               )}
+
+              {/* Job Title */}
+              <div className="flex items-center justify-between p-3.5 bg-[#F5F6F6] rounded-xl border border-border">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-semibold">Sales Team Member</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Assign candidate admission sales role and display on leaderboard.
+                  </p>
+                </div>
+                <Switch
+                  checked={formIsSalesTeam}
+                  onCheckedChange={setFormIsSalesTeam}
+                />
+              </div>
 
               {/* Job Title */}
               <div className="space-y-1.5">

@@ -136,64 +136,90 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
   }
 
   const executeGPSPunch = (kind: 'in' | 'out', note?: string) => {
-    if (!navigator.geolocation) {
-      setErrorMsg('Geolocation is not supported by your browser or device.')
+    const insecureOrUnavailableMsg =
+      'Location needs a secure (https) connection or permission. Use the app link, or allow location.'
+
+    if (typeof window !== 'undefined' && (!window.isSecureContext || !navigator.geolocation)) {
+      setPunching(false)
+      setErrorMsg(insecureOrUnavailableMsg)
       return
     }
 
     setPunching(true)
     setErrorMsg(null)
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        }
+    let settled = false
+    const timeoutGuard = setTimeout(() => {
+      if (settled) return
+      settled = true
+      setPunching(false)
+      setErrorMsg(insecureOrUnavailableMsg)
+    }, 10500)
 
-        const res = await punchAction({
-          kind,
-          lat: coords.lat,
-          lng: coords.lng,
-          accuracy: coords.accuracy,
-          note,
-          deviceHash: getDeviceHash(),
-          clientTime: new Date().toISOString(),
-        })
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          if (settled) return
+          settled = true
+          clearTimeout(timeoutGuard)
 
-        setPunching(false)
-
-        if (!res.success) {
-          // If staff allows field punch and outside geofence, prompt for note
-          if (data?.settings?.allow_field_punch && !note) {
-            setFieldPunchModalOpen(true)
-            return
+          const coords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
           }
 
-          setErrorMsg(res.error || 'Failed to record punch.')
-        } else {
-          // Refresh status
-          const refreshed = await getTodayAttendanceStatusAction()
-          if (refreshed.success && refreshed.data) {
-            startTransition(() => {
-              setData(refreshed.data)
-            })
+          const res = await punchAction({
+            kind,
+            lat: coords.lat,
+            lng: coords.lng,
+            accuracy: coords.accuracy,
+            note,
+            deviceHash: getDeviceHash(),
+            clientTime: new Date().toISOString(),
+          })
+
+          setPunching(false)
+
+          if (!res.success) {
+            // If staff allows field punch and outside geofence, prompt for note
+            if (data?.settings?.allow_field_punch && !note) {
+              setFieldPunchModalOpen(true)
+              return
+            }
+
+            setErrorMsg(res.error || 'Failed to record punch.')
+          } else {
+            // Refresh status
+            const refreshed = await getTodayAttendanceStatusAction()
+            if (refreshed.success && refreshed.data) {
+              startTransition(() => {
+                setData(refreshed.data)
+              })
+            }
           }
-        }
-      },
-      (geoErr) => {
+        },
+        (geoErr) => {
+          if (settled) return
+          settled = true
+          clearTimeout(timeoutGuard)
+          setPunching(false)
+          if (geoErr.code === geoErr.PERMISSION_DENIED || geoErr.code === geoErr.TIMEOUT) {
+            setErrorMsg(insecureOrUnavailableMsg)
+          } else {
+            setErrorMsg(insecureOrUnavailableMsg)
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      )
+    } catch {
+      if (!settled) {
+        settled = true
+        clearTimeout(timeoutGuard)
         setPunching(false)
-        if (geoErr.code === geoErr.PERMISSION_DENIED) {
-          setErrorMsg('Location permission denied. Please allow location access in your browser settings to punch.')
-        } else if (geoErr.code === geoErr.TIMEOUT) {
-          setErrorMsg('Location request timed out. Please ensure GPS is active and retry.')
-        } else {
-          setErrorMsg(`Unable to acquire GPS location: ${geoErr.message}`)
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    )
+        setErrorMsg(insecureOrUnavailableMsg)
+      }
+    }
   }
 
   const handleConfirmPrivacy = () => {
@@ -254,10 +280,10 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
   const officeRadius = data?.office?.radius_m || 100
   const lastPunchTime = data?.lastPunch?.at
     ? new Date(data.lastPunch.at).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      })
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
     : null
 
   const dayStatus = data?.dayRecord?.status || (isPunchedIn ? 'present' : 'pending')
@@ -265,16 +291,14 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
   return (
     <>
       <div
-        className={`bg-white rounded-2xl border border-[#E4E7E7] shadow-xs overflow-hidden transition-all ${
-          compact ? 'p-4' : 'p-5 sm:p-6'
-        }`}
+        className={`bg-white rounded-2xl border border-[#E4E7E7] shadow-xs overflow-hidden transition-all ${compact ? 'p-4' : 'p-5 sm:p-6'
+          }`}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#F5F6F6]">
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                isPunchedIn ? 'bg-[#E6F6F2] text-[#00A57E]' : 'bg-[#F5F6F6] text-[#6B7272]'
-              }`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isPunchedIn ? 'bg-[#E6F6F2] text-[#00A57E]' : 'bg-[#F5F6F6] text-[#6B7272]'
+                }`}
             >
               <Clock className="w-5 h-5" />
             </div>
@@ -282,17 +306,16 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[#0A0A0A]">Today&apos;s Attendance</h3>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${
-                    isPunchedIn
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : dayStatus === 'late'
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${isPunchedIn
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : dayStatus === 'late'
                       ? 'bg-amber-50 text-amber-800 border-amber-200'
                       : dayStatus === 'absent'
-                      ? 'bg-red-50 text-red-800 border-red-200'
-                      : dayStatus === 'on_leave'
-                      ? 'bg-blue-50 text-blue-800 border-blue-200'
-                      : 'bg-[#F5F6F6] text-[#6B7272] border-[#E4E7E7]'
-                  }`}
+                        ? 'bg-red-50 text-red-800 border-red-200'
+                        : dayStatus === 'on_leave'
+                          ? 'bg-blue-50 text-blue-800 border-blue-200'
+                          : 'bg-[#F5F6F6] text-[#6B7272] border-[#E4E7E7]'
+                    }`}
                 >
                   {isPunchedIn ? 'Punched In' : dayStatus.replace('_', ' ')}
                 </span>
@@ -350,11 +373,10 @@ export function HomePunchCard({ initialData, compact = false }: HomePunchCardPro
             type="button"
             disabled={punching}
             onClick={() => handlePunchClick(isPunchedIn ? 'out' : 'in')}
-            className={`w-full h-12 text-sm font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 ${
-              isPunchedIn
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                : 'bg-[#00A57E] hover:bg-[#00805F] text-white'
-            }`}
+            className={`w-full h-12 text-sm font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 ${isPunchedIn
+              ? 'bg-amber-600 hover:bg-amber-700 text-white'
+              : 'bg-[#00A57E] hover:bg-[#00805F] text-white'
+              }`}
           >
             {punching ? (
               <>

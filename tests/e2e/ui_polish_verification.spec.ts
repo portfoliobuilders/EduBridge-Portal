@@ -88,7 +88,7 @@ test.describe('UI Polish Verification & Screenshots', () => {
 
       await page.goto('/profile')
       await page.waitForSelector('text=Identity', { timeout: 15000 })
-      await expect(page.locator('text=Managed by admin')).toBeVisible()
+      await expect(page.locator('text=Managed by HR')).toBeVisible()
 
       await page.screenshot({
         path: `screenshots/profile_staff_${vp.name}_${vp.width}.png`,

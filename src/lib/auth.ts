@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
@@ -5,17 +6,30 @@ import type { Database } from '@/types/database'
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type AppRole = Database['public']['Enums']['app_role']
 
-export async function getUserProfile(): Promise<{
+export const getUserProfile = cache(async (): Promise<{
   user: { id: string; email?: string } | null
   profile: Profile | null
-}> {
+}> => {
   const supabase = await createClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+  let user: { id: string; email?: string } | null = null
 
-  if (authError || !user) {
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
+  if (!claimsError && claimsData?.claims?.sub) {
+    user = {
+      id: claimsData.claims.sub,
+      email: typeof claimsData.claims.email === 'string' ? claimsData.claims.email : undefined,
+    }
+  } else {
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (!authError && authUser) {
+      user = { id: authUser.id, email: authUser.email }
+    }
+  }
+
+  if (!user) {
     return { user: null, profile: null }
   }
 
@@ -30,7 +44,7 @@ export async function getUserProfile(): Promise<{
   }
 
   return { user, profile }
-}
+})
 
 export async function requireUser(): Promise<{
   user: { id: string; email?: string }

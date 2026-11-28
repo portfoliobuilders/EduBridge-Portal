@@ -219,4 +219,46 @@ describe('Attendance Domain Utils', () => {
       expect(days).toBe(0)
     })
   })
+
+  describe('Company Default Weekly Off & Absence Working Days', () => {
+    it('uses company default weekly off (e.g. [5] Friday) when user has no config, never all days off', () => {
+      // 2026-11-23 (Mon) to 2026-11-29 (Sun) = 7 calendar days
+      // With Friday [5] as weekly off: 6 working days (Mon, Tue, Wed, Thu, Sat, Sun)
+      const userConfig = undefined as number[] | null | undefined
+      const companyDefaultWeeklyOff = [5] // Friday
+      const effectiveWeeklyOff = userConfig && userConfig.length > 0 ? userConfig : companyDefaultWeeklyOff
+
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: effectiveWeeklyOff,
+      })
+      expect(days).toBe(6)
+    })
+
+    it('follows updated company weekly off from Friday to Saturday+Sunday [6, 0]', () => {
+      // 2026-11-23 (Mon) to 2026-11-29 (Sun) = 7 calendar days
+      // When company changes weekly off to Saturday + Sunday [6, 0]:
+      // Working days are Mon, Tue, Wed, Thu, Fri -> 5 working days
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-29',
+        weeklyOff: [6, 0],
+      })
+      expect(days).toBe(5)
+    })
+
+    it('holiday within working days is not counted as an absence or leave working day', () => {
+      // Mon 2026-11-23 to Fri 2026-11-27 (5 days)
+      // Wed 2026-11-25 is a holiday
+      // Working days = 4
+      const days = calculateLeaveWorkingDays({
+        fromDate: '2026-11-23',
+        toDate: '2026-11-27',
+        weeklyOff: [6, 0],
+        holidays: ['2026-11-25'],
+      })
+      expect(days).toBe(4)
+    })
+  })
 })

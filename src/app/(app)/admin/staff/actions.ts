@@ -16,6 +16,7 @@ const addStaffSchema = z.object({
   reports_to: z.string().uuid().optional().nullable(),
   admin_scope: z.enum(['team', 'company']).default('team'),
   is_support: z.boolean().default(false),
+  is_sales_team: z.boolean().default(false),
   employee_id: z.string().trim().optional().nullable(),
   joining_date: z.string().optional().nullable(),
 })
@@ -29,6 +30,7 @@ const updateStaffSchema = z.object({
   reports_to: z.string().uuid().optional().nullable(),
   admin_scope: z.enum(['team', 'company']).default('team'),
   is_support: z.boolean().default(false),
+  is_sales_team: z.boolean().default(false),
   is_active: z.boolean().default(true),
   employee_id: z.string().trim().optional().nullable(),
   joining_date: z.string().optional().nullable(),
@@ -52,6 +54,7 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
     reports_to: formData.get('reports_to') ? String(formData.get('reports_to')) : null,
     admin_scope: (formData.get('admin_scope') as 'team' | 'company') ?? 'team',
     is_support: formData.get('is_support') === 'true',
+    is_sales_team: formData.get('is_sales_team') === 'true',
   }
 
   const parsed = addStaffSchema.safeParse(raw)
@@ -59,7 +62,7 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' }
   }
 
-  const { name, email, phone, role, job_title, reports_to, admin_scope, is_support } = parsed.data
+  const { name, email, phone, role, job_title, reports_to, admin_scope, is_support, is_sales_team } = parsed.data
 
   // Permission check: Admins cannot create Super Admins or Admins
   if (callerProfile.role === 'admin') {
@@ -142,6 +145,7 @@ export async function inviteStaffAction(formData: FormData): Promise<ActionResul
       reports_to: reports_to || (callerProfile.role === 'admin' ? callerUser.id : null),
       admin_scope: role === 'admin' ? admin_scope : 'team',
       is_support: Boolean(is_support),
+      is_sales_team: Boolean(is_sales_team),
       is_active: true,
       updated_at: new Date().toISOString(),
     })
@@ -170,6 +174,7 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
     reports_to: formData.get('reports_to') ? String(formData.get('reports_to')) : null,
     admin_scope: (formData.get('admin_scope') as 'team' | 'company') ?? 'team',
     is_support: formData.get('is_support') === 'true',
+    is_sales_team: formData.get('is_sales_team') === 'true',
     is_active: formData.get('is_active') !== 'false',
     employee_id: formData.get('employee_id') ? String(formData.get('employee_id')) : null,
     joining_date: formData.get('joining_date') ? String(formData.get('joining_date')) : null,
@@ -221,6 +226,7 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
       reports_to: data.reports_to || null,
       admin_scope: data.role === 'admin' ? data.admin_scope : 'team',
       is_support: callerProfile.role === 'super_admin' ? data.is_support : undefined,
+      is_sales_team: data.is_sales_team,
       is_active: data.is_active,
       employee_id: data.employee_id || null,
       joining_date: data.joining_date || null,
@@ -241,8 +247,12 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
   const graceMinutes = formData.get('grace_minutes') ? parseInt(String(formData.get('grace_minutes')), 10) : null
   const attendanceRequired = formData.get('attendance_required') !== null ? formData.get('attendance_required') === 'true' : null
   const allowFieldPunch = formData.get('allow_field_punch') !== null ? formData.get('allow_field_punch') === 'true' : null
+  const weeklyOffRaw = formData.get('weekly_off') ? String(formData.get('weekly_off')) : null
+  const weeklyOff = weeklyOffRaw
+    ? weeklyOffRaw.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n))
+    : undefined
 
-  if (formData.has('office_id') || formData.has('shift_start') || formData.has('attendance_required')) {
+  if (formData.has('office_id') || formData.has('shift_start') || formData.has('attendance_required') || formData.has('weekly_off')) {
     await supabase
       .from('staff_attendance_settings')
       .upsert({
@@ -253,6 +263,7 @@ export async function updateStaffAction(formData: FormData): Promise<ActionResul
         grace_minutes: graceMinutes ?? 15,
         attendance_required: attendanceRequired ?? true,
         allow_field_punch: allowFieldPunch ?? false,
+        weekly_off: weeklyOff && weeklyOff.length > 0 ? weeklyOff : undefined,
         updated_at: new Date().toISOString(),
       })
   }

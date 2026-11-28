@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getUserProfile } from '@/lib/auth'
 import { getDubaiDateString, formatWorkedHours } from '@/lib/attendance/utils'
 
 /**
@@ -9,61 +10,75 @@ import { getDubaiDateString, formatWorkedHours } from '@/lib/attendance/utils'
  */
 export async function getAdminTodayBoardAction() {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const [{ user, profile: callerProfile }, supabase] = await Promise.all([
+      getUserProfile(),
+      createClient(),
+    ])
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: 'Unauthorized' }
     }
 
     const todayStr = getDubaiDateString(new Date())
+    const sinceIso = new Date(Date.now() - 48 * 3600 * 1000).toISOString()
 
-    // 1. Fetch all visible staff members
-    const { data: staffList } = await supabase
-      .from('profiles')
-      .select('id, full_name, display_name, role, job_title, avatar_url, is_active')
-      .eq('is_active', true)
-      .order('full_name', { ascending: true })
+    const visiblePromise =
+      callerProfile?.role === 'admin'
+        ? supabase.rpc('visible_user_ids')
+        : Promise.resolve({ data: null })
 
-    // 2. Fetch staff attendance settings
-    const { data: settingsList } = await supabase.from('staff_attendance_settings').select('*, office:offices(*)')
+    const [
+      visibleRes,
+      { data: allActiveStaff },
+      { data: settingsList },
+      { data: todayDays },
+      { data: recentPunches },
+      { data: pendingFieldPunches },
+      { data: pendingLeaves },
+      { data: pendingRegularizations },
+    ] = await Promise.all([
+      visiblePromise,
+      supabase
+        .from('profiles')
+        .select('id, full_name, display_name, role, job_title, avatar_url, is_active')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true }),
+      supabase.from('staff_attendance_settings').select('*, office:offices(*)'),
+      supabase.from('attendance_days').select('*').eq('date', todayStr),
+      supabase
+        .from('attendance_punches')
+        .select('*, profile:profiles(full_name, avatar_url)')
+        .gte('at', sinceIso)
+        .order('at', { ascending: false }),
+      supabase
+        .from('attendance_punches')
+        .select('*, profile:profiles(full_name, avatar_url), office:offices(name)')
+        .eq('status', 'pending_approval')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('leave_requests')
+        .select('*, profile:profiles(full_name, avatar_url)')
+        .eq('status', 'requested')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('regularization_requests')
+        .select('*, profile:profiles(full_name, avatar_url)')
+        .eq('status', 'requested')
+        .order('created_at', { ascending: false }),
+    ])
 
-    // 3. Fetch today's attendance days
-    const { data: todayDays } = await supabase.from('attendance_days').select('*').eq('date', todayStr)
-
-    // 4. Fetch today's punches
-    const { data: allPunches } = await supabase
-      .from('attendance_punches')
-      .select('*, profile:profiles(full_name, avatar_url)')
-      .order('at', { ascending: false })
+    let staffList = allActiveStaff || []
+    if (callerProfile?.role === 'admin') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allowedSet = new Set((visibleRes.data || []).map((r: any) => r.user_id))
+      staffList = staffList.filter((s) => allowedSet.has(s.id))
+    }
 
     // Filter Dubai today
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const todayPunches = (allPunches || []).filter((p: any) => {
+    const todayPunches = (recentPunches || []).filter((p: any) => {
       return getDubaiDateString(new Date(p.at)) === todayStr
     })
-
-    // 5. Fetch pending requests
-    const { data: pendingFieldPunches } = await supabase
-      .from('attendance_punches')
-      .select('*, profile:profiles(full_name, avatar_url), office:offices(name)')
-      .eq('status', 'pending_approval')
-      .order('created_at', { ascending: false })
-
-    const { data: pendingLeaves } = await supabase
-      .from('leave_requests')
-      .select('*, profile:profiles(full_name, avatar_url)')
-      .eq('status', 'requested')
-      .order('created_at', { ascending: false })
-
-    const { data: pendingRegularizations } = await supabase
-      .from('regularization_requests')
-      .select('*, profile:profiles(full_name, avatar_url)')
-      .eq('status', 'requested')
-      .order('created_at', { ascending: false })
 
     // Flagged punches today (accuracy_high, impossible_travel, new_device)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,46 +99,69 @@ export async function getAdminTodayBoardAction() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onLeaveList: any[] = []
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(staffList || []).forEach((staff: any) => {
-      const setting = settingsMap.get(staff.id)
-      if (setting && setting.attendance_required === false) {
-        return // Excluded e.g. super_admin/owner
-      }
-
-      const day = daysMap.get(staff.id)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userPunches = todayPunches.filter((p: any) => p.user_id === staff.id && p.status === 'accepted')
-      const lastPunch = userPunches.length > 0 ? userPunches[0] : null
-      const isCurrentlyIn = lastPunch?.kind === 'in'
-
-      const item = {
-        ...staff,
-        day,
-        setting,
-        lastPunch,
-        isCurrentlyIn,
-      }
-
-      if (day?.status === 'on_leave') {
-        onLeaveList.push(item)
-      } else if (isCurrentlyIn || day?.status === 'present') {
-        inList.push(item)
-        if (day?.late_minutes > 0 || day?.status === 'late') {
-          lateList.push(item)
+      ; (staffList || []).forEach((staff: any) => {
+        const setting = settingsMap.get(staff.id)
+        if (setting && setting.attendance_required === false) {
+          return // Excluded e.g. super_admin/owner
         }
-      } else if (day?.status === 'late') {
-        lateList.push(item)
-        inList.push(item)
-      } else {
-        notYetInList.push(item)
-      }
-    })
+
+        const day = daysMap.get(staff.id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userPunches = todayPunches.filter((p: any) => p.user_id === staff.id && p.status === 'accepted')
+        const lastPunch = userPunches.length > 0 ? userPunches[0] : null
+        const isCurrentlyIn = lastPunch?.kind === 'in'
+
+        const item = {
+          ...staff,
+          day,
+          setting,
+          lastPunch,
+          isCurrentlyIn,
+        }
+
+        if (day?.status === 'on_leave') {
+          onLeaveList.push(item)
+        } else if (isCurrentlyIn || day?.status === 'present') {
+          inList.push(item)
+          if (day?.late_minutes > 0 || day?.status === 'late') {
+            lateList.push(item)
+          }
+        } else if (day?.status === 'late') {
+          lateList.push(item)
+          inList.push(item)
+        } else {
+          notYetInList.push(item)
+        }
+      })
+
+    // Check staff with attendance_required = true but missing shift, office, or weekly-off
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unassignedStaff: any[] = []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ; (staffList || []).forEach((staff: any) => {
+        const setting = settingsMap.get(staff.id)
+        const isReq = setting ? setting.attendance_required !== false : (staff.role !== 'super_admin' && staff.role !== 'owner')
+        if (isReq) {
+          if (!setting || !setting.office_id || !setting.shift_start || !setting.weekly_off || setting.weekly_off.length === 0) {
+            unassignedStaff.push({
+              id: staff.id,
+              full_name: staff.full_name,
+              missing: [
+                (!setting || !setting.office_id) ? 'office' : null,
+                (!setting || !setting.shift_start) ? 'shift' : null,
+                (!setting || !setting.weekly_off || setting.weekly_off.length === 0) ? 'weekly-off' : null,
+              ].filter(Boolean),
+            })
+          }
+        }
+      })
 
     return {
       success: true,
       data: {
         todayStr,
+        unassignedStaff,
         counts: {
           totalStaff: staffList?.length || 0,
           in: inList.length,
@@ -156,13 +194,12 @@ export async function getAdminTodayBoardAction() {
  */
 export async function getAdminTeamMonthlySheetAction(yearMonth?: string) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const [{ user, profile: callerProfile }, supabase] = await Promise.all([
+      getUserProfile(),
+      createClient(),
+    ])
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -170,26 +207,37 @@ export async function getAdminTeamMonthlySheetAction(yearMonth?: string) {
     const startDate = `${ym}-01`
     const endDate = `${ym}-31`
 
-    // Active staff
-    const { data: staffList } = await supabase
-      .from('profiles')
-      .select('id, full_name, display_name, job_title, avatar_url')
-      .eq('is_active', true)
-      .order('full_name', { ascending: true })
+    const visiblePromise =
+      callerProfile?.role === 'admin'
+        ? supabase.rpc('visible_user_ids')
+        : Promise.resolve({ data: null })
 
-    // Attendance days for this month
-    const { data: days } = await supabase
-      .from('attendance_days')
-      .select('*')
-      .gte('date', startDate)
-      .lte('date', endDate)
+    const [visibleRes, { data: allActiveStaff }, { data: days }, { data: holidays }] =
+      await Promise.all([
+        visiblePromise,
+        supabase
+          .from('profiles')
+          .select('id, full_name, display_name, job_title, avatar_url')
+          .eq('is_active', true)
+          .order('full_name', { ascending: true }),
+        supabase
+          .from('attendance_days')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate),
+        supabase
+          .from('holidays')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate),
+      ])
 
-    // Holidays
-    const { data: holidays } = await supabase
-      .from('holidays')
-      .select('*')
-      .gte('date', startDate)
-      .lte('date', endDate)
+    let staffList = allActiveStaff || []
+    if (callerProfile?.role === 'admin') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allowedSet = new Set((visibleRes.data || []).map((r: any) => r.user_id))
+      staffList = staffList.filter((s) => allowedSet.has(s.id))
+    }
 
     // Calculate days in month
     const [yStr, mStr] = ym.split('-')
@@ -201,41 +249,41 @@ export async function getAdminTeamMonthlySheetAction(yearMonth?: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const matrix: any[] = []
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(staffList || []).forEach((staff: any) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const staffDays = (days || []).filter((d: any) => d.user_id === staff.id)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dayMap: Record<string, any> = {}
-      let totalMinutes = 0
-      let presentCount = 0
-      let lateCount = 0
-      let absentCount = 0
-      let leaveCount = 0
+      ; (staffList || []).forEach((staff: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const staffDays = (days || []).filter((d: any) => d.user_id === staff.id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dayMap: Record<string, any> = {}
+        let totalMinutes = 0
+        let presentCount = 0
+        let lateCount = 0
+        let absentCount = 0
+        let leaveCount = 0
 
-      staffDays.forEach((d) => {
-        dayMap[d.date] = d
-        totalMinutes += d.worked_minutes || 0
-        if (d.status === 'present') presentCount++
-        if (d.status === 'late') {
-          presentCount++
-          lateCount++
-        }
-        if (d.status === 'absent') absentCount++
-        if (d.status === 'on_leave') leaveCount++
-      })
+        staffDays.forEach((d) => {
+          dayMap[d.date] = d
+          totalMinutes += d.worked_minutes || 0
+          if (d.status === 'present') presentCount++
+          if (d.status === 'late') {
+            presentCount++
+            lateCount++
+          }
+          if (d.status === 'absent') absentCount++
+          if (d.status === 'on_leave') leaveCount++
+        })
 
-      matrix.push({
-        staff,
-        dayMap,
-        totalMinutes,
-        totalHoursFormatted: formatWorkedHours(totalMinutes),
-        presentCount,
-        lateCount,
-        absentCount,
-        leaveCount,
+        matrix.push({
+          staff,
+          dayMap,
+          totalMinutes,
+          totalHoursFormatted: formatWorkedHours(totalMinutes),
+          presentCount,
+          lateCount,
+          absentCount,
+          leaveCount,
+        })
       })
-    })
 
     return {
       success: true,
@@ -365,7 +413,7 @@ export async function getHolidaysAction(year?: number) {
   }
 }
 
-export async function saveHolidayAction(data: { id?: string; date: string; name: string; office_id?: string | null }) {
+export async function saveHolidayAction(data: { id?: string; date: string; name: string; office_id?: string | null; half_day?: boolean }) {
   try {
     const supabase = await createClient()
     const {
@@ -379,6 +427,7 @@ export async function saveHolidayAction(data: { id?: string; date: string; name:
           date: data.date,
           name: data.name,
           office_id: data.office_id || null,
+          half_day: Boolean(data.half_day),
         })
         .eq('id', data.id)
       if (error) return { success: false, error: error.message }
@@ -387,12 +436,14 @@ export async function saveHolidayAction(data: { id?: string; date: string; name:
         date: data.date,
         name: data.name,
         office_id: data.office_id || null,
+        half_day: Boolean(data.half_day),
         created_by: user?.id,
       })
       if (error) return { success: false, error: error.message }
     }
 
     revalidatePath('/admin/attendance')
+    revalidatePath('/admin/settings')
     return { success: true }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed to save holiday' }
@@ -405,6 +456,7 @@ export async function deleteHolidayAction(id: string) {
     const { error } = await supabase.from('holidays').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
     revalidatePath('/admin/attendance')
+    revalidatePath('/admin/settings')
     return { success: true }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed to delete holiday' }

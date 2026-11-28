@@ -110,13 +110,12 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const hasSession = Boolean(claimsData?.claims?.sub)
 
   const isLoginPage = pathname === '/login'
 
-  if (!user) {
+  if (!hasSession) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -129,22 +128,19 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // User is logged in — verify active profile
-  const { data } = await supabase
-    .from('profiles')
-    .select('is_active, role')
-    .eq('id', user.id)
-    .single()
+  // For API routes, verify active profile in proxy (page routes verify via requireUser() in AppLayout)
+  if (pathname.startsWith('/api/')) {
+    const userId = claimsData!.claims.sub
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('id', userId)
+      .single()
 
-  const profile = data as { is_active: boolean; role: string } | null
-
-  if (profile && !profile.is_active) {
-    // Inactive profile — sign out and redirect with reason
-    await supabase.auth.signOut()
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    redirectUrl.searchParams.set('reason', 'inactive')
-    return NextResponse.redirect(redirectUrl)
+    if (data && !data.is_active) {
+      await supabase.auth.signOut()
+      return NextResponse.json({ error: 'Account inactive' }, { status: 403 })
+    }
   }
 
   // If logged in and browsing /login, redirect to Home

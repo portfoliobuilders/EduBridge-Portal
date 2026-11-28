@@ -215,30 +215,66 @@ export function AdminAttendanceClient({
       {/* TAB 1: TODAY BOARD */}
       {activeTab === 'today' && (
         <div className="space-y-6">
-          {/* Real-time counters */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          {/* Warning Banner for Unassigned Staff */}
+          {todayData?.unassignedStaff && todayData.unassignedStaff.length > 0 && (
+            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <div className="font-bold text-amber-900">
+                  Attendance Setup Incomplete ({todayData.unassignedStaff.length} staff member{todayData.unassignedStaff.length > 1 ? 's' : ''})
+                </div>
+                <p className="text-amber-800">
+                  The following staff members have attendance required but are missing their shift, office geofence, or weekly off configuration:
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {todayData.unassignedStaff.map((st: any) => (
+                    <span key={st.id} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-amber-900 border border-amber-300 font-medium">
+                      {st.full_name} <span className="text-[10px] text-amber-600">({st.missing.join(', ')})</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Real-time counters (6 cards) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6B7272] block">Punched In</span>
+              <span className="text-[11px] font-semibold text-[#6B7272] block">Present</span>
               <span className="text-xl font-bold text-[#00805F] mt-1 block">{counts.in}</span>
-              <span className="text-[10px] text-[#6B7272] mt-0.5 block">Active on duty</span>
+              <span className="text-[10px] text-[#6B7272] mt-0.5 block">Punched In</span>
             </div>
 
             <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6B7272] block">Late Arrivals</span>
+              <span className="text-[11px] font-semibold text-[#6B7272] block">Late</span>
               <span className="text-xl font-bold text-[#B7791F] mt-1 block">{counts.late}</span>
-              <span className="text-[10px] text-amber-700 mt-0.5 block">Arrived after grace</span>
+              <span className="text-[10px] text-amber-700 mt-0.5 block">After grace</span>
             </div>
 
             <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6B7272] block">Not Yet In</span>
-              <span className="text-xl font-bold text-gray-700 mt-1 block">{counts.notYetIn}</span>
-              <span className="text-[10px] text-[#6B7272] mt-0.5 block">Expected today</span>
+              <span className="text-[11px] font-semibold text-[#6B7272] block">Absent</span>
+              <span className="text-xl font-bold text-[#C53030] mt-1 block">
+                {Math.max(0, (counts.totalStaff || 0) - (counts.in || 0) - (counts.notYetIn || 0) - (counts.onLeave || 0))}
+              </span>
+              <span className="text-[10px] text-red-600 mt-0.5 block">Unexcused</span>
             </div>
 
             <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
               <span className="text-[11px] font-semibold text-[#6B7272] block">On Leave</span>
               <span className="text-xl font-bold text-blue-600 mt-1 block">{counts.onLeave}</span>
-              <span className="text-[10px] text-blue-700 mt-0.5 block">Approved leaves</span>
+              <span className="text-[10px] text-blue-700 mt-0.5 block">Approved leave</span>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
+              <span className="text-[11px] font-semibold text-[#6B7272] block">Not Punched Yet</span>
+              <span className="text-xl font-bold text-gray-700 mt-1 block">{counts.notYetIn}</span>
+              <span className="text-[10px] text-[#6B7272] mt-0.5 block">Expected today</span>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#E4E7E7] p-4 shadow-xs">
+              <span className="text-[11px] font-semibold text-[#6B7272] block">Field Pending</span>
+              <span className="text-xl font-bold text-amber-600 mt-1 block">{counts.pendingFieldPunches || 0}</span>
+              <span className="text-[10px] text-amber-700 mt-0.5 block">Needs approval</span>
             </div>
           </div>
 
@@ -295,6 +331,7 @@ export function AdminAttendanceClient({
                     <th className="py-3 px-4">Staff Member</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Location</th>
                     <th className="py-3 px-4">First In</th>
                     <th className="py-3 px-4">Last Out</th>
                     <th className="py-3 px-4">Worked Time</th>
@@ -327,6 +364,21 @@ export function AdminAttendanceClient({
                           >
                             {item.isCurrentlyIn ? 'Punched In' : item.day?.status || 'Not In'}
                           </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {item.lastPunch ? (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                item.lastPunch.is_inside_geofence
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200'
+                              }`}
+                            >
+                              {item.lastPunch.is_inside_geofence ? 'In Geofence' : 'Out of Geofence'}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 font-mono text-[#6B7272]">
                           {item.day?.first_in ? new Date(item.day.first_in).toLocaleTimeString('en-GB') : '—'}

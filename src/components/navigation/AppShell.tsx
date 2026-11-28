@@ -35,7 +35,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { signOutAction } from '@/app/(auth)/login/actions'
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { HomePunchCard } from '@/components/attendance/HomePunchCard'
@@ -62,6 +61,7 @@ export function AppShell({
   const [isAnyModalOpen, setIsAnyModalOpen] = useState(false)
   const isAdminOrAbove =
     profile.role === 'super_admin' || profile.role === 'admin' || profile.role === 'owner'
+  const isSuperAdmin = profile.role === 'super_admin' || profile.role === 'owner'
 
   const enrichedCelebrations: CelebrationPerson[] = useMemo(() => {
     return initialCelebrations.map((c: CelebrationPerson) => ({
@@ -130,7 +130,7 @@ export function AppShell({
   const desktopNavItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/candidates', label: 'Candidates', icon: Users },
-    { href: '/attendance', label: 'Attendance', icon: Clock },
+    { href: isSuperAdmin ? '/admin/attendance' : '/attendance', label: 'Attendance', icon: Clock },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/reports', label: 'Reports', icon: FileBarChart },
     ...(isAdminOrAbove ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
@@ -430,7 +430,7 @@ export function AppShell({
 
           <div className="space-y-2 pt-2">
             <Link
-              href="/attendance"
+              href={isSuperAdmin ? '/admin/attendance' : '/attendance'}
               onClick={() => setAccountOpen(false)}
               className="flex items-center justify-between p-3.5 rounded-2xl border border-[#E4E7E7] hover:bg-[#F5F6F6] text-sm font-medium text-[#0A0A0A] transition"
             >
@@ -541,7 +541,7 @@ export function AppShell({
             >
               Cancel
             </Button>
-            <form action={signOutAction}>
+            <form action="/api/auth/signout" method="POST">
               <Button
                 type="submit"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs h-9"

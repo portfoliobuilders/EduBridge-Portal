@@ -56,7 +56,14 @@ export default async function SettingsPage() {
     support_access_enabled: settings?.support_access_enabled ?? false,
     celebrations_enabled: settings?.celebrations_enabled ?? false,
     celebration_emails_enabled: settings?.celebration_emails_enabled ?? true,
+    attendance_default_weekly_off: settings?.attendance_default_weekly_off ?? [5],
   }
+
+  // Fetch holidays for the Work Calendar card
+  const { data: holidays } = await supabase
+    .from('holidays')
+    .select('*')
+    .order('date', { ascending: true })
 
   return (
     <div className="space-y-6">
@@ -69,12 +76,15 @@ export default async function SettingsPage() {
 
       <PageHeader
         title="Company Settings"
-        subtitle="Manage business identity, letterhead branding, numbering prefixes, VAT rate, and messaging templates"
+        subtitle="Manage business identity, letterhead branding, numbering prefixes, VAT rate, work calendar, and messaging templates"
       />
 
       <AdminNav />
 
-      <SettingsClient initialSettings={initialSettings} />
+      <SettingsClient
+        initialSettings={initialSettings}
+        initialHolidays={holidays || []}
+      />
     </div>
   )
 }

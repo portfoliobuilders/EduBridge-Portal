@@ -16,6 +16,7 @@ interface AttendanceCalendarProps {
   holidays: any[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   leaves: any[]
+  weeklyOff?: number[]
   onMonthChange: (newYm: string) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelectDay?: (dayRecord: any, dateStr: string) => void
@@ -25,6 +26,7 @@ export function AttendanceCalendar({
   yearMonth,
   days,
   holidays,
+  weeklyOff = [5],
   onMonthChange,
   onSelectDay,
 }: AttendanceCalendarProps) {
@@ -191,7 +193,31 @@ export function AttendanceCalendar({
           const dateStr = `${yearMonth}-${String(dayNum).padStart(2, '0')}`
           const dayRecord = daysMap.get(dateStr)
           const holiday = holidaysMap.get(dateStr)
-          const status = holiday ? 'holiday' : dayRecord?.status || 'weekly_off'
+
+          const dateObj = new Date(year, month - 1, dayNum)
+          const dow = dateObj.getDay()
+          const isOff = weeklyOff.includes(dow)
+
+          const todayStr = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Dubai',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).format(new Date())
+
+          let status = 'pending'
+          if (holiday) {
+            status = 'holiday'
+          } else if (dayRecord?.status) {
+            status = dayRecord.status
+          } else if (isOff) {
+            status = 'weekly_off'
+          } else if (dateStr > todayStr) {
+            status = 'pending'
+          } else {
+            status = 'absent'
+          }
+
           const isSelected = selectedDate === dateStr
 
           return (
@@ -200,7 +226,15 @@ export function AttendanceCalendar({
               type="button"
               onClick={() => {
                 setSelectedDate(dateStr)
-                if (onSelectDay) onSelectDay(dayRecord, dateStr)
+                if (onSelectDay) {
+                  const effectiveRecord = dayRecord || {
+                    date: dateStr,
+                    status,
+                    worked_minutes: 0,
+                    late_minutes: 0,
+                  }
+                  onSelectDay(effectiveRecord, dateStr)
+                }
               }}
               className={`h-16 sm:h-20 p-1.5 sm:p-2 rounded-xl border text-left transition-all flex flex-col justify-between ${getStatusColor(
                 status

@@ -1,6 +1,6 @@
 import React from 'react'
 import { requireUser } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { getCelebrationsTodayCached } from '@/lib/celebrations'
 import { AppShell } from '@/components/navigation/AppShell'
 
 export const dynamic = 'force-dynamic'
@@ -10,16 +10,15 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { profile } = await requireUser()
-  const supabase = await createClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: celebrations } = await (supabase.rpc as any)('get_celebrations_today')
+  const [{ profile }, celebrations] = await Promise.all([
+    requireUser(),
+    getCelebrationsTodayCached(),
+  ])
 
   return (
     <AppShell
       profile={profile}
-      initialCelebrations={Array.isArray(celebrations) ? celebrations : []}
+      initialCelebrations={celebrations}
     >
       {children}
     </AppShell>

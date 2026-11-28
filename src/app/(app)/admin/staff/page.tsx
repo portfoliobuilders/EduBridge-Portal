@@ -24,6 +24,7 @@ interface StaffRow {
   reports_to_name: string | null
   admin_scope: string
   is_support: boolean
+  is_sales_team: boolean
   is_active: boolean
   last_sign_in_at: string | null
   created_at: string
@@ -56,6 +57,7 @@ export default async function StaffManagementPage() {
     reports_to_name: s.reports_to_name ?? null,
     admin_scope: (s.admin_scope as 'team' | 'company') ?? 'team',
     is_support: Boolean(s.is_support),
+    is_sales_team: Boolean(s.is_sales_team),
     is_active: s.is_active,
     last_sign_in_at: s.last_sign_in_at,
     created_at: s.created_at,

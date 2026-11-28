@@ -63,12 +63,21 @@ async function main() {
 
   const testUsers = allUsers.filter((u) => u.email?.endsWith('@test.edubridge.local'))
 
-  // Fetch profile status
-  const { data: profiles } = await admin.from('profiles').select('id, is_active, role')
+  // Fetch profile status and active demo seed runs
+  const [{ data: profiles }, { data: demoRuns }] = await Promise.all([
+    admin.from('profiles').select('id, is_active, role'),
+    admin.from('demo_seed_runs').select('manifest').is('cleaned_at', null),
+  ])
   const profileMap = new Map((profiles || []).map((p) => [p.id, p]))
+  const managedDemoUserIds = new Set()
+  for (const run of demoRuns || []) {
+    const ids = run?.manifest?.user_ids || []
+    for (const id of ids) managedDemoUserIds.add(id)
+  }
 
-  // Active test users (forbidden) or new unmanaged test users
+  // Active test users (forbidden unless managed demo user) or new unmanaged test users
   const activeOrLeaked = testUsers.filter((u) => {
+    if (managedDemoUserIds.has(u.id)) return false
     const prof = profileMap.get(u.id)
     if (prof?.is_active) return true
     return !KNOWN_DEACTIVATED_TEST_USERS.has(u.id)
@@ -84,7 +93,8 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`✅ No active or unmanaged test users found (${testUsers.length} historical FK-bound test users are safely deactivated).`)
+  const demoCount = testUsers.filter((u) => managedDemoUserIds.has(u.id)).length
+  console.log(`✅ No unmanaged test users found (${demoCount} managed demo users, ${testUsers.length - demoCount} historical deactivated test users).`)
   process.exit(0)
 }
 

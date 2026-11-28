@@ -154,16 +154,28 @@ export function OfficeMapPicker({
   }, [latitude, longitude])
 
   const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setGeoError('Geolocation is not supported by your browser.')
+    if (typeof window !== 'undefined' && (!window.isSecureContext || !navigator.geolocation)) {
+      setLocating(false)
+      setGeoError('Location needs a secure (https) connection or permission. Use the app link, or allow location.')
       return
     }
 
     setLocating(true)
     setGeoError(null)
 
+    let settled = false
+    const timeoutGuard = setTimeout(() => {
+      if (settled) return
+      settled = true
+      setLocating(false)
+      setGeoError('Location needs a secure (https) connection or permission. Use the app link, or allow location.')
+    }, 10500)
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutGuard)
         setLocating(false)
         const lat = parseFloat(pos.coords.latitude.toFixed(7))
         const lng = parseFloat(pos.coords.longitude.toFixed(7))
@@ -181,10 +193,13 @@ export function OfficeMapPicker({
         })
       },
       (err) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutGuard)
         setLocating(false)
         setGeoError(`Location failed: ${err.message}`)
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
   }
 

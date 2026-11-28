@@ -51,3 +51,7 @@ Admissions consultancy receipt and billing management web application for EduBri
    npm run build
    npm run lint
    ```
+
+## Supported Origins & HTTPS Requirement
+- **Supported**: `http://localhost:3000` (local dev/testing), HTTPS tunnels (e.g. Cloudflare Tunnel / ngrok), and production HTTPS.
+- **Unsupported**: Plain HTTP over a LAN IP (e.g. `http://192.168.x.x:3000`). Modern browsers do not treat non-localhost HTTP origins as Secure Contexts, which blocks `navigator.geolocation` (required for GPS attendance punches) and `Secure` session cookies in production mode.

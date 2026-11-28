@@ -40,8 +40,8 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
     (params.balance === 'has_balance'
       ? 'balance_due'
       : params.balance === 'fully_paid'
-      ? 'fully_paid'
-      : 'all')
+        ? 'fully_paid'
+        : 'all')
   const mine = params.mine === 'true'
   const university = params.university || ''
   const course = params.course || ''
@@ -53,68 +53,11 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
 
   const supabase = await createClient()
 
-  // 1. Fetch metadata, KPI metrics, and dropdown options in parallel
-  const [
-    { data: universitiesData },
-    { data: coursesData },
-    { data: specializationsData },
-    { data: staffData },
-    { data: kpiData },
-    compSettingsRes,
-  ] = await Promise.all([
-    supabase
-      .from('universities')
-      .select('id, name')
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('courses')
-      .select('id, university_id, name, level, default_fee')
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('specializations')
-      .select('id, course_id, name, default_fee')
-      .eq('is_active', true)
-      .order('name'),
-    isOwner
-      ? supabase
-          .from('profiles')
-          .select('id, full_name, role, job_title')
-          .eq('is_active', true)
-          .order('full_name')
-      : Promise.resolve({ data: [] }),
-    supabase.rpc('get_candidate_directory_kpis'),
-    supabase
-      .from('company_settings')
-      .select('vat_enabled, vat_rate, default_vat_treatment, no_vat_reason')
-      .limit(1)
-      .single(),
-  ])
-
-  const universities = universitiesData || []
-  const courses = coursesData || []
-  const specializations = specializationsData || []
-  const staffList = staffData || []
-  const compSettings = compSettingsRes?.data || null
-
-  const rawKpi = kpiData?.[0]
-  const kpis: CandidateDirectoryKpis = {
-    total_candidates: Number(rawKpi?.total_candidates ?? 0),
-    outstanding_balance: Number(rawKpi?.outstanding_balance ?? 0),
-    collected_this_month: Number(rawKpi?.collected_this_month ?? 0),
-    fully_paid_count: Number(rawKpi?.fully_paid_count ?? 0),
-    balance_due_count: Number(rawKpi?.balance_due_count ?? 0),
-    overdue_count: Number(rawKpi?.overdue_count ?? 0),
-    no_enrollment_count: Number(rawKpi?.no_enrollment_count ?? 0),
-  }
-
-  // 2. Query student directory view with server-side filters & pagination
+  // 1. Build student directory query with server-side filters & pagination
   let query = supabase
     .from('student_directory_view')
     .select('*', { count: 'exact' })
 
-  // Search filter (name / mobile / code / email)
   if (q) {
     const cleanDigits = q.replace(/\D/g, '')
     const noZero = cleanDigits.replace(/^0+/, '')
@@ -133,7 +76,6 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
     query = query.or(clauses.join(','))
   }
 
-  // Status filter computed from SQL view column
   if (status === 'balance_due') {
     query = query.eq('candidate_status', 'Balance due')
   } else if (status === 'overdue') {
@@ -144,22 +86,18 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
     query = query.eq('candidate_status', 'No enrollment')
   }
 
-  // Creator filter
   if (mine) {
     query = query.eq('created_by', user.id)
   }
 
-  // University filter
   if (university) {
     query = query.filter('university_ids', 'cs', `{${university}}`)
   }
 
-  // Course filter
   if (course) {
     query = query.filter('course_ids', 'cs', `{${course}}`)
   }
 
-  // Sorting
   if (sort === 'name_asc') {
     query = query.order('full_name', { ascending: true }).order('created_at', { ascending: false })
   } else if (sort === 'balance_desc') {
@@ -169,14 +107,69 @@ export default async function CandidatesPage({ searchParams }: CandidatesPagePro
       .order('last_payment_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
   } else {
-    // Newest first (default)
     query = query.order('created_at', { ascending: false })
   }
 
-  // Range pagination
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
-  const { data: studentsData, count } = await query.range(from, to)
+
+  // 2. Fetch metadata, KPI metrics, dropdown options, and directory rows in parallel
+  const [
+    { data: universitiesData },
+    { data: coursesData },
+    { data: specializationsData },
+    { data: staffData },
+    { data: kpiData },
+    compSettingsRes,
+    { data: studentsData, count },
+  ] = await Promise.all([
+    supabase
+      .from('universities')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('courses')
+      .select('id, university_id, name, level, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('specializations')
+      .select('id, course_id, name, default_fee')
+      .eq('is_active', true)
+      .order('name'),
+    isOwner
+      ? supabase
+        .from('profiles')
+        .select('id, full_name, role, job_title, is_sales_team')
+        .eq('is_active', true)
+        .order('full_name')
+      : Promise.resolve({ data: [] }),
+    supabase.rpc('get_candidate_directory_kpis'),
+    supabase
+      .from('company_settings')
+      .select('vat_enabled, vat_rate, default_vat_treatment, no_vat_reason')
+      .limit(1)
+      .single(),
+    query.range(from, to),
+  ])
+
+  const universities = universitiesData || []
+  const courses = coursesData || []
+  const specializations = specializationsData || []
+  const staffList = staffData || []
+  const compSettings = compSettingsRes?.data || null
+
+  const rawKpi = kpiData?.[0]
+  const kpis: CandidateDirectoryKpis = {
+    total_candidates: Number(rawKpi?.total_candidates ?? 0),
+    outstanding_balance: Number(rawKpi?.outstanding_balance ?? 0),
+    collected_this_month: Number(rawKpi?.collected_this_month ?? 0),
+    fully_paid_count: Number(rawKpi?.fully_paid_count ?? 0),
+    balance_due_count: Number(rawKpi?.balance_due_count ?? 0),
+    overdue_count: Number(rawKpi?.overdue_count ?? 0),
+    no_enrollment_count: Number(rawKpi?.no_enrollment_count ?? 0),
+  }
 
   const students = (studentsData as StudentDirectoryRow[]) || []
   const totalCount = count ?? 0

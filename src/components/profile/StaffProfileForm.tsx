@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useMemo } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import {
   Upload,
   Lock,
@@ -13,6 +14,7 @@ import {
   RotateCcw,
   CheckCircle,
   AlertCircle,
+  Edit2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -158,10 +160,10 @@ export function StaffProfileForm({ initialProfile }: StaffProfileFormProps) {
 
   const formattedJoiningDate = profile.joining_date
     ? new Date(profile.joining_date).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
     : null
 
   const displayJobTitle =
@@ -192,11 +194,25 @@ export function StaffProfileForm({ initialProfile }: StaffProfileFormProps) {
               Identity
             </h3>
           </div>
-          {/* Managed by admin lock hint */}
-          <div className="flex items-center gap-1.5 text-[11px] text-[#6B7272] bg-[#F5F6F6] px-2.5 py-1 rounded-full border border-[#E4E7E7]/60">
-            <Lock className="w-3 h-3 text-[#6B7272]" />
-            <span>Managed by admin</span>
-          </div>
+          {/* Lock chip for staff/admin; Edit button for super_admin */}
+          {profile.role === 'super_admin' || profile.role === 'owner' ? (
+            <Link
+              href={`/admin/staff/${profile.id}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00A57E] bg-[#E6F6F2] hover:bg-[#CCEDE5] px-3 py-1 rounded-full border border-[#00A57E]/30 transition"
+              title="Edit administrative and employment details"
+            >
+              <Edit2 className="w-3 h-3" />
+              <span>Edit</span>
+            </Link>
+          ) : (
+            <div
+              className="flex items-center gap-1.5 text-[11px] text-[#6B7272] bg-[#F5F6F6] px-2.5 py-1 rounded-full border border-[#E4E7E7]/60 cursor-help"
+              title="Ask your admin to update these details."
+            >
+              <Lock className="w-3 h-3 text-[#6B7272]" />
+              <span>Managed by HR</span>
+            </div>
+          )}
         </div>
 
         {/* Top: Avatar + Identity Info */}
